@@ -120,7 +120,6 @@ export default {
                     .then(response => response.json())
                     .then(data => { this.holderItems = data; return null; })
                     .catch(error => {
-                        console.log(error);
                         this.columns = undefinedColumns;
                         this.holderItems = undefinedData;
                         this.errorMessage = error.message;

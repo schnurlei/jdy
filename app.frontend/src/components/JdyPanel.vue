@@ -74,16 +74,12 @@ export default {
         },
         updateItemValue: function (value, newValue) {
             if (this.selectedItem) {
-                console.log('Selected Item ' + this.selectedItem + '!');
-                console.log('Value ' + value + '!');
-                console.log('New Value ' + newValue + '!');
                 this.selectedItem[value] = newValue;
             }
         }
     },
     watch: {
         classinfo: function (newClassInfo) {
-            console.log(newClassInfo); // test
             if (newClassInfo) {
                 this.formFields = convertToFields(newClassInfo);
             } else {

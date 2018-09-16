@@ -76,11 +76,9 @@ export default {
             // `this` inside methods points to the Vue instance
             this.isEditDialogVisible = true;
             this.selectedItem = listItem;
-            console.log('Hello ' + listItem.name + '!');
         },
         deleteItem: function (listItem, event) {
             // `this` inside methods points to the Vue instance
-            console.log('Delete ' + listItem.name + '!');
             this.items.splice(this.items.findIndex(x => x.name === listItem.name), 1);
         },
         close () {

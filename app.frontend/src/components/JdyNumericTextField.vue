@@ -12,8 +12,8 @@ function isKeyNumeric (key) {
 };
 
 function isKeyCursor (key) {
-    return key === 'Backspace' || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Home' || key === 'End'
-        || key === 'Delete' || key === 'Insert' || key === 'Tab';
+    return key === 'Backspace' || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Home' || key === 'End' |
+           key === 'Delete' || key === 'Insert' || key === 'Tab';
 };
 export default {
 
@@ -25,8 +25,7 @@ export default {
     },
     methods: {
         updateNumericValue: function ($event) {
-            if (!$event.altKey && !$event.ctrlKey && !isKeyNumeric($event.key) && !isKeyCursor ($event.key) ) {
-                console.log($event);
+            if (!$event.altKey && !$event.ctrlKey && !isKeyNumeric($event.key) && !isKeyCursor($event.key)) {
                 $event.preventDefault();
             }
         }
