@@ -456,6 +456,14 @@ export class JdyLongType extends JdyPrimitiveType {
     handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleLong(this);
     };
+
+    getMinValue () {
+        return this.minValue;
+    }
+
+    getMaxValue () {
+        return this.maxValue;
+    }
 }
 
 export class JdyDecimalType extends JdyPrimitiveType {
@@ -476,6 +484,14 @@ export class JdyDecimalType extends JdyPrimitiveType {
     handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleDecimal(this);
     };
+
+    getMinValue () {
+        return this.minValue;
+    }
+
+    getMaxValue () {
+        return this.maxValue;
+    }
 }
 
 export class JdyTextType extends JdyPrimitiveType {

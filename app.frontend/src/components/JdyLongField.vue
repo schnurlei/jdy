@@ -4,7 +4,7 @@
             <v-combobox :label='primAttr.getInternalName ()' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
         </div>
         <div v-else>
-            <v-text-field :label='primAttr.getInternalName ()' clearable :counter="primAttr.getType().length" :readonly="primAttr.isGenerated"></v-text-field>
+            <jdy-numeric :fieldLabel='primAttr.getInternalName()' :fieldReadonly="primAttr.isGenerated" :minValue="primAttr.getType().getMinValue()" :maxValue="primAttr.getType().getMaxValue()"></jdy-numeric>
         </div>
     </div>
 </template>

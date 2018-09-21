@@ -41,8 +41,6 @@
             </v-btn>
         </v-toolbar>
         <v-content>
-            <div>test</div>
-            <jdy-numeric></jdy-numeric>
             <router-view></router-view>
         </v-content>
         <v-navigation-drawer
