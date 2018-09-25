@@ -1,6 +1,7 @@
 import '@babel/polyfill';
 import Vue from 'vue';
 import './plugins/vuetify';
+import VeeValidate from 'vee-validate';
 import App from './App.vue';
 import JdyHolder from './components/JdyHolder.vue';
 import JdyTable from './components/JdyTable.vue';
@@ -30,6 +31,7 @@ Vue.component('jdy-boolean', JdyBooleanField);
 Vue.component('jdy-text', JdyTextField);
 
 Vue.component('jdy-numeric', JdyNumericTextField);
+Vue.use(VeeValidate);
 
 new Vue({
     router,
