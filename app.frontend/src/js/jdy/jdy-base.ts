@@ -296,6 +296,10 @@ export class JdyAttributeInfo {
         return this;
     };
 
+    getNotNull () {
+        return (this.isNotNull) ? this.isNotNull : false;
+    };
+
     setNotNull (isNotNull) {
         this.isNotNull = isNotNull;
         return this;
