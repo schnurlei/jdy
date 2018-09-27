@@ -25,6 +25,7 @@ export const testCreatePlantShopRepository = function (): JDY.JdyRepository {
     addressType.addTextAttr('Street', 30).setNotNull(true);
     addressType.addTextAttr('ZipCode', 30).setNotNull(true);
     addressType.addTextAttr('City', 30).setNotNull(true);
+    addressType.addEmailAttr('EMail', 30, null).setNotNull(true);
 
     let customerType = rep.addClassInfo('Customer', null);
     customerType.addTextAttr('CustomerId', 30).setIsKey(true);

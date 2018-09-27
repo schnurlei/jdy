@@ -517,9 +517,13 @@ export class JdyTextType extends JdyPrimitiveType {
     getLength (): number {
         return this.length;
     }
+
+    getTypeHint (): JdyTextTypeHint | null {
+        return this.typeHint;
+    }
 }
 
-enum JdyTextTypeHint {
+export enum JdyTextTypeHint {
 
     EMAIL = 'EMAIL',
     TELEPHONE = 'TELEPHONE',
