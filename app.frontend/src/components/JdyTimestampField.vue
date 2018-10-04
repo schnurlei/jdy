@@ -33,7 +33,7 @@ export default {
             date: null,
             time: null,
             menu2: false,
-            modal2: false
+            modal: false
         };
     }
 };

@@ -496,6 +496,10 @@ export class JdyDecimalType extends JdyPrimitiveType {
     getMaxValue () {
         return this.maxValue;
     }
+
+    getScale () {
+        return this.scale;
+    }
 }
 
 export class JdyTextType extends JdyPrimitiveType {

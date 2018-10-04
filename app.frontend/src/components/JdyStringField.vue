@@ -1,10 +1,11 @@
 <template>
     <div>
         <div v-if="primAttr.getType().domainValues">
-            <v-combobox :label='primAttr.getInternalName ()' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
+            <v-combobox :label='fieldLabel ()' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
         </div>
         <div v-else>
-            <v-text-field  :prepend-icon="prependIcon" v-validate="validationString" :error-messages="errors.collect('fieldValue')" data-vv-name="fieldValue" v-model="fieldValue" :label='primAttr.getInternalName ()' clearable :counter="primAttr.getType().length" :readonly="primAttr.isGenerated"></v-text-field>
+            <v-text-field  :error-messages="errors.collect('fieldValue')" data-vv-name="fieldValue" v-model="fieldValue" :prepend-icon="prependIcon"
+                           v-validate="validationString" :label="fieldLabel" clearable :counter="primAttr.getType().length" :readonly="primAttr.isGenerated"></v-text-field>
         </div>
     </div>
 </template>
@@ -64,6 +65,10 @@ export default Vue.extend({
             }
 
             return validation;
+        },
+        fieldLabel () : string {
+            let required = (this.primAttr.getNotNull()) ? '*' : '';
+            return this.primAttr.getInternalName() + required;
         }
     }
 });

@@ -1,6 +1,8 @@
 <template>
     <div>
-    <v-text-field :label="fieldLabel" clearable :readonly="fieldReadonly" v-bind:value="numericValue" :hint="rangeHint()" v-on:keydown="updateNumericValue($event)"/>
+        {{validationString}}
+    <v-text-field :error-messages="errors.collect('numericValue')" data-vv-name="numericValue" :label="fieldLabelComputed"
+                  v-validate="validationString" clearable :readonly="fieldReadonly" v-bind:value="numericValue" v-on:keydown="updateNumericValue($event)"/>
 
     </div>
 </template>
@@ -18,27 +20,41 @@ function isKeyCursor (key) {
 export default {
 
     name: 'JdyNumericTextField',
-    props: ['fieldLabel', 'fieldReadonly', 'minValue', 'maxValue'],
+    props: ['fieldLabel', 'fieldReadonly', 'minValue', 'maxValue', 'scale', 'isNotNull'],
     data () {
         return {
             numericValue: ''
         };
+    },
+    computed: {
+        fieldLabelComputed () {
+            let required = (this.isNotNull) ? '*' : '';
+            return this.fieldLabel + required;
+        },
+        validationString () {
+            let validation = 'decimal';
+            if (this.scale) {
+                validation += ':' +scale;
+            }
+            if (this.minValue || this.minValue === 0) {
+                validation += '|min_value:' + this.minValue;
+            }
+            if (this.maxValue || this.minValue === 0) {
+                validation += '|max_value:' + this.maxValue;
+            }
+
+            if (this.isNotNull) {
+                validation += '|required';
+            }
+
+            return validation;
+        }
     },
     methods: {
         updateNumericValue: function ($event) {
             if (!$event.altKey && !$event.ctrlKey && !isKeyNumeric($event.key) && !isKeyCursor($event.key)) {
                 $event.preventDefault();
             }
-        },
-        rangeHint: function () {
-            let hint = '';
-            if (this.minValue || this.minValue === 0) {
-                hint += 'Min Value: ' + this.minValue + '; ';
-            }
-            if (this.maxValue) {
-                hint += 'Max Value: ' + this.maxValue;
-            }
-            return hint;
         }
     }
 };
