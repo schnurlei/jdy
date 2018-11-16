@@ -60,6 +60,7 @@
                         </configuration>
                     </execution>
                     <!-- Run Unit tests with Jest -->
+<!--
                     <execution>
                         <id>npm run unit</id>
                         <goals>
@@ -70,6 +71,7 @@
                             <arguments>run unit</arguments>
                         </configuration>
                     </execution>
+-->
                     <!-- Run End2End tests with Nightwatch -->
                     <!--
 					<execution>
