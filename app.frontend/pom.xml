@@ -8,7 +8,7 @@
     <artifactId>app.frontend</artifactId>
 
     <parent>
-        <groupId>de.jdynamta</groupId>
+        <groupId>de.jdynameta</groupId>
         <version>1.0-SNAPSHOT</version>
         <artifactId>jdy</artifactId>
     </parent>

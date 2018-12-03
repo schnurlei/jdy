@@ -33,6 +33,20 @@ Vue.component('jdy-text', JdyTextField);
 Vue.component('jdy-numeric', JdyNumericTextField);
 Vue.use(VeeValidate);
 
+
+/*
+var readerWriter = new JDY.taffy.TaffyObjectReaderWriter(),
+    repoHandler = JDY.app.getRepositoryHandlers(readerWriter),
+*/
+
+// repoFilter = new JDY.base.QueryCreator(JDY.meta.createAppRepository().getClassInfo("AppRepository"))
+//     .query();
+//
+// readerWriter.loadValuesFromDb(repoFilter, function (loadedRepos) {
+
+
+
+
 new Vue({
     router,
     render: h => h(App)

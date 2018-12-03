@@ -73,6 +73,9 @@ export default {
     components: {
         HelloWorld
     },
+    mounted () {
+        this.fetchAbout();
+    },
     data () {
         return {
             clipped: false,
@@ -83,15 +86,27 @@ export default {
                 title: 'Inspire'
             }],
             menuitems: [
-                {title: 'Home', icon: 'dashboard', href: '#/foo/Plant'},
-                {title: 'Foo', icon: 'question_answer', href: '#/foo/Customer'},
-                {title: 'About', icon: 'question_answer', href: '#/foo/Address'}
+                { title: 'Home', icon: 'dashboard', href: '#/foo/Plant' },
+                { title: 'Foo', icon: 'question_answer', href: '#/foo/Customer' },
+                { title: 'About', icon: 'question_answer', href: '#/foo/Address' }
             ],
             miniVariant: false,
             right: true,
             rightDrawer: false,
-            title: 'Vuetify.js'
+            title: 'Jdy',
+            about: '-fetch-'
         };
+    },
+    methods: {
+        fetchAbout () {
+            fetch(new Request('api/about'))
+                .then(response => response.statusText)
+                .then(data => { this.about = data; return null; })
+                .catch(error => {
+                    console.log(error);
+                    this.about = '-error-';
+                });
+        }
     }
 };
 </script>

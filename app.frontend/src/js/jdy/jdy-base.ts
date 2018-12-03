@@ -17,7 +17,7 @@ export class JdyRepository {
         this.classes = {};
     }
 
-    addClassInfo (aInternalName, aSuperclass: JdyClassInfo | null) {
+    addClassInfo (aInternalName, aSuperclass: JdyClassInfo | null) : JdyClassInfo {
         let newClass: JdyClassInfo;
         if (this.classes[aInternalName]) {
             throw new JdyValidationError('Class already exists with name: ' + aInternalName);
@@ -608,7 +608,7 @@ export class ObjectFilterExpression {
 
 export class JdyAndExpression extends ObjectFilterExpression {
 
-    private expressionVect: ObjectFilterExpression[];
+    public expressionVect: ObjectFilterExpression[];
 
     constructor (aExprVect: ObjectFilterExpression[]) {
         super('AndExpression');

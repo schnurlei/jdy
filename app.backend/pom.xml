@@ -9,13 +9,30 @@
     <version>1.0-SNAPSHOT</version>
 
     <parent>
-        <groupId>de.jdynamta</groupId>
+        <groupId>de.jdynameta</groupId>
         <artifactId>jdy</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
 
     <dependencies>
+        <dependency>
+            <groupId>de.jdynameta</groupId>
+            <artifactId>jdy.model.jpa</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.jdynameta</groupId>
+            <artifactId>jdy.model.http</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.jdynameta</groupId>
+            <artifactId>jdy.model.persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -24,6 +41,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- In Intellij set compiler.automake.allow.when.app.running in the registry for Hot reload-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -68,6 +86,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <fork>true</fork>
+                    <addResources>true</addResources>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
