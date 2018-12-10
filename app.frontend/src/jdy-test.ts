@@ -5,7 +5,7 @@ export const testCreatePlantShopRepository = function (): JDY.JdyRepository {
     let rep = new JDY.JdyRepository('PlantShop');
 
     let plantType = rep.addClassInfo('Plant', null);
-    plantType.addTextAttr('BotanicName', 200).setIsKey(true);
+    plantType.addTextAttr('BotanicName', 200).setIsKey(true).setNotNull(true);
     plantType.addLongAttr('HeigthInCm', 0, 5000);
     plantType.addTextAttr('PlantFamily', 100).setGenerated(true);
     plantType.addTextAttr('Color', 100, ['blue', 'red', 'green']);
