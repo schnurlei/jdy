@@ -1,8 +1,14 @@
 import './jdy-base';
-import {JdyAndExpression, JdyClassInfo, JdyRepository, ObjectFilterExpression} from "@/js/jdy/jdy-base";
+import {
+	JdyAndExpression, JdyAssociationModel,
+	JdyClassInfo, JdyFilterCreationException, JdyObjectListImpl,
+	JdyRepository,
+	JdyTypedValueObject, JdyValidationError,
+	ObjectFilterExpression
+} from "@/js/jdy/jdy-base";
 
 
-const META_REPO_NAME= "ApplicationRepository";
+export const META_REPO_NAME= "ApplicationRepository";
 
 const TextMimeType= [{dbValue:"XML", representation:"text/xml"},
 						{dbValue:"HTML", representation:"text/html"},
@@ -83,7 +89,7 @@ function createAppRepository() {
 
     let textTypeModel : JdyClassInfo  = appRep.addClassInfo("AppTextType", primitiveAttribute).setShortName("TXM");
 	textTypeModel.addLongAttr("length", 1, 1000).setNotNull(true);
-	textTypeModel.addTextAttr("typeHint", 20, JDY.meta.TypeHint).setNotNull(false);
+	textTypeModel.addTextAttr("typeHint", 20, ['TELEPHONE', 'EMAIL', 'URL']).setNotNull(false);
 
     let timestampTypeModel : JdyClassInfo = appRep.addClassInfo("AppTimestampType", primitiveAttribute).setShortName("TSM");
 	timestampTypeModel.addBooleanAttr("isDatePartUsed").setNotNull(true);
@@ -92,7 +98,7 @@ function createAppRepository() {
 	let varcharTypeModel : JdyClassInfo = appRep.addClassInfo("AppVarCharType", primitiveAttribute).setShortName("VCM");
 	varcharTypeModel.addLongAttr("length", 1, Number.MAX_VALUE);
 	varcharTypeModel.addBooleanAttr("isClob").setNotNull(true);
-	varcharTypeModel.addTextAttr("mimeType", 20, JDY.meta.TextMimeType).setNotNull(false);
+	varcharTypeModel.addTextAttr("mimeType", 20, ['text/xml','text/html', 'text/plain']).setNotNull(false);
 
 	appRep.addAssociation("Attributes", classInfoModel, attributeInfoModel, "Masterclass", "Masterclass", true, true, true);
 	appRep.addAssociation("Associations", classInfoModel, associationInfoModel, "Masterclass", "Masterclass", false, true, true);
@@ -108,34 +114,33 @@ function createAppRepository() {
 
 function convertAppRepositoryToRepository(appRepository, callback) {
 
-	appRepository.assocVals("Classes").done( function(appClassInfos) {
+	appRepository.assocVals("Classes").done( function(appClassInfos: Array<any>) {
 
-	    var newRepository : JdyRepository = new JdyRepository(appRepository.applicationName),
-			appClassInfo,
-			allPromises = [],
-			i;
+	    let newRepository : JdyRepository = new JdyRepository(appRepository.applicationName);
+		let	allPromises: Promise<null>[] = [];
+		let	i : number;
 
 	    for (i = 0; i < appClassInfos.length; i++) {
-		    appClassInfo = appClassInfos[i];		
+		    let appClassInfo = appClassInfos[i];
 		    newRepository.addClassInfo(appClassInfo.InternalName, null).setAbstract(appClassInfo.isAbstract);
 	    }
 
 	    for (i = 0; i < appClassInfos.length; i++) {
-		    appClassInfo = appClassInfos[i];		
+			let appClassInfo : any = appClassInfos[i];
 		    allPromises.push(buildAttrForMetaRepo(newRepository, appClassInfo));
 	    }
 
 	    for (i = 0; i < appClassInfos.length; i++) {
-		    appClassInfo = appClassInfos[i];		
+			let appClassInfo = appClassInfos[i];
 		    allPromises.push(buildAssocsForMetaRepo(newRepository, appClassInfo));
 	    }
 
 	    for (i = 0; i < appClassInfos.length; i++) {
-		    appClassInfo = appClassInfos[i];		
+			let appClassInfo = appClassInfos[i];
 		    buildSubclassesForMetaRepo(newRepository, appClassInfo);
 	    }
 	    
-	    $.when.apply(allPromises).then(callback(newRepository));
+	    Promise.all(allPromises).then(callback(newRepository));
 	});
 };
 
@@ -147,34 +152,35 @@ function addClassToMetaRepo (metaRepo, anAppClassInfo) {
 	newMetaClass.setShortName(anAppClassInfo.InternalName);
 };
 
-function buildAssocsForMetaRepo (metaRepo, anAppClassInfo)	{
+function buildAssocsForMetaRepo (metaRepo, anAppClassInfo) : Promise<null>	{
 
-	var dfrd = $.Deferred();
+	var dfrd : Promise<null> = new Promise( (resolve, reject) => {
 
-	anAppClassInfo.assocVals("Associations").done( function(appAssocs) {
+		anAppClassInfo.assocVals("Associations").done(function (appAssocs) {
 
-		var i,
-			appAssoc,
-			metaMasterClass,
-			metaClass = metaRepo.getClassInfo(anAppClassInfo.InternalName),
-			metaMasterClassRef,
-			appAssocName,
-			metaAssoc;
+			var i,
+				appAssoc,
+				metaMasterClass,
+				metaClass = metaRepo.getClassInfo(anAppClassInfo.InternalName),
+				metaMasterClassRef,
+				appAssocName,
+				metaAssoc;
 
-		for (i = 0; i < appAssocs.length; i++) {
+			for (i = 0; i < appAssocs.length; i++) {
 
-			appAssoc = appAssocs[i];
+				appAssoc = appAssocs[i];
 
-			metaMasterClass =  metaRepo.getClassInfo(appAssoc.masterClassReference.Masterclass.InternalName); 
-			metaMasterClassRef = metaMasterClass.getAttr(appAssoc.masterClassReference.InternalName);
-			appAssocName = appAssoc.NameResource;			
-			metaAssoc = new JDY.base.AssociationModel(metaMasterClassRef, metaMasterClass, appAssocName);
-			metaClass.addAssociation(metaAssoc);
-		}
-		dfrd.resolve();
+				metaMasterClass = metaRepo.getClassInfo(appAssoc.masterClassReference.Masterclass.InternalName);
+				metaMasterClassRef = metaMasterClass.getAttr(appAssoc.masterClassReference.InternalName);
+				appAssocName = appAssoc.NameResource;
+				metaAssoc = new JdyAssociationModel(metaMasterClassRef, metaMasterClass, appAssocName);
+				metaClass.addAssociation(metaAssoc);
+			}
+			resolve();
+		});
 	});
-	
-	return dfrd.promise();
+
+	return dfrd;
 };
 
 function getDetailClass(anAssoc)	{
@@ -193,7 +199,7 @@ function buildSubclassesForMetaRepo(metaRepo, anAppClassInfo)	{
 	}
 };
 
-function buildAttrForMetaRepo(metaRepo : JdyRepository , anAppClassInfo)	{
+function buildAttrForMetaRepo(metaRepo : JdyRepository , anAppClassInfo: any): Promise<null>	{
 
     let metaClass : JdyClassInfo | null = metaRepo.getClassInfo(anAppClassInfo.InternalName);
 
@@ -202,90 +208,102 @@ function buildAttrForMetaRepo(metaRepo : JdyRepository , anAppClassInfo)	{
 		metaAttr,
 		refClass;
 
-    var dfrd = $.Deferred();
+    var dfrd : Promise<null> = new Promise( (resolve, reject) => {
 
-	anAppClassInfo.assocVals("Attributes").done( function(appAttributes) {
+		anAppClassInfo.assocVals("Attributes").done(function (appAttributes) {
 
-		var appDomainVals,
-			domainVals;
+			var appDomainVals,
+				domainVals;
 
-	    for (i = 0; i < appAttributes.length; i++) {
+			for (i = 0; i < appAttributes.length; i++) {
 
-			appAttr = appAttributes[i];
+				appAttr = appAttributes[i];
 
-			switch(appAttr.$typeInfo.internalName) {
+				switch (appAttr.$typeInfo.internalName) {
 
-				case 'AppBooleanType':
-						metaAttr = metaClass.addBooleanAttr(appAttr.InternalName);
-					break;
-				case 'AppBlobType':
-						metaAttr = metaClass.addBlobAttr(appAttr.InternalName);
-					break;
-				case 'AppDecimalType':
+					case 'AppBooleanType':
+						metaAttr = (metaClass) ? metaClass.addBooleanAttr(appAttr.InternalName) : null;
+						break;
+					case 'AppBlobType':
+						metaAttr = (metaClass) ? metaClass.addBlobAttr(appAttr.InternalName) : null;
+						break;
+					case 'AppDecimalType':
 						appDomainVals = appAttr.assocVals("DomainValues");
 						domainVals = [];
 						if (appDomainVals) {
 							for (j = 0; j < appDomainVals.length; j++) {
-								domainVals.push({dbValue:appDomainVals[j].dbValue, representation:appDomainVals[j].representation});
+								domainVals.push({
+									dbValue: appDomainVals[j].dbValue,
+									representation: appDomainVals[j].representation
+								});
 							}
 						}
-						metaAttr = metaClass.addDecimalAttr(appAttr.InternalName, appAttr.MinValue , appAttr.MaxValue, appAttr.Scale, domainVals);
-					break;
-				case 'AppFloatType':
-						metaAttr = metaClass.addFloatAttr(appAttr.InternalName);
-					break;
-				case 'AppLongType':
+						metaAttr = (metaClass) ? metaClass.addDecimalAttr(appAttr.InternalName, appAttr.MinValue, appAttr.MaxValue, appAttr.Scale, domainVals) : null;
+						break;
+					case 'AppFloatType':
+						metaAttr = (metaClass) ? metaClass.addFloatAttr(appAttr.InternalName) : null;
+						break;
+					case 'AppLongType':
 						appDomainVals = appAttr.assocVals("DomainValues");
 						domainVals = [];
 						if (appDomainVals) {
 							for (j = 0; j < appDomainVals.length; j++) {
-								domainVals.push({dbValue:appDomainVals[j].dbValue, representation:appDomainVals[j].representation});
+								domainVals.push({
+									dbValue: appDomainVals[j].dbValue,
+									representation: appDomainVals[j].representation
+								});
 							}
 						}
-						metaAttr = metaClass.addLongAttr(appAttr.InternalName, appAttr.MinValue , appAttr.MaxValue, domainVals);
+						metaAttr = (metaClass) ? metaClass.addLongAttr(appAttr.InternalName, appAttr.MinValue, appAttr.MaxValue, domainVals) : null;
 
-					break;
-				case 'AppTextType':
+						break;
+					case 'AppTextType':
 						appDomainVals = appAttr.assocVals("DomainValues");
 						domainVals = [];
 						if (appDomainVals) {
 							for (j = 0; j < appDomainVals.length; j++) {
-								domainVals.push({dbValue:appDomainVals[j].dbValue, representation:appDomainVals[j].representation});
+								domainVals.push({
+									dbValue: appDomainVals[j].dbValue,
+									representation: appDomainVals[j].representation
+								});
 							}
 						}
 
-						metaAttr = metaClass.addTextAttr(appAttr.InternalName, appAttr.length, domainVals);
-					break;
-				case 'AppTimestampType':
-						metaAttr = metaClass.addTimeStampAttr(appAttr.InternalName, appAttr.isDatePartUsed, appAttr.isTimePartUsed);
-					break;
-				case 'AppVarCharType':
-						metaAttr = metaClass.addVarCharAttr(appAttr.InternalName, appAttr.length);
-					break;
-				case 'AppObjectReference':
+						metaAttr = (metaClass) ? metaClass.addTextAttr(appAttr.InternalName, appAttr.length, domainVals) : null;
+						break;
+					case 'AppTimestampType':
+						metaAttr = (metaClass) ? metaClass.addTimeStampAttr(appAttr.InternalName, appAttr.isDatePartUsed, appAttr.isTimePartUsed) : null;
+						break;
+					case 'AppVarCharType':
+						metaAttr = (metaClass) ? metaClass.addVarCharAttr(appAttr.InternalName, appAttr.length) : null;
+						break;
+					case 'AppObjectReference':
 
-					refClass = metaRepo.getClassInfo(appAttr.referencedClass.InternalName);
-					metaAttr = metaClass.addReference(appAttr.InternalName, refClass);
-					metaAttr.setIsDependent(appAttr.isDependent);
-					metaAttr.setIsInAssociation(appAttr.isInAssociation);
-					break;
-				default:
-					throw new JDY.base.ValidationError("Invalid type: " + appAttr.$typeInfo.internalName);
+						refClass = metaRepo.getClassInfo(appAttr.referencedClass.InternalName);
+						if (metaClass) {
+							metaAttr = metaClass.addReference(appAttr.InternalName, refClass);
+							metaAttr.setIsDependent(appAttr.isDependent);
+							metaAttr.setIsInAssociation(appAttr.isInAssociation);
+						}
+						break;
+					default:
+						reject("Invalid type: " + appAttr.$typeInfo.internalName);
+				}
+
+				metaAttr.setIsKey(appAttr.isKey).setNotNull(appAttr.isNotNull).setGenerated(appAttr.isGenerated);
+				metaAttr.setPos(appAttr.pos).setAttrGroup(appAttr.attrGroup);
 			}
 
-			metaAttr.setIsKey(appAttr.isKey).setNotNull(appAttr.isNotNull).setGenerated(appAttr.isGenerated);
-			metaAttr.setPos(appAttr.pos).setAttrGroup(appAttr.attrGroup);
-		}
-		
-		dfrd.resolve();
+			resolve();
+		});
 	});
 
-	return dfrd.promise();
+	return dfrd;
 };
 
 
 
-function createFilterRepository  () {
+function createFilterRepository () : JdyRepository {
 	"use strict";
 	var filterRep = new JdyRepository("FilterRepository");
 
@@ -335,143 +353,167 @@ function createFilterRepository  () {
 
 export class FilterCreator {
 	
-	rep = JDY.meta.createFilterRepository();
-	idCounter=0;
+	rep : JdyRepository = createFilterRepository();
+	idCounter : number=0;
+	curExpr : JdyTypedValueObject | null = null;
 
-};
+	convertMetaFilter2AppFilter (metaQuery) {
 
-JDY.meta.FilterCreator.prototype.convertMetaFilter2AppFilter = function(metaQuery) {
-	
-	var queryObj;
-	queryObj = new JDY.base.TypedValueObject(this.rep.getClassInfo("AppQuery"));
-	queryObj.FilterId = this.idCounter++;
-	queryObj.repoName = metaQuery.resultType.getRepoName();
-	queryObj.className = metaQuery.resultType.getInternalName();
-	if(metaQuery.getFilterExpression()) {
-		queryObj.expr = this.createAppExpr(metaQuery.getFilterExpression());
-	} else {
-		queryObj.expr = null;
-	}
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppQuery");
+		if(classInfo) {
+			let queryObj : JdyTypedValueObject;
+			queryObj = new JdyTypedValueObject(classInfo, null, false);
+			queryObj.setVal('FilterId',this.idCounter++);
+			queryObj.setVal('repoName',  metaQuery.resultType.getRepoName());
+			queryObj.setVal('className', metaQuery.resultType.getInternalName());
+			if(metaQuery.getFilterExpression()) {
+				queryObj.setVal('expr', this.createAppExpr(metaQuery.getFilterExpression()));
+			} else {
+				queryObj.setVal('expr', null);
+			}
+			return queryObj;
+		} else {
+			return null;
+		}
 
-	return queryObj;
-	
-};
+	};
 
-JDY.meta.FilterCreator.prototype.visitOrExpression = function(aOrExpr) {
+	createAppExpr ( aMetaExpr) {
 
-	var orExpr = new JDY.base.TypedValueObject(this.rep.getClassInfo("AppOrExpr")),
-		subExprs = [],
-		subMetaexpr,
-		subAppExpr,
-		i;
+		aMetaExpr.visit(this);
+		var result = this.curExpr;
+		return result;
+	};
 
-	orExpr.ExprId = this.idCounter++;
+	visitOrExpression (aOrExpr) {
 
-	for (i = 0; i < aOrExpr.expressionVect.length; i++) {
-		subMetaexpr = aOrExpr.expressionVect[i];
-		subAppExpr = this.createAppExpr(subMetaexpr);
-		subAppExpr.AppOrExpr = orExpr;
-		subExprs.push(subAppExpr);
-	}
-	orExpr.$assocs.orSubExpr = subExprs;
-	this.curExpr = orExpr;
-};
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppOrExpr");
+		if(classInfo) {
+			var orExpr = new JdyTypedValueObject(classInfo, null, false),
+				subExprs = new JdyObjectListImpl(classInfo.getAssoc('orSubExpr')),
+				i;
 
-JDY.meta.FilterCreator.prototype.createAppExpr =	function ( aMetaExpr) {
-		
-	aMetaExpr.visit(this);
-	var result = this.curExpr;
-	return result;
-};
+			orExpr.setVal('ExprId', this.idCounter++);
 
-JDY.meta.FilterCreator.prototype.visitAndExpression = function(aAndExpr: JdyAndExpression){
+			for (i = 0; i < aOrExpr.expressionVect.length; i++) {
+				let subMetaexpr = aOrExpr.expressionVect[i];
+				let subAppExpr = this.createAppExpr(subMetaexpr);
+				if(subAppExpr) {
+					subAppExpr.setVal('AppOrExpr', orExpr);
+					subExprs.add(subAppExpr);
+				}
+			}
+			orExpr.$assocs['orSubExpr']  = subExprs;
+			this.curExpr = orExpr;
+		}
+    };
 
-	var andExpr = new JDY.base.TypedValueObject(this.rep.getClassInfo("AppAndExpr")),
-		subExprs = [],
-		i;
+    visitAndExpression (aAndExpr: JdyAndExpression){
 
-	andExpr.ExprId = this.idCounter++;
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppAndExpr");
+		if(classInfo) {
+			var andExpr = new JdyTypedValueObject(classInfo, null, false),
+				subExprs = new JdyObjectListImpl(classInfo.getAssoc('andSubExpr')),
+				i;
 
-	for (i = 0; i < aAndExpr.expressionVect.length; i++) {
-		let subMetaexpr : ObjectFilterExpression = aAndExpr.expressionVect[i];
-		let subAppExpr = this.createAppExpr(subMetaexpr);
-		subAppExpr.AppAndExpr = andExpr;
-		subExprs.push(subAppExpr);
-	}
+			andExpr.setVal('ExprId', this.idCounter++);
 
-	andExpr.$assocs.andSubExpr = subExprs;
-	this.curExpr = andExpr;
-};
+			for (i = 0; i < aAndExpr.expressionVect.length; i++) {
+				let subMetaexpr: ObjectFilterExpression = aAndExpr.expressionVect[i];
+				let subAppExpr = this.createAppExpr(subMetaexpr);
+				if(subAppExpr) {
+					subAppExpr.setVal('AppAndExpr', andExpr);
+					subExprs.add(subAppExpr);
+				}
+			}
+
+			andExpr.$assocs['andSubExpr'] = subExprs;
+			this.curExpr = andExpr;
+		}
+    };
 
 
-JDY.meta.FilterCreator.prototype.visitOperatorExpression = function( aOpExpr) {
+    visitOperatorExpression ( aOpExpr) {
 
-	var appOpExpr = new JDY.base.TypedValueObject(this.rep.getClassInfo("AppOperatorExpr")); 
-	appOpExpr.ExprId = this.idCounter++;
-	appOpExpr.attrName = aOpExpr.attributeInfo.getInternalName();
-	appOpExpr.operator = this.createAppOperator(aOpExpr.myOperator);
-	this.setAppCompareValue(appOpExpr, aOpExpr);
-	this.curExpr = appOpExpr;
-};
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppOperatorExpr");
+		if(classInfo) {
+			var appOpExpr = new JdyTypedValueObject(classInfo, null, false);
+			appOpExpr.setVal('ExprId', this.idCounter++);
+			appOpExpr.setVal('attrName', aOpExpr.attributeInfo.getInternalName());
+			appOpExpr.setVal('operator', this.createAppOperator(aOpExpr.myOperator));
+			this.setAppCompareValue(appOpExpr, aOpExpr);
+			this.curExpr = appOpExpr;
+		}
+    };
 
-JDY.meta.FilterCreator.prototype.createAppOperator = function(aMetaOper) {
+    createAppOperator (aMetaOper) {
 
-	return aMetaOper.visitOperatorHandler(this );
-};
+        return aMetaOper.visitOperatorHandler(this );
+    };
 
-JDY.meta.FilterCreator.prototype.visitLessOperator = function(aOperator) {
+    visitLessOperator (aOperator) {
 
-	var appOp =  new JDY.base.TypedValueObject(this.rep.getClassInfo("AppOperatorLess"));
-	appOp.isAlsoEqual = aOperator.isAlsoEqual;
-	return appOp;
-};
-		
-JDY.meta.FilterCreator.prototype.visitGreatorOperator = function( aOperator) {
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppOperatorLess");
+		if(classInfo) {
+			var appOp = new JdyTypedValueObject(classInfo, null, false);
+			appOp.setVal('isAlsoEqual',  aOperator.isAlsoEqual);
+			return appOp;
+		}
+    };
 
-	var appOp =  new JDY.base.TypedValueObject(this.rep.getClassInfo("AppOperatorGreater"));
-	appOp.isAlsoEqual = aOperator.isAlsoEqual;
-	return appOp;
-};
-		
-JDY.meta.FilterCreator.prototype.visitEqualOperator = function( aOperator) {
+    visitGreatorOperator ( aOperator) {
 
-	var appOp =  new JDY.base.TypedValueObject(this.rep.getClassInfo("AppOperatorEqual"));
-	appOp.isNotEqual = aOperator.isNotEqual;
-	return appOp;
-};
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppOperatorGreater");
+		if(classInfo) {
+			var appOp = new JdyTypedValueObject(classInfo, null, false);
+			appOp.setVal('isAlsoEqual',  aOperator.isAlsoEqual);
+			return appOp;
+		}
+    };
 
-JDY.meta.FilterCreator.prototype.setAppCompareValue = function( appOpExpr,	aOpExpr) {
+    visitEqualOperator ( aOperator) {
 
-	switch(aOpExpr.attributeInfo.type.$type) {
+		let classInfo: JdyClassInfo | null = this.rep.getClassInfo("AppOperatorEqual");
+		if(classInfo) {
+			var appOp = new JdyTypedValueObject(classInfo, null, false);
+			appOp.setVal('isNotEqual', aOperator.isNotEqual);
+			return appOp;
+		}
+    };
 
-		case 'BooleanType':
-				appOpExpr.booleanVal = aOpExpr.compareValue;
-			break;
-		case 'BlobType':
-				throw new JDY.base.FilterCreationException("AppBlobType not supported");
-			break;
-		case 'DecimalType':
-				appOpExpr.decimalVal = aOpExpr.compareValue;
-			break;
-		case 'FloatType':
-				appOpExpr.floatVal = aOpExpr.compareValue;
-			break;
-		case 'LongType':
-				appOpExpr.longVal = aOpExpr.compareValue;
-			break;
-		case 'TextType':
-				appOpExpr.textVal = aOpExpr.compareValue;
-			break;
-		case 'TimestampType':
-				appOpExpr.timestampVal = aOpExpr.compareValue;
-			break;
-		case 'VarCharType':
-				throw new JDY.base.FilterCreationException("AppVarCharType not supported");
-			break;
-		default:
-			throw new JDY.base.FilterCreationException("Invalid type: " + appAttribute.$typeInfo.internalName);
-	}
+    setAppCompareValue ( appOpExpr,	aOpExpr) {
 
+        switch(aOpExpr.attributeInfo.type.$type) {
+
+            case 'BooleanType':
+                appOpExpr.booleanVal = aOpExpr.compareValue;
+                break;
+            case 'BlobType':
+                throw new JdyFilterCreationException("AppBlobType not supported");
+                break;
+            case 'DecimalType':
+                appOpExpr.decimalVal = aOpExpr.compareValue;
+                break;
+            case 'FloatType':
+                appOpExpr.floatVal = aOpExpr.compareValue;
+                break;
+            case 'LongType':
+                appOpExpr.longVal = aOpExpr.compareValue;
+                break;
+            case 'TextType':
+                appOpExpr.textVal = aOpExpr.compareValue;
+                break;
+            case 'TimestampType':
+                appOpExpr.timestampVal = aOpExpr.compareValue;
+                break;
+            case 'VarCharType':
+                throw new JdyFilterCreationException("AppVarCharType not supported");
+                break;
+            default:
+                throw new JdyFilterCreationException("Invalid type: " + aOpExpr.attributeInfo.internalName);
+        }
+
+    };
 };
 
 

@@ -5,27 +5,23 @@
 
 /*jslint plusplus: true */
 
-// initialize global jdy namespace
-var JDY = JDY || {};
+const CLASS_INTERNAL_NAME_TAG = "@classInternalName";
+const NAMESPACE_TAG = "@namespace";
+const PERSISTENCE_TAG = "@persistence";
 
-JDY.json = {};
+const COMPACT_TYPE_TAG = "@t";
+const COMPACT_PERSISTENCE_TAG = "@p";
 
-JDY.json.CLASS_INTERNAL_NAME_TAG = "@classInternalName";
-JDY.json.NAMESPACE_TAG = "@namespace";
-JDY.json.PERSISTENCE_TAG = "@persistence";
+ enum Operation {
 
-JDY.json.COMPACT_TYPE_TAG = "@t";
-JDY.json.COMPACT_PERSISTENCE_TAG = "@p";
+ 	PROXY = "PROXY",
+ 	INSERT = "INSERT",
+ 	UPDATE = "UPDATE",
+ 	DELETE = "DELETE",
+	READ = "READ"
+ }
 
-JDY.json.Operation = {};
-JDY.json.Operation.PROXY = "PROXY";
-JDY.json.Operation.INSERT = "INSERT";
-JDY.json.Operation.UPDATE = "UPDATE";
-JDY.json.Operation.DELETE = "DELETE";
-JDY.json.Operation.READ = "READ";
-
-
-JDY.json.JsonFileReader = function () {
+class JsonFileReader {
 	"use strict";
 };
 

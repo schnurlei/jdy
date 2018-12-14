@@ -1,3 +1,5 @@
+import construct = Reflect.construct;
+
 export class JdyValidationError extends Error {
     constructor (m: string) {
         super(m);
@@ -82,16 +84,16 @@ export class JdyClassInfo {
         this.isAbstract = false;
     }
 
-    forEachAttr (aFunc) {
-        this.getAllAttributeList().forEach(aFunc);
+    forEachAttr (callbackfn: (value: JdyAttributeInfo, index: number, array: JdyAttributeInfo[]) => void, thisArg?: any) {
+        this.getAllAttributeList().forEach(callbackfn);
     };
 
-    forEachAssoc (aFunc) {
-        this.getAllAssociationList().forEach(aFunc);
+    forEachAssoc (callbackfn: (value: JdyAssociationModel, index: number, array:JdyAssociationModel[]) => void, thisArg?: any) {
+        this.getAllAssociationList().forEach(callbackfn);
     };
 
-    getAllAttributeList () {
-        let tmpAttrList = this.attrList;
+    getAllAttributeList () :  JdyAttributeInfo[] {
+        let tmpAttrList :  JdyAttributeInfo[] = this.attrList;
 
         if (this.superclass) {
             tmpAttrList = tmpAttrList.concat(this.superclass.getAllAttributeList());
@@ -100,7 +102,7 @@ export class JdyClassInfo {
         return tmpAttrList;
     };
 
-    getAllAssociationList () {
+    getAllAssociationList () : JdyAssociationModel[] {
         let tmpAssocList: JdyAssociationModel[] = this.assocList;
 
         if (this.superclass) {
@@ -792,6 +794,16 @@ export class JdyFilterCreationException extends Error {
     }
 }
 
+export class JdyPersistentException extends Error {
+
+    constructor (m: string) {
+        super(m);
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, JdyValidationError.prototype);
+    }
+}
+
 export class JdyQueryCreator {
 
     protected resultInfo: JdyClassInfo;
@@ -914,3 +926,136 @@ export class JdyOrQueryCreator extends JdyQueryCreator {
         return this.parentCreator;
     };
 }
+
+export interface JdyObjectList {
+
+    done(anCallback);
+    add(anValueObject);
+}
+
+export class JdyObjectListImpl implements JdyObjectList {
+
+    assocObj: JdyAssociationModel;
+    objects :  Array<any> = [];
+
+    constructor(anAssocInfo: JdyAssociationModel) {
+
+        this.assocObj = anAssocInfo;
+    }
+
+    done(anCallback) {
+        anCallback(this.objects);
+    }
+
+    add(anValueObject) {
+        this.objects.push(anValueObject);
+    }
+
+};
+
+
+
+export class JdyProxyObjectList implements JdyObjectList {
+
+    objects : Array<any> = [];
+    assocObj : JdyAssociationModel;
+    proxyResolver;
+    masterObject : JdyTypedValueObject;
+    promise : null | any;
+
+    constructor(anAssocInfo: JdyAssociationModel, aProxyResolver: any, aMasterObj: JdyTypedValueObject) {
+
+        this.assocObj = anAssocInfo;
+        this.masterObject = aMasterObj;
+        this.proxyResolver = aProxyResolver;
+    }
+
+    done(anCallback) {
+        let dfrd,
+            that = this;
+
+        if(!this.promise) {
+
+            this.promise =  new Promise((resolve, reject) => {
+                resolve(123);
+            });
+
+            if(this.proxyResolver) {
+
+                this.proxyResolver.resolveAssoc(that.assocObj,that.masterObject, aAssocList =>{
+                    this.objects = aAssocList;
+                    this.promise.resolve(aAssocList);
+                });
+            } else {
+                this.promise .reject("Proxy Error: no proxy resolver " + this.assocObj.getAssocName());
+            }
+        }
+
+        this.promise.done(anCallback);
+    }
+
+    add(anValueObject) {
+        this.objects.push(anValueObject);
+    }
+
+};
+
+
+export class JdyTypedValueObject {
+
+    $typeInfo;
+    public $assocs : {[name: string]: JdyObjectList} = {};
+    $proxyResolver;
+    $proxy : any = null;
+
+    constructor (aClassInfo: JdyClassInfo, aProxyResolver: any|null, asProxy: boolean) {
+
+        this.$proxyResolver = aProxyResolver;
+
+        if(asProxy) {
+            this.$proxy = {};
+        }
+
+        aClassInfo.forEachAttr(
+
+            curAttrInfo => this[curAttrInfo.getInternalName()] = null
+        );
+
+        aClassInfo.forEachAssoc(
+
+            curAssocInfo => this.$assocs[curAssocInfo.getAssocName()] = new JdyProxyObjectList(curAssocInfo, aProxyResolver, this)
+        );
+    }
+
+    setAssocVals (anAssoc, anObjectList : JdyProxyObjectList) {
+
+        let assocName = (typeof anAssoc === "string") ? anAssoc : anAssoc.getAssocName();
+        this.$assocs[assocName] = anObjectList;
+    };
+
+    assocVals (anAssoc) : JdyObjectList {
+
+        let assocName = (typeof anAssoc === "string") ? anAssoc : anAssoc.getAssocName(),
+        assocObj = this.$assocs[assocName];
+        return assocObj;
+    };
+
+    val (anAttr) {
+
+        return this[(typeof anAttr === "string") ? anAttr : anAttr.getInternalName()];
+    };
+
+    setVal (anAttr, aValue) {
+
+        this[anAttr.getInternalName()] = aValue;
+    };
+
+    setProxyVal (anAttr, aValue) {
+
+        this.$proxy[anAttr.getInternalName()] = aValue;
+    };
+
+};
+
+
+
