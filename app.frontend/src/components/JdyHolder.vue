@@ -102,6 +102,7 @@ const undefinedData = [
 
 export default {
     data () {
+
         return {
             columns: undefinedColumns,
             holderItems: undefinedData,
@@ -113,19 +114,26 @@ export default {
     watch: {
         // whenever question changes, this function will run
         classinfo: function (newClassInfo) {
+
             if (newClassInfo) {
+
                 this.columns = convertToColumns(newClassInfo);
                 var myRequest = new Request('json/' + newClassInfo.internalName + '.json');
                 fetch(myRequest)
                     .then(response => response.json())
-                    .then(data => { this.holderItems = data; return null; })
+                    .then(data => {
+
+                        this.holderItems = data; return null;
+                    })
                     .catch(error => {
+
                         this.columns = undefinedColumns;
                         this.holderItems = undefinedData;
                         this.errorMessage = error.message;
                         this.showMessage = true;
                     });
             } else {
+
                 this.columns = undefinedColumns;
                 this.holderItems = undefinedData;
             }

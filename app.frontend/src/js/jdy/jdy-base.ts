@@ -1,7 +1,7 @@
 import construct = Reflect.construct;
 
 export class JdyValidationError extends Error {
-    constructor (m: string) {
+    public constructor (m: string) {
         super(m);
 
         // Set the prototype explicitly.
@@ -11,17 +11,20 @@ export class JdyValidationError extends Error {
 
 export class JdyRepository {
 
-    repoName: string;
+    private repoName: string;
     private classes: { [name: string]: JdyClassInfo };
 
-    constructor (repoName: string) {
+    public constructor (repoName: string) {
+
         this.repoName = repoName;
         this.classes = {};
     }
 
-    addClassInfo (aInternalName, aSuperclass: JdyClassInfo | null) : JdyClassInfo {
+    public addClassInfo (aInternalName, aSuperclass: JdyClassInfo | null): JdyClassInfo {
+
         let newClass: JdyClassInfo;
         if (this.classes[aInternalName]) {
+
             throw new JdyValidationError('Class already exists with name: ' + aInternalName);
         }
 
@@ -30,13 +33,14 @@ export class JdyRepository {
         return newClass;
     };
 
-    getClassInfo (aInternalName): JdyClassInfo | null {
+    public getClassInfo (aInternalName): JdyClassInfo | null {
+
         return this.classes[aInternalName];
     };
 
-    addAssociation (anAssocName: string, aMasterClass: JdyClassInfo, aDetailClass: JdyClassInfo,
-        aDetailInternalName: string, aDetailExternalName: string,
-        keyInDetail: boolean, notNullInDetail: boolean, aIsDependent: boolean) {
+    public addAssociation (anAssocName: string, aMasterClass: JdyClassInfo, aDetailClass: JdyClassInfo
+        , aDetailInternalName: string, aDetailExternalName: string
+        , keyInDetail: boolean, notNullInDetail: boolean, aIsDependent: boolean) {
         let newAssoc,
             detailToMasterAssoc;
 
@@ -52,20 +56,20 @@ export class JdyRepository {
 
 export class JdyClassInfo {
 
-    nameSpace: string | null;
-    repoName: string;
-    internalName: string;
-    externalName: string;
-    shortName: string;
-    isAbstract: boolean;
-    superclass: JdyClassInfo | null;
-    attributes: { [name: string]: JdyAttributeInfo };
-    attrList: JdyAttributeInfo[];
-    associations: { [name: string]: JdyAssociationModel };
-    assocList: JdyAssociationModel[];
-    subclasses: JdyClassInfo[];
+    private nameSpace: string | null;
+    private repoName: string;
+    private internalName: string;
+    private externalName: string;
+    private shortName: string;
+    private isAbstract: boolean;
+    private superclass: JdyClassInfo | null;
+    private attributes: { [name: string]: JdyAttributeInfo };
+    private attrList: JdyAttributeInfo[];
+    private associations: { [name: string]: JdyAssociationModel };
+    private assocList: JdyAssociationModel[];
+    private subclasses: JdyClassInfo[];
 
-    constructor (repoName: string, internalName: string, superclass: JdyClassInfo | null) {
+    public constructor (repoName: string, internalName: string, superclass: JdyClassInfo | null) {
         this.nameSpace = null;
         this.repoName = repoName;
         this.internalName = internalName;
@@ -84,16 +88,16 @@ export class JdyClassInfo {
         this.isAbstract = false;
     }
 
-    forEachAttr (callbackfn: (value: JdyAttributeInfo, index: number, array: JdyAttributeInfo[]) => void, thisArg?: any) {
+    public forEachAttr (callbackfn: (value: JdyAttributeInfo, index: number, array: JdyAttributeInfo[]) => void, thisArg?: any) {
         this.getAllAttributeList().forEach(callbackfn);
     };
 
-    forEachAssoc (callbackfn: (value: JdyAssociationModel, index: number, array:JdyAssociationModel[]) => void, thisArg?: any) {
+    public forEachAssoc (callbackfn: (value: JdyAssociationModel, index: number, array: JdyAssociationModel[]) => void, thisArg?: any) {
         this.getAllAssociationList().forEach(callbackfn);
     };
 
-    getAllAttributeList () :  JdyAttributeInfo[] {
-        let tmpAttrList :  JdyAttributeInfo[] = this.attrList;
+    public getAllAttributeList (): JdyAttributeInfo[] {
+        let tmpAttrList: JdyAttributeInfo[] = this.attrList;
 
         if (this.superclass) {
             tmpAttrList = tmpAttrList.concat(this.superclass.getAllAttributeList());
@@ -102,7 +106,7 @@ export class JdyClassInfo {
         return tmpAttrList;
     };
 
-    getAllAssociationList () : JdyAssociationModel[] {
+    public getAllAssociationList (): JdyAssociationModel[] {
         let tmpAssocList: JdyAssociationModel[] = this.assocList;
 
         if (this.superclass) {
@@ -112,7 +116,7 @@ export class JdyClassInfo {
         return tmpAssocList;
     };
 
-    addAssociation (aAssoc: JdyAssociationModel) {
+    public addAssociation (aAssoc: JdyAssociationModel) {
         if (this.associations[aAssoc.getAssocName()]) {
             throw new JdyValidationError('Associtaion already exists with name: ' + aAssoc.getAssocName());
         }
@@ -122,14 +126,14 @@ export class JdyClassInfo {
         return aAssoc;
     };
 
-    addReference (anInternalName, aReferencedClass) {
+    public addReference (anInternalName, aReferencedClass) {
         let newAttr;
         newAttr = new JdyObjectReferenceInfo(anInternalName, anInternalName, false, false, aReferencedClass);
         this.addReferenceToAttrList(newAttr);
         return newAttr;
     };
 
-    addReferenceToAttrList (aObjRef) {
+    public addReferenceToAttrList (aObjRef) {
         if (this.attributes[aObjRef.getInternalName()]) {
             throw new JdyValidationError('Attribute already exists with name: ' + aObjRef.getInternalName());
         }
@@ -138,10 +142,10 @@ export class JdyClassInfo {
         this.attrList.push(aObjRef);
     };
 
-    addPrimitiveAttr (aInternalName: string, aPrimitiveType) {
+    public addPrimitiveAttr (aInternalName: string, aPrimitiveType) {
         let newAttr;
         if (this.attributes[aInternalName]) {
-            throw new JdyValidationError('Attribute already exists with name: ' + aInternalName);
+            throw new Error('Attribute already exists with name: ' + aInternalName);
         }
 
         newAttr = new JdyPrimitiveAttributeInfo(aInternalName, aInternalName, false, false, aPrimitiveType);
@@ -150,85 +154,85 @@ export class JdyClassInfo {
         return newAttr;
     };
 
-    addTextAttr (aInternalName, aLength, aDomainValueList? :null | string[]) {
+    public addTextAttr (aInternalName, aLength, aDomainValueList?: null | string[]) {
         return this.addPrimitiveAttr(aInternalName, new JdyTextType(aLength, null, aDomainValueList));
     };
 
-    addEmailAttr (aInternalName, aLength, aDomainValueList) {
+    public addEmailAttr (aInternalName, aLength, aDomainValueList) {
         return this.addPrimitiveAttr(aInternalName, new JdyTextType(aLength, JdyTextTypeHint.EMAIL, aDomainValueList));
     };
 
-    addUrlAttr (aInternalName, aLength, aDomainValueList) {
+    public addUrlAttr (aInternalName, aLength, aDomainValueList) {
         return this.addPrimitiveAttr(aInternalName, new JdyTextType(aLength, JdyTextTypeHint.URL, aDomainValueList));
     };
 
-    addTelephoneAttr (aInternalName, aLength, aDomainValueList) {
+    public addTelephoneAttr (aInternalName, aLength, aDomainValueList) {
         return this.addPrimitiveAttr(aInternalName, new JdyTextType(aLength, JdyTextTypeHint.TELEPHONE, aDomainValueList));
     };
 
-    addBooleanAttr (aInternalName) {
+    public addBooleanAttr (aInternalName) {
         return this.addPrimitiveAttr(aInternalName, new JdyBooleanType());
     };
 
-    addVarCharAttr (aInternalName, aLength) {
+    public addVarCharAttr (aInternalName, aLength) {
         return this.addPrimitiveAttr(aInternalName, new JdyVarCharType(aLength, '', false));
     };
 
-    addDecimalAttr (aInternalName, aMinValue, aMaxValue, aScale, aDomainValueList = null) {
+    public addDecimalAttr (aInternalName, aMinValue, aMaxValue, aScale, aDomainValueList = null) {
         return this.addPrimitiveAttr(aInternalName, new JdyDecimalType(aMinValue, aMaxValue, aScale, aDomainValueList));
     };
 
-    addLongAttr (aInternalName, aMinValue, aMaxValue, aDomainValueList = null) {
+    public addLongAttr (aInternalName, aMinValue, aMaxValue, aDomainValueList = null) {
         return this.addPrimitiveAttr(aInternalName, new JdyLongType(aMinValue, aMaxValue, aDomainValueList));
     };
 
-    addTimeStampAttr (aInternalName, isDatePartUsed, isTimePartUsed) {
+    public addTimeStampAttr (aInternalName, isDatePartUsed, isTimePartUsed) {
         return this.addPrimitiveAttr(aInternalName, new JdyTimeStampType(isDatePartUsed, isTimePartUsed));
     };
 
-    addFloatAttr (aInternalName) {
+    public addFloatAttr (aInternalName) {
         return this.addPrimitiveAttr(aInternalName, new JdyFloatType());
     };
 
-    addBlobAttr (aInternalName) {
+    public addBlobAttr (aInternalName) {
         return this.addPrimitiveAttr(aInternalName, new JdyBlobType(''));
     };
 
-    getShortName () {
+    public getShortName () {
         return this.shortName;
     };
 
-    setShortName (aShortName) {
+    public setShortName (aShortName) {
         this.shortName = aShortName;
         return this;
     };
 
-    setAbstract (newValue) {
+    public setAbstract (newValue) {
         this.isAbstract = newValue;
         return this;
     };
 
-    getInternalName () {
+    public getInternalName () {
         return this.internalName;
     };
 
-    getAssoc (aAssocName) {
+    public getAssoc (aAssocName) {
         return this.associations[aAssocName];
     };
 
-    getAttr (aInternalName): JdyAttributeInfo {
+    public getAttr (aInternalName): JdyAttributeInfo {
         return this.attributes[aInternalName];
     };
 
-    getNameSpace () {
+    public getNameSpace () {
         return this.nameSpace;
     };
 
-    getRepoName () {
+    public getRepoName () {
         return this.repoName;
     };
 
-    getAllSubclasses () {
+    public getAllSubclasses () {
         return this.subclasses;
     }
 }
@@ -239,21 +243,21 @@ export class JdyAssociationModel {
     private assocName: string;
     private masterClassReference: JdyObjectReferenceInfo;
 
-    constructor (aMasterClassRef: JdyObjectReferenceInfo, aDetailClass: JdyClassInfo, anAssocName: string) {
+    public constructor (aMasterClassRef: JdyObjectReferenceInfo, aDetailClass: JdyClassInfo, anAssocName: string) {
         this.detailClass = aDetailClass;
         this.masterClassReference = aMasterClassRef;
         this.assocName = anAssocName;
     }
 
-    getAssocName () {
+    public getAssocName () {
         return this.assocName;
     };
 
-    getDetailClass () {
+    public getDetailClass () {
         return this.detailClass;
     };
 
-    getMasterClassReference () {
+    public getMasterClassReference () {
         return this.masterClassReference;
     };
 
@@ -261,68 +265,72 @@ export class JdyAssociationModel {
 
 export class JdyAttributeInfo {
 
-    internalName: string;
-    externalName: string;
-    key: boolean;
-    isNotNull: boolean;
-    isGenerated: Boolean;
-    attrGroup: string | null;
-    pos: null;
-    primitive: boolean;
+    private internalName: string;
+    private externalName: string;
+    private key: boolean;
+    private isNotNull: boolean;
+    private generated: boolean;
+    private attrGroup: string | null;
+    private pos: null;
+    protected primitive: boolean;
 
-    constructor (aInternalName: string, aExternalName: string, isKey: boolean, isNotNull: boolean) {
+    public constructor (aInternalName: string, aExternalName: string, isKey: boolean, isNotNull: boolean) {
         this.internalName = aInternalName;
         this.externalName = aExternalName;
         this.key = isKey;
         this.isNotNull = isNotNull;
-        this.isGenerated = false;
+        this.generated = false;
         this.attrGroup = null;
         this.pos = null;
         this.primitive = false;
     }
 
-    getInternalName () {
+    public getInternalName () {
         return this.internalName;
     };
 
-    isPrimitive () {
+    public isPrimitive () {
         return (this.primitive) ? this.primitive : false;
     };
 
-    isKey () {
+    public isKey () {
         return (this.key) ? this.key : false;
     };
 
-    setIsKey (isKey) {
+    public isGenerated () {
+        return (this.isGenerated) ? this.isGenerated : false;
+    };
+
+    public setIsKey (isKey) {
         this.key = isKey;
         return this;
     };
 
-    getNotNull () {
+    public getNotNull () {
         return (this.isNotNull) ? this.isNotNull : false;
     };
 
-    setNotNull (isNotNull) {
+    public setNotNull (isNotNull) {
         this.isNotNull = isNotNull;
         return this;
     };
 
-    setGenerated (isGenerated) {
+    public setGenerated (isGenerated) {
         this.isGenerated = isGenerated;
         return this;
     };
 
-    setExternalName (aExternalName) {
+    public setExternalName (aExternalName) {
         this.externalName = aExternalName;
         return this;
     };
 
-    setAttrGroup (anAttrGroup) {
+    public setAttrGroup (anAttrGroup) {
         this.attrGroup = anAttrGroup;
         return this;
     };
 
-    setPos (aPos) {
+    public setPos (aPos) {
         this.pos = aPos;
         return this;
     };
@@ -333,7 +341,7 @@ export class JdyObjectReferenceInfo extends JdyAttributeInfo {
     private inAssociation: boolean;
     private dependent: boolean;
 
-    constructor (aInternalName: string, aExternalName: string, isKeyFlag: boolean, isNotNullFlag: boolean, aReferencedClass: JdyClassInfo) {
+    public constructor (aInternalName: string, aExternalName: string, isKeyFlag: boolean, isNotNullFlag: boolean, aReferencedClass: JdyClassInfo) {
         super(aInternalName, aExternalName, isKeyFlag, isNotNullFlag);
         this.referencedClass = aReferencedClass;
         this.inAssociation = false;
@@ -341,16 +349,16 @@ export class JdyObjectReferenceInfo extends JdyAttributeInfo {
         this.primitive = false;
     };
 
-    getReferencedClass () {
+    public getReferencedClass () {
         return this.referencedClass;
     };
 
-    setIsDependent (isDependent) {
+    public setIsDependent (isDependent) {
         this.dependent = isDependent;
         return this;
     };
 
-    setIsInAssociation (inAssociation) {
+    public setIsInAssociation (inAssociation) {
         this.inAssociation = inAssociation;
         return this;
     };
@@ -360,18 +368,18 @@ export class JdyPrimitiveAttributeInfo extends JdyAttributeInfo {
 
     private type: JdyPrimitiveType;
 
-    constructor (aInternalName: string, aExternalName: string, isKey: boolean, isNotNull: boolean, aType: JdyPrimitiveType) {
+    public constructor (aInternalName: string, aExternalName: string, isKey: boolean, isNotNull: boolean, aType: JdyPrimitiveType) {
         super(aInternalName, aExternalName, isKey, isNotNull);
         this.type = aType;
         this.primitive = true;
     }
 
-    getType () : JdyPrimitiveType {
+    public getType (): JdyPrimitiveType {
         return this.type;
     };
 }
 
-enum JdyDataType {
+export enum JdyDataType {
 
     JDY_BOOLEAN = 'BOOLEAN',
     JDY_DECIMAL = 'DECIMAL',
@@ -385,63 +393,70 @@ enum JdyDataType {
 
 export interface JdyPrimitiveTypeVisitor {
 
-    handleBoolean (aType: JdyBooleanType): boolean|null|void,
-    handleDecimal (aType: JdyDecimalType): number|null|void,
-    handleTimeStamp (aType: JdyTimeStampType): Date|null|void,
-    handleFloat (aType: JdyFloatType): number|null|void,
-    handleLong (aType: JdyLongType): number|null|void,
-    handleText (aType: JdyTextType): string|null|void,
-    handleVarChar (aType: JdyVarCharType): string|null|void,
-    handleBlob (aType: JdyBlobType): object|null|void
+    handleBoolean (aType: JdyBooleanType): boolean | null | void;
+
+    handleDecimal (aType: JdyDecimalType): number | null | void;
+
+    handleTimeStamp (aType: JdyTimeStampType): Date | null | void;
+
+    handleFloat (aType: JdyFloatType): number | null | void;
+
+    handleLong (aType: JdyLongType): number | null | void;
+
+    handleText (aType: JdyTextType): string | null | void;
+
+    handleVarChar (aType: JdyVarCharType): string | null | void;
+
+    handleBlob (aType: JdyBlobType): object | null | void;
 }
 
 export abstract class JdyPrimitiveType {
 
-    $type: JdyDataType;
+    private $type: JdyDataType;
 
-    constructor ($type: JdyDataType) {
+    public constructor ($type: JdyDataType) {
         this.$type = $type;
     }
 
     abstract handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor);
 
-    getType () {
+    public getType () {
         return this.$type;
     }
 }
 
 export class JdyBlobType extends JdyPrimitiveType {
 
-    typeHint: string;
+    private typeHint: string;
 
-    constructor (typeHint: string) {
+    public constructor (typeHint: string) {
         super(JdyDataType.JDY_BLOB);
         this.typeHint = typeHint;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleBlob(this);
     };
 }
 
 export class JdyFloatType extends JdyPrimitiveType {
 
-    constructor () {
+    public constructor () {
         super(JdyDataType.JDY_FLOAT);
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleFloat(this);
     };
 }
 
 export class JdyBooleanType extends JdyPrimitiveType {
 
-    constructor () {
+    public constructor () {
         super(JdyDataType.JDY_BOOLEAN);
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleBoolean(this);
     };
 }
@@ -452,22 +467,22 @@ export class JdyLongType extends JdyPrimitiveType {
     private maxValue: number;
     private domainValues: any;
 
-    constructor (aMinValue: number, aMaxValue: number, aDomainValueList) {
+    public constructor (aMinValue: number, aMaxValue: number, aDomainValueList) {
         super(JdyDataType.JDY_LONG);
         this.minValue = aMinValue;
         this.maxValue = aMaxValue;
         this.domainValues = aDomainValueList;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleLong(this);
     };
 
-    getMinValue () {
+    public getMinValue () {
         return this.minValue;
     }
 
-    getMaxValue () {
+    public getMaxValue () {
         return this.maxValue;
     }
 }
@@ -479,7 +494,7 @@ export class JdyDecimalType extends JdyPrimitiveType {
     private scale: number;
     private domainValues: any;
 
-    constructor (aMinValue: number, aMaxValue: number, aScale: number, aDomainValueList) {
+    public constructor (aMinValue: number, aMaxValue: number, aScale: number, aDomainValueList) {
         super(JdyDataType.JDY_DECIMAL);
         this.minValue = aMinValue;
         this.maxValue = aMaxValue;
@@ -487,19 +502,19 @@ export class JdyDecimalType extends JdyPrimitiveType {
         this.domainValues = aDomainValueList;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleDecimal(this);
     };
 
-    getMinValue () {
+    public getMinValue () {
         return this.minValue;
     }
 
-    getMaxValue () {
+    public getMaxValue () {
         return this.maxValue;
     }
 
-    getScale () {
+    public getScale () {
         return this.scale;
     }
 }
@@ -509,22 +524,22 @@ export class JdyTextType extends JdyPrimitiveType {
     private typeHint: JdyTextTypeHint | null;
     private domainValues: string[] | null | undefined;
 
-    constructor (aLength: number, aTypeHint: JdyTextTypeHint | null, aDomainValueList?: string[] | null) {
+    public constructor (aLength: number, aTypeHint: JdyTextTypeHint | null, aDomainValueList?: string[] | null) {
         super(JdyDataType.JDY_TEXT);
         this.length = aLength;
         this.typeHint = aTypeHint;
         this.domainValues = aDomainValueList;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleText(this);
     };
 
-    getLength (): number {
+    public getLength (): number {
         return this.length;
     }
 
-    getTypeHint (): JdyTextTypeHint | null {
+    public getTypeHint (): JdyTextTypeHint | null {
         return this.typeHint;
     }
 }
@@ -541,13 +556,13 @@ export class JdyTimeStampType extends JdyPrimitiveType {
     private datePartUsed: boolean;
     private timePartUsed: boolean;
 
-    constructor (isDatePartUsed: boolean, isTimePartUsed: boolean) {
+    public constructor (isDatePartUsed: boolean, isTimePartUsed: boolean) {
         super(JdyDataType.JDY_TIMESTAMP);
         this.datePartUsed = isDatePartUsed;
         this.timePartUsed = isTimePartUsed;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleTimeStamp(this);
     };
 }
@@ -558,14 +573,14 @@ export class JdyVarCharType extends JdyPrimitiveType {
     private mimeType: null;
     private clob: boolean;
 
-    constructor (aLength: number, mimeType: string, isClobFlag: boolean) {
+    public constructor (aLength: number, mimeType: string, isClobFlag: boolean) {
         super(JdyDataType.JDY_VARCHAR);
         this.length = aLength;
         this.mimeType = null;
         this.clob = isClobFlag;
     }
 
-    handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
+    public handlePrimitiveKey (aHandler: JdyPrimitiveTypeVisitor) {
         return aHandler.handleVarChar(this);
     };
 }
@@ -575,40 +590,41 @@ export class JdyClassInfoQuery {
     private resultInfo: JdyClassInfo;
     private filterExpression: ObjectFilterExpression | null;
 
-    constructor (aTypeInfo: JdyClassInfo, aFilterExpr: ObjectFilterExpression | null) {
+    public constructor (aTypeInfo: JdyClassInfo, aFilterExpr: ObjectFilterExpression | null) {
         this.resultInfo = aTypeInfo;
         this.filterExpression = aFilterExpr;
     }
 
-    getResultInfo () {
+    public getResultInfo () {
         return this.resultInfo;
     };
 
-    matchesObject (aModel) {
+    public matchesObject (aModel) {
         return this.filterExpression === null || this.filterExpression.matchesObject(aModel);
     };
 
-    getFilterExpression () {
+    public getFilterExpression () {
         return this.filterExpression;
     };
 
-    setFilterExpression (aExpression) {
+    public setFilterExpression (aExpression) {
         this.filterExpression = aExpression;
     };
 }
 
 export class ObjectFilterExpression {
-    $exprType: string;
 
-    constructor (aType: string) {
+    private $exprType: string;
+
+    public constructor (aType: string) {
         this.$exprType = aType;
     }
 
-    matchesObject (aModel): boolean {
+    public matchesObject (aModel): boolean {
         return true;
     }
 
-    visit (aModel): void {
+    public visit (aModel): void {
     }
 }
 
@@ -616,16 +632,16 @@ export class JdyAndExpression extends ObjectFilterExpression {
 
     public expressionVect: ObjectFilterExpression[];
 
-    constructor (aExprVect: ObjectFilterExpression[]) {
+    public constructor (aExprVect: ObjectFilterExpression[]) {
         super('AndExpression');
         this.expressionVect = aExprVect;
     }
 
-    visit (aVisitor) {
+    public visit (aVisitor) {
         return aVisitor.visitAndExpression(this);
     };
 
-    matchesObject (aModel) {
+    public matchesObject (aModel) {
         let matches = true;
         for (let i = 0; i < this.expressionVect.length; i++) {
             matches = this.expressionVect[i].matchesObject(aModel);
@@ -638,17 +654,17 @@ export class JdyOrExpression extends ObjectFilterExpression {
 
     private expressionVect: ObjectFilterExpression[];
 
-    constructor (aExprVect: ObjectFilterExpression[]) {
+    public constructor (aExprVect: ObjectFilterExpression[]) {
         super('OrExpression');
 
         this.expressionVect = aExprVect;
     }
 
-    visit (aVisitor) {
+    public visit (aVisitor) {
         return aVisitor.visitOrExpression(this);
     };
 
-    matchesObject (aModel) {
+    public matchesObject (aModel) {
         let matches = true;
         for (let i = 0; i < this.expressionVect.length; i++) {
             matches = this.expressionVect[i].matchesObject(aModel);
@@ -663,23 +679,23 @@ export class JdyOperatorExpression extends ObjectFilterExpression {
     private attributeInfo: JdyAttributeInfo;
     private compareValue: any;
 
-    constructor (aOperator: ExpressionPrimitiveOperator, aAttributeInfo: JdyAttributeInfo, aCompareValue) {
+    public constructor (aOperator: ExpressionPrimitiveOperator, aAttributeInfo: JdyAttributeInfo, aCompareValue) {
         super('OperatorExpression');
         this.myOperator = aOperator;
         this.attributeInfo = aAttributeInfo;
         this.compareValue = aCompareValue;
     }
 
-    visit (aVisitor) {
+    public visit (aVisitor) {
         return aVisitor.visitOperatorExpression(this);
     };
 
-    matchesObject (aModel) {
+    public matchesObject (aModel) {
         let modelValue = aModel.getValue(this.attributeInfo);
         return this.myOperator.compareValues(modelValue, this.compareValue, this.attributeInfo);
     };
 
-    getOperator () {
+    public getOperator () {
         return this.myOperator;
     };
 
@@ -687,11 +703,11 @@ export class JdyOperatorExpression extends ObjectFilterExpression {
 
 export class ExpressionPrimitiveOperator {
 
-    visitOperatorHandler (aVisitor) {
+    public visitOperatorHandler (aVisitor) {
         return aVisitor.visitEqualOperator(this);
     };
 
-    compareValues (value1, value2, attributeInfo): boolean {
+    public compareValues (value1, value2, attributeInfo): boolean {
         return true;
     }
 }
@@ -700,16 +716,16 @@ export class JdyEqualOperator extends ExpressionPrimitiveOperator {
 
     private isNotEqual: boolean;
 
-    constructor (notEqual: boolean) {
+    public constructor (notEqual: boolean) {
         super();
         this.isNotEqual = notEqual;
     }
 
-    visitOperatorHandler (aVisitor) {
+    public visitOperatorHandler (aVisitor) {
         return aVisitor.visitEqualOperator(this);
     };
 
-    compareValues (value1, value2, attributeInfo) {
+    public compareValues (value1, value2, attributeInfo) {
         let result = false;
         if (value1 !== null && value2 !== null) {
             result = attributeInfo.compareObjects(value1, value2) === 0;
@@ -720,7 +736,7 @@ export class JdyEqualOperator extends ExpressionPrimitiveOperator {
         return result;
     };
 
-    toString () {
+    public toString () {
         return (this.isNotEqual) ? '<>' : '=';
     };
 }
@@ -729,16 +745,16 @@ export class JdyGreatorOperator extends ExpressionPrimitiveOperator {
 
     private isAlsoEqual: boolean;
 
-    constructor (alsoEqual: boolean) {
+    public constructor (alsoEqual: boolean) {
         super();
         this.isAlsoEqual = alsoEqual;
     }
 
-    visitOperatorHandler (aVisitor) {
+    public visitOperatorHandler (aVisitor) {
         return aVisitor.visitGreatorOperator(this);
     };
 
-    compareValues (value1, value2, attributeInfo) {
+    public compareValues (value1, value2, attributeInfo) {
         let result = false;
         if (value1 !== null && value2 !== null) {
             result = attributeInfo.compareObjects(value1, value2) > 0;
@@ -749,7 +765,7 @@ export class JdyGreatorOperator extends ExpressionPrimitiveOperator {
         return result;
     };
 
-    toString () {
+    public toString () {
         return (this.isAlsoEqual) ? '>=' : '>';
     };
 
@@ -759,16 +775,16 @@ export class JdyLessOperator extends ExpressionPrimitiveOperator {
 
     private isAlsoEqual: boolean;
 
-    constructor (alsoEqual: boolean) {
+    public constructor (alsoEqual: boolean) {
         super();
         this.isAlsoEqual = alsoEqual;
     }
 
-    visitOperatorHandler (aVisitor) {
+    public visitOperatorHandler (aVisitor) {
         return aVisitor.visitLessOperator(this);
     };
 
-    compareValues (value1, value2, attributeInfo) {
+    public compareValues (value1, value2, attributeInfo) {
         let result = false;
         if (value1 !== null && value2 !== null) {
             result = attributeInfo.compareObjects(value1, value2) < 0;
@@ -779,14 +795,14 @@ export class JdyLessOperator extends ExpressionPrimitiveOperator {
         return result;
     };
 
-    toString () {
+    public toString () {
         return (this.isAlsoEqual) ? '<=' : '<';
     };
 }
 
 export class JdyFilterCreationException extends Error {
 
-    constructor (m: string) {
+    public constructor (m: string) {
         super(m);
 
         // Set the prototype explicitly.
@@ -796,7 +812,7 @@ export class JdyFilterCreationException extends Error {
 
 export class JdyPersistentException extends Error {
 
-    constructor (m: string) {
+    public constructor (m: string) {
         super(m);
 
         // Set the prototype explicitly.
@@ -809,66 +825,66 @@ export class JdyQueryCreator {
     protected resultInfo: JdyClassInfo;
     private createdExpr: ObjectFilterExpression | null;
 
-    constructor (aResultInfo: JdyClassInfo) {
+    public constructor (aResultInfo: JdyClassInfo) {
         this.resultInfo = aResultInfo;
         this.createdExpr = null;
     }
 
-    query (): JdyClassInfoQuery {
+    public query (): JdyClassInfoQuery {
         return new JdyClassInfoQuery(this.resultInfo, this.createdExpr);
     };
 
-    greater (anExAttrName, aCompareValue) {
+    public greater (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyGreatorOperator(false));
         return this;
     };
 
-    greaterOrEqual (anExAttrName, aCompareValue) {
+    public greaterOrEqual (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyGreatorOperator(true));
         return this;
     };
 
-    less (anExAttrName, aCompareValue) {
+    public less (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyLessOperator(false));
         return this;
     };
 
-    lessOrEqual (anExAttrName, aCompareValue) {
+    public lessOrEqual (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyLessOperator(true));
         return this;
     };
 
-    equal (anExAttrName, aCompareValue) {
+    public equal (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyEqualOperator(false));
         return this;
     };
 
-    notEqual (anExAttrName, aCompareValue) {
+    public notEqual (anExAttrName, aCompareValue) {
         this.addOperatorExpression(anExAttrName, aCompareValue, new JdyEqualOperator(true));
         return this;
     };
 
-    addOperatorExpression (anAttrName: string, aCompareValue, aOperator: ExpressionPrimitiveOperator) {
+    public addOperatorExpression (anAttrName: string, aCompareValue, aOperator: ExpressionPrimitiveOperator) {
         let attributeInfo: JdyAttributeInfo = this.resultInfo.getAttr(anAttrName);
         let opExpr = new JdyOperatorExpression(aOperator, attributeInfo, aCompareValue);
         this.addExpression(opExpr);
         return this;
     };
 
-    addExpression (anExpr: ObjectFilterExpression): JdyQueryCreator {
+    public addExpression (anExpr: ObjectFilterExpression): JdyQueryCreator {
         this.createdExpr = anExpr;
         return this;
     };
 
-    and () {
+    public and () {
         return new JdyAndQueryCreator(this.resultInfo, this);
     };
 
-    or () {
+    public or () {
         return new JdyOrQueryCreator(this.resultInfo, this);
     };
 
-    end () {
+    public end (): JdyQueryCreator {
         throw new JdyFilterCreationException('No Multiple Expression open');
     };
 }
@@ -878,23 +894,23 @@ export class JdyAndQueryCreator extends JdyQueryCreator {
     private parentCreator: JdyQueryCreator;
     private expressions: ObjectFilterExpression[];
 
-    constructor (aResultInfo: JdyClassInfo, aParentCreator: JdyQueryCreator) {
+    public constructor (aResultInfo: JdyClassInfo, aParentCreator: JdyQueryCreator) {
         super(aResultInfo);
-        JdyAttributeInfo.apply(this, arguments);
+        // JdyAttributeInfo.apply(this, arguments);
         this.parentCreator = aParentCreator;
         this.expressions = [];
     }
 
-    addExpression (anExpr: ObjectFilterExpression): JdyQueryCreator {
+    public addExpression (anExpr: ObjectFilterExpression): JdyQueryCreator {
         this.expressions.push(anExpr);
         return this;
     };
 
-    query (): JdyClassInfoQuery {
+    public query (): JdyClassInfoQuery {
         throw new JdyFilterCreationException('And not closes');
     };
 
-    end () {
+    public end () {
         this.parentCreator.addExpression(new JdyAndExpression(this.expressions));
         return this.parentCreator;
     };
@@ -905,23 +921,23 @@ export class JdyOrQueryCreator extends JdyQueryCreator {
     private parentCreator: JdyQueryCreator;
     private expressions: ObjectFilterExpression[];
 
-    constructor (aResultInfo, aParentCreator) {
+    public constructor (aResultInfo, aParentCreator) {
         super(aResultInfo);
-        JdyAttributeInfo.apply(this, arguments);
+        // JdyAttributeInfo.apply(this, arguments);
         this.parentCreator = aParentCreator;
         this.expressions = [];
     }
 
-    addExpression (anExpr): JdyQueryCreator {
+    public addExpression (anExpr): JdyQueryCreator {
         this.expressions.push(anExpr);
         return this;
     };
 
-    query (): JdyClassInfoQuery {
+    public query (): JdyClassInfoQuery {
         throw new JdyFilterCreationException('Or not closes');
     };
 
-    end () {
+    public end () {
         this.parentCreator.addExpression(new JdyOrExpression(this.expressions));
         return this.parentCreator;
     };
@@ -929,133 +945,139 @@ export class JdyOrQueryCreator extends JdyQueryCreator {
 
 export interface JdyObjectList {
 
-    done(anCallback);
-    add(anValueObject);
+    done (anCallback);
+
+    add (anValueObject);
 }
 
 export class JdyObjectListImpl implements JdyObjectList {
 
-    assocObj: JdyAssociationModel;
-    objects :  Array<any> = [];
+    private assocObj: JdyAssociationModel;
+    private objects: any[] = [];
 
-    constructor(anAssocInfo: JdyAssociationModel) {
+    public constructor (anAssocInfo: JdyAssociationModel) {
 
         this.assocObj = anAssocInfo;
     }
 
-    done(anCallback) {
+    public done (anCallback) {
         anCallback(this.objects);
     }
 
-    add(anValueObject) {
+    public add (anValueObject) {
         this.objects.push(anValueObject);
     }
 
 };
 
-
-
 export class JdyProxyObjectList implements JdyObjectList {
 
-    objects : Array<any> = [];
-    assocObj : JdyAssociationModel;
-    proxyResolver;
-    masterObject : JdyTypedValueObject;
-    promise : null | any;
+    private objects: any[] = [];
+    private assocObj: JdyAssociationModel;
+    private proxyResolver;
+    private masterObject: JdyTypedValueObject;
+    private promise: null | any;
 
-    constructor(anAssocInfo: JdyAssociationModel, aProxyResolver: any, aMasterObj: JdyTypedValueObject) {
+    public constructor (anAssocInfo: JdyAssociationModel, aProxyResolver: any, aMasterObj: JdyTypedValueObject) {
 
         this.assocObj = anAssocInfo;
         this.masterObject = aMasterObj;
         this.proxyResolver = aProxyResolver;
     }
 
-    done(anCallback) {
-        let dfrd,
-            that = this;
+    public done (anCallback) {
+        let dfrd;
+        let that = this;
 
-        if(!this.promise) {
+        if (!this.promise) {
 
-            this.promise =  new Promise((resolve, reject) => {
+            this.promise = new Promise((resolve, reject) => {
                 resolve(123);
             });
 
-            if(this.proxyResolver) {
+            if (this.proxyResolver) {
 
-                this.proxyResolver.resolveAssoc(that.assocObj,that.masterObject, aAssocList =>{
+                this.proxyResolver.resolveAssoc(that.assocObj, that.masterObject, aAssocList => {
                     this.objects = aAssocList;
                     this.promise.resolve(aAssocList);
                 });
             } else {
-                this.promise .reject("Proxy Error: no proxy resolver " + this.assocObj.getAssocName());
+                this.promise.reject('Proxy Error: no proxy resolver ' + this.assocObj.getAssocName());
             }
         }
 
         this.promise.done(anCallback);
     }
 
-    add(anValueObject) {
+    public add (anValueObject) {
         this.objects.push(anValueObject);
     }
 
 };
 
-
 export class JdyTypedValueObject {
 
-    $typeInfo;
-    public $assocs : {[name: string]: JdyObjectList} = {};
-    $proxyResolver;
-    $proxy : any = null;
+    public $typeInfo: JdyClassInfo;
+    public $assocs: { [name: string]: JdyObjectList } = {};
+    private $proxyResolver;
+    private $proxy: any = null;
 
-    constructor (aClassInfo: JdyClassInfo, aProxyResolver: any|null, asProxy: boolean) {
+    public constructor (aClassInfo: JdyClassInfo, aProxyResolver: any | null, asProxy: boolean) {
 
+        this.$typeInfo = aClassInfo;
         this.$proxyResolver = aProxyResolver;
 
-        if(asProxy) {
+        if (asProxy) {
             this.$proxy = {};
         }
 
         aClassInfo.forEachAttr(
-
-            curAttrInfo => this[curAttrInfo.getInternalName()] = null
+            curAttrInfo => {
+                this[curAttrInfo.getInternalName()] = null;
+            }
         );
 
         aClassInfo.forEachAssoc(
-
-            curAssocInfo => this.$assocs[curAssocInfo.getAssocName()] = new JdyProxyObjectList(curAssocInfo, aProxyResolver, this)
+            curAssocInfo => {
+                if (aProxyResolver) {
+                    this.$assocs[curAssocInfo.getAssocName()] = new JdyProxyObjectList(curAssocInfo, aProxyResolver, this);
+                } else {
+                    this.$assocs[curAssocInfo.getAssocName()] = new JdyObjectListImpl(curAssocInfo);
+                }
+            }
         );
     }
 
-    setAssocVals (anAssoc, anObjectList : JdyProxyObjectList) {
+    public setAssocVals (anAssoc, anObjectList: JdyObjectList) {
 
-        let assocName = (typeof anAssoc === "string") ? anAssoc : anAssoc.getAssocName();
+        let assocName = (typeof anAssoc === 'string') ? anAssoc : anAssoc.getAssocName();
         this.$assocs[assocName] = anObjectList;
     };
 
-    assocVals (anAssoc) : JdyObjectList {
+    public assocVals (anAssoc): JdyObjectList {
 
-        let assocName = (typeof anAssoc === "string") ? anAssoc : anAssoc.getAssocName(),
-        assocObj = this.$assocs[assocName];
+        let assocName = (typeof anAssoc === 'string') ? anAssoc : anAssoc.getAssocName();
+        let assocObj = this.$assocs[assocName];
         return assocObj;
     };
 
-    val (anAttr) {
+    public val (anAttr) {
 
-        return this[(typeof anAttr === "string") ? anAttr : anAttr.getInternalName()];
+        return this[(typeof anAttr === 'string') ? anAttr : anAttr.getInternalName()];
     };
 
-    setVal (anAttr, aValue) {
+    public setVal (anAttr, aValue) {
 
-        this[anAttr.getInternalName()] = aValue;
+        if (typeof anAttr === 'string') {
+            this[anAttr] = aValue;
+        } else {
+            this[anAttr.getInternalName()] = aValue;
+        }
     };
 
-    setProxyVal (anAttr, aValue) {
+    public setProxyVal (anAttr, aValue) {
 
         this.$proxy[anAttr.getInternalName()] = aValue;
     };
 
 };
-
-
-

@@ -1,407 +1,365 @@
-import {JdyPersistentException, JdyTypedValueObject} from "@/js/jdy/jdy-base";
-import {META_REPO_NAME} from "@/js/jdy/jdy-meta";
+import { JdyAssociationModel, JdyPersistentException, JdyTypedValueObject } from '@/js/jdy/jdy-base';
+import { FilterCreator, META_REPO_NAME } from '@/js/jdy/jdy-meta';
+import { JsonCompactFileWriter, JsonFileReader, JsonFileWriter, Operation } from '@/js/jdy/jdy-json';
 
 class JsonHttpObjectReader {
 
-	basepath;
-	reader = new JDY.json.JsonFileReader();
-	writer = new JDY.json.JsonFileWriter();
-	filterCreator = new JDY.meta.FilterCreator();
-	att2AbbrMap = {};
-	jsonWriter;
+    private basepath;
+    private reader = new JsonFileReader();
+    private writer = new JsonFileWriter();
+    private filterCreator = new FilterCreator();
+    private att2AbbrMap: { [name: string]: string };
+    private jsonWriter;
 
-	constructor(aBasePath, aMetaRepoName) {
+    public constructor (aBasePath, aMetaRepoName) {
 
-		this.basepath = aBasePath;
-		this.att2AbbrMap.repoName="rn";
-		this.att2AbbrMap.className="cn";
-		this.att2AbbrMap.expr="ex";
-		this.att2AbbrMap.orSubExpr="ose";
-		this.att2AbbrMap.andSubExpr="ase";
-		this.att2AbbrMap.attrName="an";
-		this.att2AbbrMap.operator="op";
-		this.att2AbbrMap.isNotEqual="ne";
-		this.att2AbbrMap.isAlsoEqual="ae";
-		this.att2AbbrMap.longVal="lv";
-		this.att2AbbrMap.textVal="tv";
-		this.jsonWriter = new JDY.json.JsonCompactFileWriter(this.att2AbbrMap);
+        this.basepath = aBasePath;
+        this.att2AbbrMap = {}
+        this.att2AbbrMap.repoName = 'rn';
+        this.att2AbbrMap.className = 'cn';
+        this.att2AbbrMap.expr = 'ex';
+        this.att2AbbrMap.orSubExpr = 'ose';
+        this.att2AbbrMap.andSubExpr = 'ase';
+        this.att2AbbrMap.attrName = 'an';
+        this.att2AbbrMap.operator = 'op';
+        this.att2AbbrMap.isNotEqual = 'ne';
+        this.att2AbbrMap.isAlsoEqual = 'ae';
+        this.att2AbbrMap.longVal = 'lv';
+        this.att2AbbrMap.textVal = 'tv';
+        this.jsonWriter = new JsonCompactFileWriter(this.att2AbbrMap);
 
-	}
+    }
 
-	loadValuesFromDb(aFilter, successFunct, failFunc) {
-		"use strict";
+    public loadValuesFromDb (aFilter, successFunct, failFunc) {
+        'use strict';
 
-		var uri = this.createUriForClassInfo(aFilter.resultType, META_REPO_NAME, this.basepath),
-			deferredCall,
-			that = this,
-			appQuery = this.filterCreator.convertMetaFilter2AppFilter(aFilter),
-			expr;
+        let uri = this.createUriForClassInfo(aFilter.resultType, META_REPO_NAME, this.basepath);
+        let deferredCall;
+        let that = this;
+        let appQuery = this.filterCreator.convertMetaFilter2AppFilter(aFilter);
+        let expr;
 
-		if (appQuery.expr) {
-			expr = this.jsonWriter.writeObjectList( [appQuery.expr],JDY.json.Operation.INSERT);
-			uri = uri +"?"+this.fixedEncodeURIComponent(JSON.stringify(expr));
-		}
+        if (appQuery && appQuery.val('expr')) {
+            expr = this.jsonWriter.writeObjectList([appQuery.val('expr')], Operation.INSERT);
+            uri = uri + '?' + this.fixedEncodeURIComponent(JSON.stringify(expr));
+        }
 
-		deferredCall = this.createAjaxGetCall(uri);
+        deferredCall = this.createAjaxGetCall(uri);
 
-		deferredCall.done(function (rtoData) {
+        deferredCall.done(function (rtoData) {
 
-			var resultObjects = that.reader.readObjectList(rtoData, aFilter.resultType);
-			successFunct(resultObjects);
-		});
-		deferredCall.error(function (data) {
-			if (failFunc) {
-				failFunc();
-			}
-		});
+            var resultObjects = that.reader.readObjectList(rtoData, aFilter.resultType);
+            successFunct(resultObjects);
+        });
+        deferredCall.error(function (data) {
+            if (failFunc) {
+                failFunc();
+            }
+        });
 
-	};
+    };
 
-	fixedEncodeURIComponent = function (str) {
-		return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
-	};
+    private fixedEncodeURIComponent (str) {
+        return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, '%2A');
+    };
 
-	createAjaxGetCall = function (aUrl) {
-		"use strict";
+    private createAjaxGetCall (aUrl) {
+        'use strict';
 
-		return $.ajax({
-			url : aUrl,
-			type : "GET",
-			dataType: "json",
-			contentType: "application/json"
-		});
-	};
+        var myRequest = new Request(aUrl);
+        return fetch(myRequest)
+            .then(response => response.json());
+
+    };
+
+    private createUriForClassInfo (aClassInfo, aMetaModelReponame, aBasePath) {
+        'use strict';
+
+        let reponame = aClassInfo.repoName;
+        let repoPart = '@jdy';// pseudo repo for meta information
+        let infoPath = (aBasePath === null) ? '' : aBasePath;
+
+        if (reponame !== aMetaModelReponame) {
+            repoPart = reponame;
+        }
+        // check whether path ends with /
+        infoPath = (infoPath.charAt(infoPath.length - 1) === '/') ? infoPath : infoPath + '/';
+        infoPath += repoPart + '/' + aClassInfo.getInternalName();
+
+        return infoPath;
+    };
 
 };
 
+export function parameterGetVisitor (aAttrValue) {
 
+    return {
 
+        handleBoolean: function (aType) {
+            return aAttrValue.toString();
+        },
 
+        handleDecimal: function (aType) {
+            return aAttrValue.toString();
+        },
 
+        handleTimeStamp: function (aType) {
+            return aAttrValue.toISOString();
+        },
+
+        handleFloat: function (aType) {
+            return aAttrValue.toString();
+        },
+
+        handleLong: function (aType) {
+            return aAttrValue.toString();
+        },
+
+        handleText: function (aType) {
+            return aAttrValue;
+        },
+
+        handleVarChar: function (aType) {
+            return aAttrValue;
+        },
+
+        handleBlob: function (aType) {
+            throw new JdyPersistentException('Blob Values not supported');
+        }
+    };
+};
+
+export function createParametersFor (aValueObj, aClassInfo, aPrefix): { name: string; value: string }[] {
+
+    let nameValuePairs: { name: string; value: string }[] = [];
+    let refObjParams;
+    let curValue;
+
+    aClassInfo.forEachAttr(curAttrInfo => {
+
+        if (curAttrInfo.isKey()) {
+            if (curAttrInfo.isPrimitive()) {
+
+                curValue = curAttrInfo.getType().handlePrimitiveKey(parameterGetVisitor(aValueObj.val(curAttrInfo)));
+                nameValuePairs.push({ name: aPrefix + curAttrInfo.getInternalName(), value: curValue });
+            } else {
+
+                if (typeof aValueObj.val(curAttrInfo) === 'object') {
+                    refObjParams = createParametersFor(aValueObj.val(curAttrInfo),
+                        curAttrInfo.getReferencedClass(),
+                        aPrefix + curAttrInfo.getInternalName() + '.');
+                    nameValuePairs = nameValuePairs.concat(refObjParams);
+                } else {
+                    throw new JdyPersistentException('Wrong type for attr value (no object): ' + curAttrInfo.getInternalName());
+                }
+            }
+        }
+    });
+
+    return nameValuePairs;
+};
 
 class JsonHttpObjectWriter {
 
-	basepath;
-	reader = new JDY.json.JsonFileReader();
-	writer = new JDY.json.JsonFileWriter();
+    private basepath;
+    private reader = new JsonFileReader();
+    private writer = new JsonFileWriter();
 
-	constructor(aBasePath, aMetaModelRepoName) {
+    public constructor (aBasePath, aMetaModelRepoName) {
 
-		this.basepath = aBasePath;
-	}
+        this.basepath = aBasePath;
+    }
 
-	deleteObjectInDb  (aObjToDelete, aClassInfo, successFunct, failFunc) {
-		"use strict";
+    public deleteObjectInDb (aObjToDelete, aClassInfo, successFunct, failFunc) {
+        'use strict';
 
-		var uri = JDY.http.createUriForClassInfo(aClassInfo, JDY.meta.META_REPO_NAME, this.basepath),
-			params = JDY.http.createParametersFor(aObjToDelete, aClassInfo, "");
+        let uri = this.createUriForClassInfo(aClassInfo, META_REPO_NAME, this.basepath);
+        let params = createParametersFor(aObjToDelete, aClassInfo, '');
 
-		uri = uri + "?" + $.param(params);
-		this.sendJsonDeleteRequest(uri, successFunct, failFunc);
-	};
+        // uri = uri + '?' + $.param(params);
+        this.sendJsonDeleteRequest(uri, successFunct, failFunc);
+    };
 
-	insertObjectInDb (aObjToInsert, successFunct, failFunc) {
-		"use strict";
+    public insertObjectInDb (aObjToInsert, successFunct, failFunc) {
+        'use strict';
 
-		var singleElementList = [],
-			result,
-			content,
-			that = this;
+        let singleElementList: any[] = [];
+        let result;
+        let content;
+        let that = this;
 
+        singleElementList.push(aObjToInsert);
 
-		singleElementList.push(aObjToInsert);
+        content = this.writer.writeObjectList(singleElementList, 'INSERT', null);
 
-		content = this.writer.writeObjectList(singleElementList, 'INSERT');
+        function handleResult (rtoData) {
 
-		function handleResult(rtoData) {
+            result = that.reader.readObjectList(rtoData, aObjToInsert.$typeInfo);
+            successFunct(result[0]);
 
-			result = that.reader.readObjectList(rtoData, aObjToInsert.$typeInfo);
-			successFunct(result[0]);
+        }
 
-		}
-		this.sendJsonPostRequest(JDY.http.createUriForClassInfo(aObjToInsert.$typeInfo, JDY.meta.META_REPO_NAME, this.basepath),
-			JSON.stringify(content),
-			handleResult,
-			failFunc);
-	};
+        this.sendJsonPostRequest(this.createUriForClassInfo(aObjToInsert.$typeInfo, META_REPO_NAME, this.basepath),
+            JSON.stringify(content),
+            handleResult,
+            failFunc);
+    };
 
-	updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
-		"use strict";
+    public updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
+        'use strict';
 
-		var singleElementList = [],
-			result,
-			content,
-			that = this;
+        let singleElementList: any[] = [];
+        let result;
+        let content;
+        let that = this;
 
+        singleElementList.push(aObjToUpdate);
 
-		singleElementList.push(aObjToUpdate);
+        content = this.writer.writeObjectList(singleElementList, 'UPDATE', null);
 
-		content = this.writer.writeObjectList(singleElementList, 'UPDATE');
+        function handleResult (rtoData) {
 
-		function handleResult(rtoData) {
+            result = that.reader.readObjectList(rtoData, aObjToUpdate.$typeInfo);
+            successFunct(result[0]);
 
-			result = that.reader.readObjectList(rtoData, aObjToUpdate.$typeInfo);
-			successFunct(result[0]);
+        }
 
-		}
-		this.sendJsonPutRequest(createUriForClassInfo(aObjToUpdate.$typeInfo, META_REPO_NAME, this.basepath),
-			JSON.stringify(content),
-			handleResult,
-			failFunc);
-	};
+        this.sendJsonPutRequest(this.createUriForClassInfo(aObjToUpdate.$typeInfo, META_REPO_NAME, this.basepath),
+            JSON.stringify(content),
+            handleResult,
+            failFunc);
+    };
 
-	executeWorkflowAction = function (actionName, aObjToWorkOn, successFunct, failFunc) {
-		"use strict";
+    private fixedEncodeURIComponent (str) {
+        return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, '%2A');
+    };
 
-		var singleElementList = [],
-			result,
-			content,
-			that = this,
-			uri;
+    private sendJsonPostRequest (uri, content, successFunct, failFunc) {
 
+        var deferredCall = this.createAjaxPostCall(uri, content);
 
-		singleElementList.push(aObjToWorkOn);
+        deferredCall.then(function (rtoData) {
+            successFunct(rtoData);
+        });
+        deferredCall.catch(function (data) {
+            if (failFunc) {
+                failFunc(data);
+            }
+        });
+    };
 
-		content = this.writer.writeObjectList(singleElementList, 'READ');
+    private sendJsonPutRequest (uri, content, successFunct, failFunc) {
 
-		function handleResult(rtoData) {
+        var deferredCall = this.createAjaxPutCall(uri, content);
 
-			result = that.reader.readObjectList(rtoData, aObjToWorkOn.$typeInfo);
-			successFunct(result[0]);
+        deferredCall.then(function (rtoData) {
+            successFunct(rtoData);
+        });
+        deferredCall.catch(function (data) {
+            if (failFunc) {
+                failFunc(data);
+            }
+        });
+    };
 
-		}
+    private sendJsonDeleteRequest (uri, successFunct, failFunc) {
+
+        var deferredCall = this.createAjaxDeleteCall(uri);
+
+        deferredCall.then(function (rtoData) {
+            successFunct(rtoData);
+        }).catch(failFunc());
+    };
+
+    private createAjaxDeleteCall (aUrl) {
+
+        return fetch(aUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    };
+
+    private createAjaxPostCall (aUrl, content) {
+
+        return fetch(aUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: content
+        });
+    };
+
+    private createAjaxPutCall (aUrl, content) {
+
+        return fetch(aUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: content
+        });
+    };
+
+    private createUriForClassInfo (aClassInfo, aMetaModelReponame, aBasePath) {
+
+        let reponame = aClassInfo.repoName;
+        let repoPart = '@jdy';// pseudo repo for meta information
+        let infoPath = (aBasePath === null) ? '' : aBasePath;
+
+        if (reponame !== aMetaModelReponame) {
+            repoPart = reponame;
+        }
+        // check whether path ends with /
+        infoPath = (infoPath.charAt(infoPath.length - 1) === '/') ? infoPath : infoPath + '/';
+        infoPath += repoPart + '/' + aClassInfo.getInternalName();
+
+        return infoPath;
+    };
 
-		uri = JDY.http.createUriForClassInfo(aObjToWorkOn.$typeInfo, JDY.meta.META_REPO_NAME, this.basepath);
-		uri = uri +"?"+JDY.http.fixedEncodeURIComponent(actionName);
-		this.sendJsonPutRequest(uri,
-			JSON.stringify(content),
-			handleResult,
-			failFunc);
-
-	};
-
-	sendJsonPostRequest (uri, content, successFunct, failFunc) {
-		"use strict";
-
-		var deferredCall = this.createAjaxPostCall(uri, content);
-
-		deferredCall.done(function (rtoData) {
-			successFunct(rtoData);
-		});
-		deferredCall.error(function (data) {
-			if (failFunc) {
-				failFunc();
-			}
-		});
-	};
-	sendJsonPutRequest  (uri, content, successFunct, failFunc) {
-		"use strict";
-
-		var deferredCall = this.createAjaxPutCall(uri, content);
-
-		deferredCall.done(function (rtoData) {
-			successFunct(rtoData);
-		});
-		deferredCall.error(function (data) {
-			if (failFunc) {
-				failFunc();
-			}
-		});
-	};
-
-
-	sendJsonDeleteRequest (uri, successFunct, failFunc) {
-		"use strict";
-
-		var deferredCall = this.createAjaxDeleteCall(uri);
-
-		deferredCall.done(function (rtoData) {
-			successFunct(rtoData);
-		});
-		deferredCall.error(function (data) {
-			if (failFunc) {
-				failFunc();
-			}
-		});
-	};
-
-	createAjaxDeleteCall (aUrl) {
-		"use strict";
-
-		return $.ajax({
-			url : aUrl,
-			type : "DELETE",
-			dataType: "json",
-			contentType: "application/json"
-		});
-	};
-
-	createAjaxPostCall (aUrl, content) {
-		"use strict";
-
-		return $.ajax({
-			url : aUrl,
-			type : "POST",
-			dataType: "json",
-			contentType: "application/json",
-			data: content
-		});
-	};
-
-	JDcreateAjaxPutCall (aUrl, content) {
-		"use strict";
-
-		return $.ajax({
-			url : aUrl,
-			type : "PUT",
-			dataType: "json",
-			contentType: "application/json",
-			data: content
-		});
-	};
-
-
-	createUriForClassInfo (aClassInfo, aMetaModelReponame, aBasePath) {
-		"use strict";
-
-		var reponame = aClassInfo.repoName,
-			repoPart = "@jdy",// pseudo repo for meta information
-			infoPath = (aBasePath === null) ?  "" : aBasePath;
-
-		if (reponame !== aMetaModelReponame) {
-			repoPart = reponame;
-		}
-		// check whether path ends with /
-		infoPath = (infoPath.charAt(infoPath.length - 1) === "/") ? infoPath : infoPath + "/";
-		infoPath += repoPart + "/" + aClassInfo.getInternalName();
-
-		return infoPath;
-	};
-
-
-	createParametersFor(aValueObj, aClassInfo, aPrefix) {
-
-		var nameValuePairs = [],
-			refObjParams,
-			curValue;
-
-		aClassInfo.forEachAttr(curAttrInfo => {
-
-			if (curAttrInfo.isKey()) {
-				if (curAttrInfo.isPrimitive()) {
-
-					curValue = curAttrInfo.getType().handlePrimitiveKey(this.parameterGetVisitor(aValueObj.val(curAttrInfo)));
-					nameValuePairs.push({name: aPrefix + curAttrInfo.getInternalName(), value: curValue});
-				} else {
-
-					if (typeof aValueObj.val(curAttrInfo) === "object") {
-						refObjParams = this.createParametersFor(aValueObj.val(curAttrInfo),
-							curAttrInfo.getReferencedClass(),
-							aPrefix + curAttrInfo.getInternalName() + ".");
-						nameValuePairs = nameValuePairs.concat(refObjParams);
-					} else {
-						throw new JdyPersistentException("Wrong type for attr value (no object): " + curAttrInfo.getInternalName());
-					}
-				}
-			}
-		});
-
-		return nameValuePairs;
-	};
-
-	parameterGetVisitor (aAttrValue) {
-		"use strict";
-
-		return {
-
-			handleBoolean: function (aType) {
-				return aAttrValue.toString();
-			},
-
-			handleDecimal: function (aType) {
-				return aAttrValue.toString();
-			},
-
-			handleTimeStamp: function (aType) {
-				return aAttrValue.toISOString();
-			},
-
-			handleFloat: function (aType) {
-				return aAttrValue.toString();
-			},
-
-			handleLong: function (aType) {
-				return aAttrValue.toString();
-			},
-
-			handleText: function (aType) {
-				return aAttrValue;
-			},
-
-			handleVarChar: function (aType) {
-				return aAttrValue;
-			},
-
-			handleBlob: function (aType) {
-				throw new JdyPersistentException("Blob Values not supported");
-				//return aAttrValue;
-			}
-		};
-	};
 };
-
-
-
 
 class JsonHttpPersistentService {
 
-	reader;
-	writer;
+    private reader;
+    private writer;
 
-	constructor(aBasePath, aMetaRepoName) {
+    public constructor (aBasePath, aMetaRepoName) {
 
-		this.reader = new JsonHttpObjectReader(aBasePath, null);
-		this.writer =  new JsonHttpObjectWriter(aBasePath, null);
+        this.reader = new JsonHttpObjectReader(aBasePath, null);
+        this.writer = new JsonHttpObjectWriter(aBasePath, null);
 
-	}
+    }
 
+    public loadValuesFromDb (aFilter, successFunct, failFunc) {
 
-	loadValuesFromDb (aFilter, successFunct, failFunc) {
-		"use strict";
+        this.reader.loadValuesFromDb(aFilter, successFunct, failFunc);
+    };
 
-		this.reader.loadValuesFromDb(aFilter, successFunct, failFunc);
-	};
+    public deleteObjectInDb (aObjToDelete, aClassInfo, successFunct, failFunc) {
 
-	deleteObjectInDb  (aObjToDelete, aClassInfo, successFunct, failFunc) {
-		"use strict";
+        this.writer.deleteObjectInDb(aObjToDelete, aClassInfo, successFunct, failFunc);
+    };
 
-		this.writer.deleteObjectInDb(aObjToDelete, aClassInfo, successFunct, failFunc);
-	};
+    public insertObjectInDb (aObjToInsert, successFunct, failFunc) {
 
-	insertObjectInDb (aObjToInsert, successFunct, failFunc) {
-		"use strict";
+        this.writer.insertObjectInDb(aObjToInsert, successFunct, failFunc);
+    };
 
-		this.writer.insertObjectInDb(aObjToInsert, successFunct, failFunc);
-	};
+    public updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
 
-	updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
-		"use strict";
+        this.writer.updateObjectInDb(aObjToUpdate, successFunct, failFunc);
+    };
 
-		this.writer.updateObjectInDb(aObjToUpdate, successFunct, failFunc);
-	};
+    public executeWorkflowAction (actionName, aObjToWorkOn, successFunct, failFunc) {
+        this.writer.executeWorkflowAction(actionName, aObjToWorkOn, successFunct, failFunc);
 
+    };
 
-	executeWorkflowAction (actionName, aObjToWorkOn, successFunct, failFunc) {
-		"use strict";
-		this.writer.executeWorkflowAction(actionName, aObjToWorkOn, successFunct, failFunc);
-
-	};
-
-	createNewObject (aTypeInfo) {
-		"use strict";
-		return new JdyTypedValueObject(aTypeInfo, null, false);
-	};
-
+    public createNewObject (aTypeInfo) {
+        return new JdyTypedValueObject(aTypeInfo, null, false);
+    };
 
 };
-

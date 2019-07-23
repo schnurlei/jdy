@@ -1,18 +1,20 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Home from './views/Home.vue';
-import {testCreatePlantShopRepository} from './jdy-test';
+import { testCreatePlantShopRepository } from './jdy-test';
 import JdyHolder from './components/JdyHolder.vue';
 
 Vue.use(VueRouter);
 
 const plantRepository = testCreatePlantShopRepository();
 
-function dynamicPropsFn (route) {
+function convertRouteToClassInfo (route) {
+
     const classInfo = plantRepository.getClassInfo(route.params.classinfo);
     return {
         classinfo: classInfo
     };
+
 }
 
 export default new VueRouter({
@@ -30,6 +32,8 @@ export default new VueRouter({
             // which is lazy-loaded when the route is visited.
             component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
         },
-        {path: '/foo/:classinfo', component: JdyHolder, props: dynamicPropsFn}
+        {
+            path: '/jdy/:classinfo', component: JdyHolder, props: convertRouteToClassInfo
+        }
     ]
 });

@@ -4,18 +4,22 @@ module.exports = {
     node: true
   },
   'extends': [
-    'plugin:vue/essential',
+    'plugin:vue/base',
     '@vue/standard',
-    '@vue/typescript'
+    '@vue/typescript',
+    'plugin:@typescript-eslint/recommended'
   ],
   rules: {
-    'indent': ['error', 4],
+    "indent": ["error", 4, { "SwitchCase": 1 }],
+    "no-use-before-define": ["warn", { "functions": true, "classes": false }],
+    "@typescript-eslint/no-use-before-define": ["warn", { "functions": true, "classes": false }],
     'semi': [1, "always"],
-    'padded-blocks': ['error', { 'blocks': 'never' }],
+    'padded-blocks': ['off', { 'blocks': 'always' }],
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
   },
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    parser: 'typescript-eslint-parser'
-  }
+  },
+  plugins: ['@typescript-eslint']
 }

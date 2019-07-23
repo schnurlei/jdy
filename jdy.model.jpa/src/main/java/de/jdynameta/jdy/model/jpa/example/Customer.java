@@ -4,14 +4,8 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
+import javax.persistence.*;
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 
 /**
@@ -35,11 +29,11 @@ public class Customer implements Serializable {
     @Column(name = "LASTNAME")
 	private String lastname;
 	@JoinColumn(name = "INVOICEADDRESS_ADDRESSID", referencedColumnName = "ADDRESSID")
-    @ManyToOne
-	private Address invoiceaddressAddressid;
+    @ManyToOne(targetEntity = Address.class)
+	private IAddress invoiceaddressAddressid;
 	@JoinColumn(name = "PRIVATEADDRESS_ADDRESSID", referencedColumnName = "ADDRESSID")
-    @ManyToOne(optional = false)
-	private Address privateaddressAddressid;
+    @ManyToOne(optional = false, targetEntity = Address.class)
+	private IAddress privateaddressAddressid;
 
 	public Customer() {
 	}
@@ -86,19 +80,19 @@ public class Customer implements Serializable {
 		this.lastname = lastname;
 	}
 
-	public Address getInvoiceaddressAddressid() {
+	public IAddress getInvoiceaddressAddressid() {
 		return invoiceaddressAddressid;
 	}
 
-	public void setInvoiceaddressAddressid(Address invoiceaddressAddressid) {
+	public void setInvoiceaddressAddressid(IAddress invoiceaddressAddressid) {
 		this.invoiceaddressAddressid = invoiceaddressAddressid;
 	}
 
-	public Address getPrivateaddressAddressid() {
+	public IAddress getPrivateaddressAddressid() {
 		return privateaddressAddressid;
 	}
 
-	public void setPrivateaddressAddressid(Address privateaddressAddressid) {
+	public void setPrivateaddressAddressid(IAddress privateaddressAddressid) {
 		this.privateaddressAddressid = privateaddressAddressid;
 	}
 
@@ -126,5 +120,5 @@ public class Customer implements Serializable {
 	public String toString() {
 		return "de.jdynameta.model.asm.jpa.Customer[ customerid=" + customerid + " ]";
 	}
-	
+
 }

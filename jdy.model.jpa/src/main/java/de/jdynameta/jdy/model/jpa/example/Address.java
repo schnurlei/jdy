@@ -4,16 +4,9 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Collection;
-
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 /**
  *
@@ -21,7 +14,7 @@ import javax.persistence.Table;
  */
 @Entity(name="Address")
 @Table(name = "ADDRESS")
-public class Address implements Serializable {
+public class Address implements Serializable, IAddress {
 	private static final long serialVersionUID = 1L;
 	@Id
     @Basic(optional = false)
@@ -54,50 +47,62 @@ public class Address implements Serializable {
 		this.city = city;
 	}
 
+	@Override
 	public String getAddressid() {
 		return addressid;
 	}
 
+	@Override
 	public void setAddressid(String addressid) {
 		this.addressid = addressid;
 	}
 
+	@Override
 	public String getStreet() {
 		return street;
 	}
 
+	@Override
 	public void setStreet(String street) {
 		this.street = street;
 	}
 
+	@Override
 	public String getZipcode() {
 		return zipcode;
 	}
 
+	@Override
 	public void setZipcode(String zipcode) {
 		this.zipcode = zipcode;
 	}
 
+	@Override
 	public String getCity() {
 		return city;
 	}
 
+	@Override
 	public void setCity(String city) {
 		this.city = city;
 	}
 
+	@Override
 	public Collection<Customer> getCustomerCollection() {
 		return customerCollection;
 	}
 
+	@Override
 	public void setCustomerCollection(Collection<Customer> customerCollection) {
 		this.customerCollection = customerCollection;
 	}
 
+	@Override
 	public Collection<Customer> getCustomerCollection1() {
 		return customerCollection1;
 	}
 
+	@Override
 	public void setCustomerCollection1(Collection<Customer> customerCollection1) {
 		this.customerCollection1 = customerCollection1;
 	}
@@ -126,5 +131,5 @@ public class Address implements Serializable {
 	public String toString() {
 		return "de.jdynameta.model.asm.jpa.Address[ addressid=" + addressid + " ]";
 	}
-	
+
 }

@@ -74,9 +74,11 @@ export default {
         HelloWorld
     },
     mounted () {
+
         this.fetchAbout();
     },
     data () {
+
         return {
             clipped: false,
             drawer: true,
@@ -86,9 +88,9 @@ export default {
                 title: 'Inspire'
             }],
             menuitems: [
-                { title: 'Home', icon: 'dashboard', href: '#/foo/Plant' },
-                { title: 'Foo', icon: 'question_answer', href: '#/foo/Customer' },
-                { title: 'About', icon: 'question_answer', href: '#/foo/Address' }
+                { title: 'Home', icon: 'dashboard', href: '#/jdy/Plant' },
+                { title: 'Foo', icon: 'question_answer', href: '#/jdy/Customer' },
+                { title: 'About', icon: 'question_answer', href: '#/jdy/Address' }
             ],
             miniVariant: false,
             right: true,
@@ -99,6 +101,7 @@ export default {
     },
     methods: {
         fetchAbout () {
+
             fetch(new Request('api/about'))
                 .then(response => response.statusText)
                 .then(data => { this.about = data; return null; })

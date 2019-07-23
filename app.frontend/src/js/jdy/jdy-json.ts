@@ -1,541 +1,505 @@
- // jdynameta, 
+// jdynameta,
 // Copyright (c)2012 Rainer Schneider, Roggenburg.
 // Distributed under Apache 2.0 license
 // http://jdynameta.de
 
-/*jslint plusplus: true */
+import {
+    JdyAssociationModel, JdyAttributeInfo,
+    JdyClassInfo,
+    JdyObjectList,
+    JdyObjectListImpl, JdyObjectReferenceInfo,
+    JdyPersistentException, JdyPrimitiveAttributeInfo,
+    JdyTypedValueObject
+} from '@/js/jdy/jdy-base';
 
-const CLASS_INTERNAL_NAME_TAG = "@classInternalName";
-const NAMESPACE_TAG = "@namespace";
-const PERSISTENCE_TAG = "@persistence";
+const CLASS_INTERNAL_NAME_TAG = '@classInternalName';
+const NAMESPACE_TAG = '@namespace';
+const PERSISTENCE_TAG = '@persistence';
 
-const COMPACT_TYPE_TAG = "@t";
-const COMPACT_PERSISTENCE_TAG = "@p";
+const COMPACT_TYPE_TAG = '@t';
+const COMPACT_PERSISTENCE_TAG = '@p';
 
- enum Operation {
+export function jsonReaderGetVisitor (aAttrValue) {
 
- 	PROXY = "PROXY",
- 	INSERT = "INSERT",
- 	UPDATE = "UPDATE",
- 	DELETE = "DELETE",
-	READ = "READ"
- }
+    return {
 
-class JsonFileReader {
-	"use strict";
+        handleBoolean: function () {
+
+            if (typeof aAttrValue !== 'boolean') {
+                throw new JdyPersistentException('Wrong type boolean : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
+
+        handleDecimal: function () {
+            if (typeof aAttrValue !== 'number') {
+                throw new JdyPersistentException('Wrong type long : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
+
+        handleTimeStamp: function () {
+            return new Date(aAttrValue);
+        },
+
+        handleFloat: function () {
+            return aAttrValue;
+        },
+
+        handleLong: function () {
+
+            if (typeof aAttrValue !== 'number') {
+                throw new JdyPersistentException('Wrong type long : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
+
+        handleText: function () {
+            return aAttrValue;
+        },
+
+        handleVarChar: function () {
+            return aAttrValue;
+        },
+
+        handleBlob: function () {
+            throw new JdyPersistentException('Blob Values not supported');
+            // return aAttrValue;
+        }
+    };
 };
 
-JDY.json.JsonFileReader.prototype.readObjectList = function (aJsonNode, aClassInfo) {
-	"use strict";
+export function jsonWriterValueGetVisitor (aAttrValue) {
+    'use strict';
 
-	var resultList = [],
-		i;
+    return {
 
-	if (Array.isArray(aJsonNode)) {
+        handleBoolean: function () {
 
-		for (i = 0; i < aJsonNode.length; i++) {
+            if (typeof aAttrValue !== 'boolean') {
+                throw new JdyPersistentException('Wrong type boolean : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
 
-			if (typeof aJsonNode[i] === "object") {
-				resultList.push(this.createModelForJsonObj(aJsonNode[i], aClassInfo));
-			} else {
-				throw new JDY.base.JdyPersistentException("Error parsing JSON. No JSONObject: " + aJsonNode[i].toString());
-			}
-		}
-	}
-	return resultList;
+        handleDecimal: function (aType) {
+            if (typeof aAttrValue !== 'number') {
+                throw new JdyPersistentException('Wrong type long : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
+
+        handleTimeStamp: function () {
+            return aAttrValue.toISOString();
+        },
+
+        handleFloat: function () {
+            return aAttrValue;
+        },
+
+        handleLong: function () {
+
+            if (typeof aAttrValue !== 'number') {
+                throw new JdyPersistentException('Wrong type long : ' + aAttrValue);
+            }
+            return aAttrValue;
+        },
+
+        handleText: function () {
+            return aAttrValue;
+        },
+
+        handleVarChar: function () {
+            return aAttrValue;
+        },
+
+        handleBlob: function () {
+            throw new JdyPersistentException('Blob Values not supported');
+        }
+    };
 };
 
-JDY.json.JsonFileReader.prototype.createModelForJsonObj = function createModelForJsonObj(aJsonNode, aClassInfo) {
-	"use strict";
+export enum Operation {
 
-	var concreteClass = this.createClassInfoFromMeta(aJsonNode, aClassInfo),
-		persistenceType = aJsonNode[JDY.json.PERSISTENCE_TAG],
-		result = null,
-		attrValue,
-		isNew,
-		that = this;
+    PROXY = 'PROXY',
+    INSERT = 'INSERT',
+    UPDATE = 'UPDATE',
+    DELETE = 'DELETE',
+    READ = 'READ'
+}
 
+export class JsonFileReader {
 
-	result = new JDY.base.TypedValueObject(concreteClass, false);
-	concreteClass.forEachAttr(function (curAttrInfo) {
+    public readObjectList (aJsonNode, aClassInfo) {
+        'use strict';
 
-		if (persistenceType !== JDY.json.Operation.PROXY || curAttrInfo.isKey()) {
-			attrValue = aJsonNode[curAttrInfo.getInternalName()];
+        let resultList: any[] = [];
+        let i;
 
-			if (attrValue === undefined) {
-				throw new JDY.base.JdyPersistentException("Missing value for type in attr value: " + curAttrInfo.getInternalName());
-			} else {
-				if (attrValue !== null) {
+        if (Array.isArray(aJsonNode)) {
 
-					if (curAttrInfo.isPrimitive()) {
+            for (i = 0; i < aJsonNode.length; i++) {
 
-						result[curAttrInfo.getInternalName()] = curAttrInfo.getType().handlePrimitiveKey(that.jsonValueGetVisitor(attrValue));
-					} else {
+                if (typeof aJsonNode[i] === 'object') {
+                    resultList.push(this.createModelForJsonObj(aJsonNode[i], aClassInfo));
+                } else {
+                    throw new JdyPersistentException('Error parsing JSON. No JSONObject: ' + aJsonNode[i].toString());
+                }
+            }
+        }
+        return resultList;
+    };
 
-						if (typeof attrValue === "object") {
-							result[curAttrInfo.getInternalName()] = that.createModelForJsonObj(attrValue, curAttrInfo.getReferencedClass());
-						} else {
-							throw new JDY.base.JdyPersistentException("Wrong type for attr value (no object): " + curAttrInfo.getInternalName());
-						}
-					}
-				} else {
-					result[curAttrInfo.getInternalName()] =  null;
-				}
-			}
-		}
-	});
-	if (persistenceType !== JDY.json.Operation.PROXY) {
+    private createModelForJsonObj (aJsonNode, aClassInfo) {
+        'use strict';
 
-		concreteClass.forEachAssoc(function (curAssoc) {
+        let concreteClass = this.createClassInfoFromMeta(aJsonNode, aClassInfo);
+        let persistenceType = aJsonNode[PERSISTENCE_TAG];
+        let result: JdyTypedValueObject;
+        let attrValue;
+        let isNew;
+        let that = this;
 
-			result.$assocs[curAssoc.getAssocName()] = that.createAssociationList(aJsonNode, result, curAssoc);
-		});
-	}
+        if (concreteClass != null) {
 
-	return result;
+            result = new JdyTypedValueObject(concreteClass, null, false);
+            concreteClass.forEachAttr(function (curAttrInfo: JdyAttributeInfo) {
+
+                if (persistenceType !== Operation.PROXY || curAttrInfo.isKey()) {
+                    attrValue = aJsonNode[curAttrInfo.getInternalName()];
+
+                    if (attrValue === undefined) {
+                        throw new JdyPersistentException('Missing value for type in attr value: ' + curAttrInfo.getInternalName());
+                    } else {
+                        if (attrValue !== null) {
+
+                            if (curAttrInfo.isPrimitive()) {
+
+                                let primAttrType = curAttrInfo as JdyPrimitiveAttributeInfo;
+                                result[curAttrInfo.getInternalName()] = primAttrType.getType().handlePrimitiveKey(jsonReaderGetVisitor(attrValue));
+                            } else {
+
+                                if (typeof attrValue === 'object') {
+                                    let refType = curAttrInfo as JdyObjectReferenceInfo;
+                                    result[curAttrInfo.getInternalName()] = that.createModelForJsonObj(attrValue, refType.getReferencedClass());
+                                } else {
+                                    throw new JdyPersistentException('Wrong type for attr value (no object): ' + curAttrInfo.getInternalName());
+                                }
+                            }
+                        } else {
+                            result[curAttrInfo.getInternalName()] = null;
+                        }
+                    }
+                }
+            });
+            if (persistenceType !== Operation.PROXY) {
+
+                concreteClass.forEachAssoc(function (curAssoc) {
+
+                    result.$assocs[curAssoc.getAssocName()] = that.createAssociationList(aJsonNode, result, curAssoc);
+                });
+            }
+
+            return result;
+        }
+    };
+
+    private createAssociationList (aMasterNode, aMasterObj, curAssoc): JdyObjectList {
+        'use strict';
+
+        let objList: JdyObjectList | [] | null = [];
+        let i;
+        let assocNode = aMasterNode[curAssoc.getAssocName()];
+
+        if (assocNode === null) {
+            objList = new JdyObjectListImpl(curAssoc);
+        } else {
+            objList = new JdyObjectListImpl(curAssoc);
+            if (Array.isArray(assocNode)) {
+                for (i = 0; i < assocNode.length; i++) {
+                    if (typeof assocNode[i] === 'object') {
+                        objList.add(this.createModelForJsonObj(assocNode[i], curAssoc.getDetailClass()));
+                    } else {
+                        throw new JdyPersistentException('Error parsing JSON. No JSONObject: ');
+                    }
+                }
+            } else {
+                throw new JdyPersistentException('Wrong type for assoc value (no array): ' + curAssoc.assocName);
+            }
+        }
+
+        return objList;
+    };
+
+    private createClassInfoFromMeta (jsonObj, aClassInfo): JdyClassInfo | null {
+        'use strict';
+
+        let repoName = jsonObj[NAMESPACE_TAG];
+        let classInternalName = jsonObj[CLASS_INTERNAL_NAME_TAG];
+        return this.getConcreteClass(aClassInfo, repoName, classInternalName);
+    };
+
+    public getConcreteClass (aClassInfo, aRepoName, classInternalName): JdyClassInfo | null {
+        'use strict';
+
+        let concreteClass: JdyClassInfo | null = null;
+        let i;
+        let curClassInfo;
+
+        if (aClassInfo.getInternalName() === classInternalName &&
+            aClassInfo.getRepoName() === aRepoName) {
+            concreteClass = aClassInfo;
+        } else {
+            for (i = 0; i < aClassInfo.getAllSubclasses().length; i++) {
+
+                curClassInfo = aClassInfo.getAllSubclasses()[i];
+                concreteClass = this.getConcreteClass(curClassInfo, aRepoName, classInternalName);
+                if (concreteClass) {
+                    break;
+                }
+            }
+        }
+
+        return concreteClass;
+    };
+
 };
 
-JDY.json.JsonFileReader.prototype.createAssociationList = function (aMasterNode, aMasterObj, curAssoc) {
-	"use strict";
+export class JsonFileWriter {
 
-	var objList = [],
-		i,
-		assocNode = aMasterNode[curAssoc.getAssocName()];
+    private writeStrategy = {
+        isWriteAsProxy: function () {
+            return true;
+        }
+    };
 
-	if (assocNode === null) {
-		objList = [];
-	} else {
-		objList = new JDY.base.ObjectList(curAssoc);
-		if (Array.isArray(assocNode)) {
-			for (i = 0; i < assocNode.length; i++) {
-				if (typeof assocNode[i] === "object") {
-					objList.add(this.createModelForJsonObj(assocNode[i], curAssoc.getDetailClass()));
-				} else {
-					throw new JDY.base.JdyPersistentException("Error parsing JSON. No JSONObject: ");
-				}
-			}
-		} else {
-			throw new JDY.base.JdyPersistentException("Wrong type for assoc value (no array): " + curAssoc.assocName);
-		}
-	}
+    public writeObjectList (aJsonNode: any[] | JdyObjectList, aPersistenceType, aAssocInfo) {
+        'use strict';
 
-	return objList;
+        let resultList: any[] = [];
+        if (Array.isArray(aJsonNode)) {
+
+            resultList = this.writeObjectArray(aJsonNode, aPersistenceType, aAssocInfo);
+        } else {
+            aJsonNode.done(objects => {
+                resultList = this.writeObjectArray(objects, aPersistenceType, aAssocInfo)
+            });
+        }
+        return resultList;
+    };
+
+    private writeObjectArray (objects: any[], aPersistenceType, aAssocInfo) {
+        'use strict';
+
+        let resultList: any[] = [];
+        let i;
+
+        for (i = 0; i < objects.length; i++) {
+
+            if (typeof objects[i] === 'object') {
+                resultList.push(this.writeObjectToJson(objects[i], aPersistenceType));
+            } else {
+                throw new JdyPersistentException('Error parsing JSON. No JSONObject: ' + objects[i].toString());
+            }
+        }
+        return resultList;
+    };
+
+    private writeObjectToJson (objToWrite, aPersistenceType) {
+        'use strict';
+
+        var jsonObject = this.createClassInfoNode(objToWrite, aPersistenceType, false);
+        return jsonObject;
+    };
+
+    private createClassInfoNode (objToWrite, aPersistenceType, asProxy) {
+
+        let jsonObject = {};
+        let attrValue;
+        let that = this;
+        let isProxy;
+        let refJsonNode;
+
+        this.addMetaDataFields(jsonObject, objToWrite.$typeInfo, (asProxy) ? 'PROXY' : aPersistenceType);
+
+        objToWrite.$typeInfo.forEachAttr(function (curAttrInfo) {
+
+            if (!asProxy || curAttrInfo.isKey()) {
+                attrValue = objToWrite[curAttrInfo.getInternalName()];
+
+                if (attrValue === undefined) {
+                    throw new JdyPersistentException('Missing value for type in attr value: ' + curAttrInfo.getInternalName());
+                } else {
+                    if (attrValue !== null) {
+
+                        if (curAttrInfo.isPrimitive()) {
+
+                            jsonObject[curAttrInfo.getInternalName()] = curAttrInfo.getType().handlePrimitiveKey(jsonWriterValueGetVisitor(attrValue));
+                        } else {
+                            isProxy = asProxy || that.writeStrategy.isWriteAsProxy();
+                            refJsonNode = that.createClassInfoNode(attrValue, aPersistenceType, isProxy);
+                            jsonObject[curAttrInfo.getInternalName()] = refJsonNode;
+                        }
+                    } else {
+                        jsonObject[curAttrInfo.getInternalName()] = null;
+                    }
+                }
+            }
+        });
+
+        objToWrite.$typeInfo.forEachAssoc(function (curAssoc) {
+            if (!asProxy && !that.writeStrategy.isWriteAsProxy()) {
+                jsonObject[curAssoc.getAssocName()] = that.writeObjectList(objToWrite.assocVals(curAssoc), aPersistenceType, curAssoc);
+            }
+        });
+
+        return jsonObject;
+    };
+
+    private addMetaDataFields (jsonObject, aClassInfo, aPersistenceType) {
+        'use strict';
+
+        jsonObject[NAMESPACE_TAG] = aClassInfo.getRepoName();
+        jsonObject[CLASS_INTERNAL_NAME_TAG] = aClassInfo.getInternalName();
+        jsonObject[PERSISTENCE_TAG] = aPersistenceType;
+    };
+
 };
 
-JDY.json.JsonFileReader.prototype.createClassInfoFromMeta = function getConcreteClass(jsonObj, aClassInfo) {
-	"use strict";
-
-	var repoName = jsonObj[JDY.json.NAMESPACE_TAG],
-		classInternalName = jsonObj[JDY.json.CLASS_INTERNAL_NAME_TAG];
-	return this.getConcreteClass(aClassInfo, repoName, classInternalName);
-};
-
-JDY.json.JsonFileReader.prototype.getConcreteClass = function getConcreteClass(aClassInfo, aRepoName, classInternalName) {
-	"use strict";
-
-	var concreteClass = null,
-		i,
-		curClassInfo;
-
-	if (aClassInfo.getInternalName() === classInternalName &&
-			aClassInfo.getRepoName() === aRepoName) {
-		concreteClass = aClassInfo;
-	} else {
-		for (i = 0; i < aClassInfo.getAllSubclasses().length; i++) {
-
-			curClassInfo = aClassInfo.getAllSubclasses()[i];
-			concreteClass = getConcreteClass(curClassInfo, aRepoName, classInternalName);
-			if (concreteClass) {
-				break;
-			}
-		}
-	}
-
-	return concreteClass;
-};
-
-JDY.json.JsonFileReader.prototype.jsonValueGetVisitor = function (aAttrValue) {
-	"use strict";
-
-	return {
-
-		handleBoolean: function (aType) {
-
-			if (typeof aAttrValue !== 'boolean') {
-				throw new JDY.base.JdyPersistentException("Wrong type boolean : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
+export class JsonCompactFileWriter {
+
+    private writeStrategy = {
+        isWriteAsProxy: function () {
+            return false;
+        }
+    };
+
+    private writeNullValues = false;
+    private writeGenreatedAtr = false;
+    private writePersistence = false;
+    private name2Abbr: { [name: string]: string };
+
+    public constructor (aName2Abbr: { [name: string]: string }) {
+
+        this.name2Abbr = aName2Abbr;
+    }
+
+    public writeObjectList (aJsonNode, aPersistenceType, aAssocInfo) {
+        'use strict';
+
+        let resultList: any[] = [];
+        let i;
+
+        if (Array.isArray(aJsonNode)) {
+
+            for (i = 0; i < aJsonNode.length; i++) {
+
+                if (typeof aJsonNode[i] === 'object') {
+                    resultList.push(this.writeObjectToJson(aJsonNode[i], aPersistenceType, this.createAssocClmnVisibility(aAssocInfo)));
+                } else {
+                    throw new JdyPersistentException('Error parsing JSON. No JSONObject: ' + aJsonNode[i].toString());
+                }
+            }
+        }
+        return resultList;
+    };
 
-		handleDecimal: function (aType) {
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aType;
-		},
-
-		handleTimeStamp: function (aType) {
-			return new Date(aAttrValue);
-		},
-
-		handleFloat: function (aType) {
-			return aAttrValue;
-		},
-
-		handleLong: function (aType) {
-
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
-
-		handleText: function (aType) {
-			return aAttrValue;
-		},
+    private writeObjectToJson (objToWrite, aPersistenceType, clmnVisibility) {
+        'use strict';
 
-		handleVarChar: function (aType) {
-			return aAttrValue;
-		},
+        var jsonObject = this.createClassInfoNode(objToWrite, aPersistenceType, false, clmnVisibility);
+        return jsonObject;
+    };
 
-		handleBlob: function (aType) {
-			throw new JDY.base.JdyPersistentException("Blob Values not supported");
-			//return aAttrValue;
-		}
-	};
-};
+    private createClassInfoNode (objToWrite: JdyTypedValueObject, aPersistenceType, asProxy, aClmnVisibility) {
+        'use strict';
 
-JDY.json.JsonFileWriter = function () {
-	"use strict";
-	this.writeStrategy = {
-		isWriteAsProxy : function () {
-			return true;
-		}
-	};
-};
+        let jsonObject = {};
+        let attrValue;
+        let that = this;
+        let isProxy;
+        let refJsonNode;
+        let clmnVisib = aClmnVisibility;
 
-JDY.json.JsonFileWriter.prototype.writeObjectList = function (aJsonNode, aPersistenceType) {
-	"use strict";
+        this.addMetaDataFields(jsonObject, objToWrite.$typeInfo, (asProxy) ? 'PROXY' : aPersistenceType);
+        console.log('t: ' + objToWrite.$typeInfo.getInternalName());
+        objToWrite.$typeInfo.forEachAttr(function (curAttrInfo) {
 
-	var resultList = [],
-		i;
-
-	if (Array.isArray(aJsonNode)) {
+            if (!clmnVisib || clmnVisib.isAttributeVisible(curAttrInfo)) {
 
-		for (i = 0; i < aJsonNode.length; i++) {
+                if (!asProxy || curAttrInfo.isKey()) {
+                    attrValue = objToWrite[curAttrInfo.getInternalName()];
 
-			if (typeof aJsonNode[i] === "object") {
-				resultList.push(this.writeObjectToJson(aJsonNode[i], aPersistenceType));
-			} else {
-				throw new JDY.base.JdyPersistentException("Error parsing JSON. No JSONObject: " + aJsonNode[i].toString());
-			}
-		}
-	}
-	return resultList;
-};
+                    if (attrValue === undefined) {
+                        throw new JdyPersistentException('Missing value for type in attr value: ' + curAttrInfo.getInternalName());
+                    } else {
+                        if (attrValue !== null) {
 
+                            if (curAttrInfo.isPrimitive()) {
 
-JDY.json.JsonFileWriter.prototype.writeObjectToJson = function (objToWrite, aPersistenceType) {
-	"use strict";
+                                if (!curAttrInfo.isGenerated || that.writeGenreatedAtr) {
+                                    let primAttrType = curAttrInfo as JdyPrimitiveAttributeInfo;
+                                    jsonObject[that.nameForAttr(curAttrInfo)] = primAttrType.getType().handlePrimitiveKey(jsonWriterValueGetVisitor(attrValue));
+                                }
+                            } else {
+                                console.log(curAttrInfo.getInternalName());
 
-	var jsonObject = this.createClassInfoNode(objToWrite, aPersistenceType, false);
-	return jsonObject;
-};
+                                isProxy = asProxy || that.writeStrategy.isWriteAsProxy();
+                                refJsonNode = that.createClassInfoNode(attrValue, aPersistenceType, isProxy, null);
+                                jsonObject[that.nameForAttr(curAttrInfo)] = refJsonNode;
+                            }
+                        } else {
+                            if (that.writeNullValues) {
+                                jsonObject[that.nameForAttr(curAttrInfo)] = null;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
-JDY.json.JsonFileWriter.prototype.createClassInfoNode = function createClassInfoNode(objToWrite, aPersistenceType, asProxy) {
-	"use strict";
+        objToWrite.$typeInfo.forEachAssoc(function (curAssoc) {
+            if (!asProxy && !that.writeStrategy.isWriteAsProxy()) {
 
-	var jsonObject = {},
-		attrValue,
-		that = this,
-		isProxy,
-		refJsonNode;
+                jsonObject[that.nameForAssoc(curAssoc)] = that.writeObjectList(objToWrite.assocVals(curAssoc), aPersistenceType, curAssoc);
+            }
+        });
 
+        return jsonObject;
+    };
 
-	this.addMetaDataFields(jsonObject, objToWrite.$typeInfo, (asProxy) ? 'PROXY' : aPersistenceType);
+    private addMetaDataFields (jsonObject, aClassInfo, aPersistenceType) {
+        'use strict';
 
-	objToWrite.$typeInfo.forEachAttr(function (curAttrInfo) {
+        jsonObject[COMPACT_TYPE_TAG] = aClassInfo.getShortName();
 
-		if (!asProxy || curAttrInfo.isKey()) {
-			attrValue = objToWrite[curAttrInfo.getInternalName()];
+        if (this.writePersistence) {
+            jsonObject[COMPACT_PERSISTENCE_TAG] = aPersistenceType;
+        }
+    };
 
-			if (attrValue === undefined) {
-				throw new JDY.base.JdyPersistentException("Missing value for type in attr value: " + curAttrInfo.getInternalName());
-			} else {
-				if (attrValue !== null) {
-
-					if (curAttrInfo.isPrimitive()) {
-
-						jsonObject[curAttrInfo.getInternalName()] = curAttrInfo.getType().handlePrimitiveKey(that.jsonValueGetVisitor(attrValue));
-					} else {
-						isProxy = asProxy || that.writeStrategy.isWriteAsProxy();
-						refJsonNode = that.createClassInfoNode(attrValue, aPersistenceType, isProxy);
-						jsonObject[curAttrInfo.getInternalName()] =  refJsonNode;
-					}
-				} else {
-					jsonObject[curAttrInfo.getInternalName()] =  null;
-				}
-			}
-		}
-	});
+    private nameForAssoc (anAssocInfo) {
 
+        return (this.name2Abbr[anAssocInfo.getAssocName()])
+            ? this.name2Abbr[anAssocInfo.getAssocName()]
+            : anAssocInfo.getAssocName();
+    };
 
+    private nameForAttr (attrInfo) {
 
+        return (this.name2Abbr[attrInfo.getInternalName()])
+            ? this.name2Abbr[attrInfo.getInternalName()]
+            : attrInfo.getInternalName();
+    };
 
-	objToWrite.$typeInfo.forEachAssoc(function (curAssoc) {
-		if (!asProxy && !that.writeStrategy.isWriteAsProxy() ) { 
-			jsonObject.setAssocVals(that.createAssociationList(objToWrite.getValue(curAssoc), aPersistenceType));
-		}
-	});
+    private createAssocClmnVisibility (aAssocInfo) {
 
-	return jsonObject;
-};
+        return {
 
+            isAttributeVisible: function (aAttrInfo) {
 
-JDY.json.JsonFileWriter.prototype.addMetaDataFields = function (jsonObject, aClassInfo, aPersistenceType) {
-	"use strict";
-
-	jsonObject[JDY.json.NAMESPACE_TAG] =  aClassInfo.getRepoName();
-	jsonObject[JDY.json.CLASS_INTERNAL_NAME_TAG] = aClassInfo.getInternalName();
-	jsonObject[JDY.json.PERSISTENCE_TAG] = (aPersistenceType) ? aPersistenceType : "" ;
-};
-
-JDY.json.JsonFileWriter.prototype.jsonValueGetVisitor = function (aAttrValue) {
-	"use strict";
-
-	return {
-
-		handleBoolean: function (aType) {
-
-			if (typeof aAttrValue !== 'boolean') {
-				throw new JDY.base.JdyPersistentException("Wrong type boolean : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
-
-		handleDecimal: function (aType) {
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aType;
-		},
-
-		handleTimeStamp: function (aType) {
-			return aAttrValue.toISOString();
-		},
-
-		handleFloat: function (aType) {
-			return aAttrValue;
-		},
-
-		handleLong: function (aType) {
-
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
-
-		handleText: function (aType) {
-			return aAttrValue;
-		},
-
-		handleVarChar: function (aType) {
-			return aAttrValue;
-		},
-
-		handleBlob: function (aType) {
-			throw new JDY.base.JdyPersistentException("Blob Values not supported");
-			//return aAttrValue;
-		}
-	};
-};
-
-
-JDY.json.JsonCompactFileWriter = function (aName2Abbr) {
-	"use strict";
-	this.writeStrategy = {
-		isWriteAsProxy : function () {
-			return false;
-		}
-	};
-	
-	this.writeNullValues = false;
-	this.writeGenreatedAtr = false;
-	this.writePersistence = false;
-	this.name2Abbr = (aName2Abbr) ? aName2Abbr : {};
-};
-
-
-JDY.json.JsonCompactFileWriter.prototype.writeObjectList = function (aJsonNode, aPersistenceType, aAssocInfo) {
-	"use strict";
-
-	var resultList = [],
-		i;
-
-	if (Array.isArray(aJsonNode)) {
-
-		for (i = 0; i < aJsonNode.length; i++) {
-
-			if (typeof aJsonNode[i] === "object") {
-				resultList.push(this.writeObjectToJson(aJsonNode[i], aPersistenceType, JDY.json.createAssocClmnVisibility(aAssocInfo)));
-			} else {
-				throw new JDY.base.JdyPersistentException("Error parsing JSON. No JSONObject: " + aJsonNode[i].toString());
-			}
-		}
-	}
-	return resultList;
-};
-
-JDY.json.JsonCompactFileWriter.prototype.writeObjectToJson = function (objToWrite, aPersistenceType, clmnVisibility) {
-	"use strict";
-
-	var jsonObject = this.createClassInfoNode(objToWrite, aPersistenceType, false, clmnVisibility);
-	return jsonObject;
-};
-
-JDY.json.JsonCompactFileWriter.prototype.createClassInfoNode = function createClassInfoNode(objToWrite, aPersistenceType, asProxy, aClmnVisibility) {
-	"use strict";
-
-	var jsonObject = {},
-		attrValue,
-		that = this,
-		isProxy,
-		refJsonNode,
-		clmnVisib = aClmnVisibility;
-
-
-	this.addMetaDataFields(jsonObject, objToWrite.$typeInfo, (asProxy) ? 'PROXY' : aPersistenceType);
-	console.log("t: "+ objToWrite.$typeInfo.internalName);
-	objToWrite.$typeInfo.forEachAttr(function (curAttrInfo) {
-
-		if( !clmnVisib || clmnVisib.isAttributeVisible(curAttrInfo)) {
-
-			if (!asProxy || curAttrInfo.isKey()) {
-				attrValue = objToWrite[curAttrInfo.getInternalName()];
-
-				if (attrValue === undefined) {
-					throw new JDY.base.JdyPersistentException("Missing value for type in attr value: " + curAttrInfo.getInternalName());
-				} else {
-					if (attrValue !== null) {
-
-						if (curAttrInfo.isPrimitive()) {
-
-							if( !curAttrInfo.isGenerated || that.writeGenreatedAtr) {
-								jsonObject[that.nameForAttr(curAttrInfo)] = curAttrInfo.getType().handlePrimitiveKey(that.jsonValueGetVisitor(attrValue));
-							}
-						} else {
-							console.log(curAttrInfo.getInternalName());
-
-							isProxy = asProxy || that.writeStrategy.isWriteAsProxy();
-							refJsonNode = that.createClassInfoNode(attrValue, aPersistenceType, isProxy);
-							jsonObject[that.nameForAttr(curAttrInfo)] =  refJsonNode;
-						}
-					} else {
-						if(that.writeNullValues) {
-							jsonObject[that.nameForAttr(curAttrInfo)] =  null;
-						}
-					}
-				}
-			}
-		}
-	});
-
-
-	objToWrite.$typeInfo.forEachAssoc(function (curAssoc) {
-		if (!asProxy && !that.writeStrategy.isWriteAsProxy() ) { 
-
-			jsonObject[that.nameForAssoc(curAssoc)] = that.writeObjectList(objToWrite.assocVals(curAssoc), aPersistenceType, curAssoc);
-		}
-	});
-
-	return jsonObject;
-};
-
-JDY.json.JsonCompactFileWriter.prototype.addMetaDataFields = function (jsonObject, aClassInfo, aPersistenceType) {
-	"use strict";
-
-	jsonObject[JDY.json.COMPACT_TYPE_TAG] = aClassInfo.getShortName();
-
-	if(this.writePersistence) {
-		jsonObject[JDY.json.COMPACT_PERSISTENCE_TAG] = (aPersistenceType) ? aPersistenceType : "" ;
-	}
-};
-
-JDY.json.JsonCompactFileWriter.prototype.nameForAssoc = function (anAssocInfo) {
-	
-	return (this.name2Abbr[anAssocInfo.getAssocName()]) 
-				? this.name2Abbr[anAssocInfo.getAssocName()]
-				: anAssocInfo.getAssocName();
-};
-
-
-JDY.json.JsonCompactFileWriter.prototype.nameForAttr = function (attrInfo) {
-	
-	return (this.name2Abbr[attrInfo.getInternalName()]) 
-				? this.name2Abbr[attrInfo.getInternalName()] 
-				: attrInfo.getInternalName();
-};
-
-JDY.json.JsonCompactFileWriter.prototype.jsonValueGetVisitor = function (aAttrValue) {
-	"use strict";
-
-	return {
-
-		handleBoolean: function (aType) {
-
-			if (typeof aAttrValue !== 'boolean') {
-				throw new JDY.base.JdyPersistentException("Wrong type boolean : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
-
-		handleDecimal: function (aType) {
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aType;
-		},
-
-		handleTimeStamp: function (aType) {
-			return new Date(aAttrValue);
-		},
-
-		handleFloat: function (aType) {
-			return aAttrValue;
-		},
-
-		handleLong: function (aType) {
-
-			if (typeof aAttrValue !== 'number') {
-				throw new JDY.base.JdyPersistentException("Wrong type long : " + aAttrValue);
-			}
-			return aAttrValue;
-		},
-
-		handleText: function (aType) {
-			return aAttrValue;
-		},
-
-		handleVarChar: function (aType) {
-			return aAttrValue;
-		},
-
-		handleBlob: function (aType) {
-			throw new JDY.base.JdyPersistentException("Blob Values not supported");
-			//return aAttrValue;
-		}
-	};
-};
-
-
-JDY.json.createAssocClmnVisibility = function(aAssocInfo) {
-	
-	return {
-		
-		isAttributeVisible: function(aAttrInfo) {
-
-			return (!aAssocInfo) || (aAssocInfo.getMasterClassReference() !== aAttrInfo);
-		}
-	};
+                return (!aAssocInfo) || (aAssocInfo.getMasterClassReference() !== aAttrInfo);
+            }
+        };
+    };
 };

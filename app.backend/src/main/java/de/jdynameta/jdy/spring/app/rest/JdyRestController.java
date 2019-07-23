@@ -40,7 +40,7 @@ public class JdyRestController {
 
     @RequestMapping(value="jdy/meta",method= RequestMethod.GET)
     public String metaModel() {
-        LOG.info("about");
+        LOG.info("metaModel");
         JpaMetamodelReader reader = new JpaMetamodelReader();
         ClassRepository repo = reader.createMetaRepository(entityManager.getMetamodel(), "TestApp");
 
