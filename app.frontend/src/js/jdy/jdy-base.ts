@@ -979,6 +979,10 @@ export class JdyObjectListImpl implements JdyObjectList {
         this.objects.push(anValueObject);
     }
 
+    public getObjects (): any[] {
+
+        return this.objects;
+    }
 };
 
 export class JdyProxyObjectList implements JdyObjectList {

@@ -232,10 +232,10 @@ function buildAttrForMetaRepo (metaRepo: JdyRepository, anAppClassInfo: any): Pr
                         appDomainVals = appAttr.assocVals('DomainValues');
                         domainVals = [];
                         if (appDomainVals) {
-                            for (j = 0; j < appDomainVals.length; j++) {
+                            for (j = 0; j < appDomainVals.getObjects().length; j++) {
                                 domainVals.push({
-                                    dbValue: appDomainVals[j].dbValue,
-                                    representation: appDomainVals[j].representation
+                                    dbValue: appDomainVals.getObjects()[j].dbValue,
+                                    representation: appDomainVals.getObjects()[j].representation
                                 });
                             }
                         }
@@ -248,10 +248,10 @@ function buildAttrForMetaRepo (metaRepo: JdyRepository, anAppClassInfo: any): Pr
                         appDomainVals = appAttr.assocVals('DomainValues');
                         domainVals = [];
                         if (appDomainVals) {
-                            for (j = 0; j < appDomainVals.length; j++) {
+                            for (j = 0; j < appDomainVals.getObjects().length; j++) {
                                 domainVals.push({
-                                    dbValue: appDomainVals[j].dbValue,
-                                    representation: appDomainVals[j].representation
+                                    dbValue: appDomainVals.getObjects()[j].dbValue,
+                                    representation: appDomainVals.getObjects()[j].representation
                                 });
                             }
                         }
@@ -262,10 +262,10 @@ function buildAttrForMetaRepo (metaRepo: JdyRepository, anAppClassInfo: any): Pr
                         appDomainVals = appAttr.assocVals('DomainValues');
                         domainVals = [];
                         if (appDomainVals) {
-                            for (j = 0; j < appDomainVals.length; j++) {
+                            for (j = 0; j < appDomainVals.getObjects().length; j++) {
                                 domainVals.push({
-                                    dbValue: appDomainVals[j].dbValue,
-                                    representation: appDomainVals[j].representation
+                                    dbValue: appDomainVals.getObjects()[j].dbValue,
+                                    representation: appDomainVals.getObjects()[j].representation
                                 });
                             }
                         }

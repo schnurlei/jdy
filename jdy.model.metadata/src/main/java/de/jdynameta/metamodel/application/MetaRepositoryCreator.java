@@ -36,29 +36,29 @@ public class MetaRepositoryCreator
 	public ClassRepository createMetaRepository(AppRepository appRep)
 	{
 		JdyRepositoryModel metaRepo = new JdyRepositoryModel(appRep.getApplicationName());
-		
+
 		// build base classes
 		for (AppClassInfo curClass : appRep.getClassesColl())
 		{
 			addClassToMetaRepo(metaRepo, curClass);
-		} 
+		}
 
-		// add Attributes 
+		// add Attributes
 		for (AppClassInfo curClass : appRep.getClassesColl())
 		{
 			buildAttrForMetaRepo(metaRepo, curClass);
-		} 
+		}
 
 		for (AppClassInfo curClass : appRep.getClassesColl())
 		{
 			buildAssocsForMetaRepo(metaRepo, curClass);
-		} 
+		}
 
 		for (AppClassInfo curClass : appRep.getClassesColl())
 		{
 			buildSubclassesForMetaRepo(metaRepo, curClass);
-		} 
-		
+		}
+
 		return metaRepo;
 	}
 
@@ -70,16 +70,16 @@ public class MetaRepositoryCreator
 		metaClass.setShortName(curClass.getInternalName());
 		metaClass.setNameSpace(curClass.getNameSpace());
 	}
-	
+
 	private void buildAttrForMetaRepo(ClassRepository metaRepo, AppClassInfo anAppClassInfo)
 	{
 		JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anAppClassInfo.getInternalName());
-		
+
 		for (AppAttribute appAttr : getAttributesColl(anAppClassInfo))
 		{
-			JdyAbstractAttributeModel metaAttr = null; 
+			JdyAbstractAttributeModel metaAttr = null;
 			if(appAttr instanceof AppPrimitiveAttribute) {
-				PrimitiveType metaType = createMetaRepoType((AppPrimitiveAttribute) appAttr); 
+				PrimitiveType metaType = createMetaRepoType((AppPrimitiveAttribute) appAttr);
 				metaAttr = new JdyPrimitiveAttributeModel(metaType
 							, appAttr.getInternalName(),appAttr.getInternalName()
 							,appAttr.isKey(), appAttr.isNotNull());
@@ -96,12 +96,12 @@ public class MetaRepositoryCreator
 
 			metaAttr.setGenerated(appAttr.isGenerated());
 			metaAttr.setGroup(appAttr.getAttrGroup());
-			
+
 			metaClass.addAttributeInfo(metaAttr);
 		}
-		
+
 	}
-	
+
 	private void buildAssocsForMetaRepo(ClassRepository metaRepo, AppClassInfo annAppClass)
 	{
 		JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(annAppClass.getInternalName());
@@ -109,17 +109,17 @@ public class MetaRepositoryCreator
 		for (Object appAssocObj : annAppClass.getAssociationsColl())
 		{
 			AppAssociation appAssoc = (AppAssociation) appAssocObj;
-			
-			JdyClassInfoModel masterClass = (JdyClassInfoModel) metaRepo.getClassForName(appAssoc.getMasterClassReference().getMasterclass().getInternalName()); 
+
+			JdyClassInfoModel masterClass = (JdyClassInfoModel) metaRepo.getClassForName(appAssoc.getMasterClassReference().getMasterclass().getInternalName());
 
 			JdyObjectReferenceModel metaMasterClassRef = (JdyObjectReferenceModel) masterClass.getAttributeInfoForExternalName(appAssoc.getMasterClassReference().getInternalName());
-			JdyClassInfoModel metaDetailClass = (JdyClassInfoModel) metaRepo.getClassForName(appAssoc.getMasterClassReference().getMasterclass().getInternalName()); 
-			String metaAssocName = appAssoc.getNameResource();			
+			JdyClassInfoModel metaDetailClass = (JdyClassInfoModel) metaRepo.getClassForName(appAssoc.getMasterClassReference().getMasterclass().getInternalName());
+			String metaAssocName = appAssoc.getNameResource();
 			JdyAssociationModel metaAssoc = new JdyAssociationModel(metaMasterClassRef, metaDetailClass, metaAssocName);
 			metaClass.addAssociation(metaAssoc);
 		}
 	}
-	
+
 	private void buildSubclassesForMetaRepo(ClassRepository metaRepo, AppClassInfo anAppClass)
 	{
 		JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anAppClass.getInternalName());
@@ -128,23 +128,23 @@ public class MetaRepositoryCreator
 			JdyClassInfoModel metaSuper = (JdyClassInfoModel) metaRepo.getClassForName(appSuper.getInternalName());
 			metaSuper.addSubclass(metaClass);
 		}
-		
+
 	}
-	
+
 	public AppClassInfo getDetailClass(AppAssociation anAssoc)
 	{
 		return (anAssoc.getMasterClassReference() == null) ? null : anAssoc.getMasterClassReference().getMasterclass();
 	}
-	
-	
+
+
 	private JdyClassInfoModel getMetaRepoRefClass(AppObjectReference anAppRef, ClassRepository metaRepo)
-	{	
+	{
 		return (JdyClassInfoModel) metaRepo.getClassForName(anAppRef.getReferencedClass().getInternalName());
 	}
-	
+
 	private PrimitiveType createMetaRepoType(AppPrimitiveAttribute anAppPrim)
-	{	
-		PrimitiveType metaType = null; 
+	{
+		PrimitiveType metaType = null;
 		if(anAppPrim instanceof AppBlobType) {
 			metaType = new JdyBlobType();
 		} else if(anAppPrim instanceof AppBooleanType) {
@@ -182,7 +182,7 @@ public class MetaRepositoryCreator
 				}
 			}
 			metaType = metaStringType;
-			
+
 		} else if(anAppPrim instanceof AppTimestampType) {
 			metaType = new JdyTimeStampType();
 		} else if(anAppPrim instanceof AppVarCharType) {
@@ -192,8 +192,8 @@ public class MetaRepositoryCreator
 		}
 		return metaType;
 	}
-	
-	private GenericValueObjectImpl insertToDb(GenericValueObjectImpl objToInsert) throws JdyPersistentException 
+
+	private GenericValueObjectImpl insertToDb(GenericValueObjectImpl objToInsert) throws JdyPersistentException
 	{
 		if(this.metaCon != null) {
 			return this.metaCon.insertObjectInDb(objToInsert, objToInsert.getClassInfo());
@@ -202,14 +202,14 @@ public class MetaRepositoryCreator
 		}
 	}
 
-	private void updateToDb(GenericValueObjectImpl objToUpdate) throws JdyPersistentException 
+	private void updateToDb(GenericValueObjectImpl objToUpdate) throws JdyPersistentException
 	{
 		if(this.metaCon != null) {
 			this.metaCon.updateObjectToDb(objToUpdate, objToUpdate.getClassInfo());
 		}
 	}
 
-	
+
 	public AppRepository createAppRepository(ClassRepository  metaRep) throws JdyPersistentException
 	{
 		AppRepository appRepo = new AppRepository();
@@ -217,33 +217,33 @@ public class MetaRepositoryCreator
 		appRepo.setName(metaRep.getRepoName());
 		appRepo.setAppVersion(1L);
 		appRepo = (AppRepository) insertToDb(appRepo);
-		
+
 		ChangeableObjectList<AppClassInfo> classesColl = new ChangeableObjectList<AppClassInfo>();
 		appRepo.setClassesColl(classesColl);
-		
+
 		// build base classes
 		for (ClassInfo curClass : metaRep.getAllClassInfosIter())
 		{
 			addClassToAppRepo(appRepo, classesColl, curClass);
-		} 
+		}
 
-		// add Attributes 
+		// add Attributes
 		for (ClassInfo curClass : metaRep.getAllClassInfosIter())
 		{
 			buildAttrForAppRepo(appRepo, curClass);
-		} 
+		}
 
 		for (ClassInfo curClass : metaRep.getAllClassInfosIter())
 		{
 			buildAssocsForAppRepo(appRepo, curClass);
-		} 
-		
+		}
+
 		for (ClassInfo curClass : metaRep.getAllClassInfosIter())
 		{
 			buildSubclassesForAppRepo(appRepo, curClass);
-		} 
+		}
 
-		
+
 		return appRepo;
 	}
 
@@ -257,7 +257,7 @@ public class MetaRepositoryCreator
 		appClass.setNameSpace(curClass.getNameSpace());
 		ChangeableObjectList<AppClassInfo> subClassColl = new ChangeableObjectList<AppClassInfo>();
 		appClass.setSubclassesColl(subClassColl);
-		
+
 		appClass = (AppClassInfo) insertToDb(appClass);
 		aClassesColl.addObject(appClass);
 	}
@@ -268,13 +268,13 @@ public class MetaRepositoryCreator
 		ChangeableObjectList<AppAttribute> attrColl = new ChangeableObjectList<AppAttribute>();
 		appClass.setAttributesColl(attrColl);
 		long i = 0;
-		
+
 		for (AttributeInfo metaAttr : aMetaClass.getAttributeInfoIterator())
 		{
 			if( aMetaClass.isSubclassAttribute(metaAttr)) {
-				AppAttribute appAttr = null; 
+				AppAttribute appAttr = null;
 				if(metaAttr instanceof PrimitiveAttributeInfo) {
-					appAttr = createAppRepoAttr((PrimitiveAttributeInfo) metaAttr); 
+					appAttr = createAppRepoAttr((PrimitiveAttributeInfo) metaAttr);
 				} else {
 					ObjectReferenceAttributeInfo metaRef= (ObjectReferenceAttributeInfo)metaAttr;
 					AppClassInfo refClass = getClassFromAppRepo(aAppRepo, metaRef.getReferencedClass());
@@ -291,7 +291,7 @@ public class MetaRepositoryCreator
 				appAttr.setAttrGroup(metaAttr.getAttrGroup());
 				appAttr.setPos(i++);
 				appAttr.setMasterclass(appClass);
-				
+
 				appAttr = (AppAttribute) insertToDb(appAttr);
 				attrColl.addObject(appAttr);
 				if(metaAttr instanceof PrimitiveAttributeInfo) {
@@ -300,84 +300,87 @@ public class MetaRepositoryCreator
 			}
 		}
 	}
-	
+
 	private AppClassInfo getClassFromAppRepo(AppRepository aAppRepo, ClassInfo aMetaClass)
 	{
 		AppClassInfo foundedClass = null;
-		
+
 		for (AppClassInfo appClass : aAppRepo.getClassesColl())
 		{
-			if( appClass.getInternalName().equals(aMetaClass.getInternalName())) 
+			if( appClass.getInternalName().equals(aMetaClass.getInternalName()))
 			{
 				foundedClass= appClass;
 			}
 		}
-		
+
 		return foundedClass;
 	}
-	
+
 	private void createDomainValues(PrimitiveAttributeInfo aMetaPrim, AppAttribute appAttr) throws JdyPersistentException
 	{
 		if( ((PrimitiveAttributeInfo)aMetaPrim).getType() instanceof TextType) {
 
-			if ( ((TextType)aMetaPrim.getType()).getDomainValues() != null 
-					&& ((TextType)aMetaPrim.getType()).getDomainValues().size() > 0) 
+			if ( ((TextType)aMetaPrim.getType()).getDomainValues() != null
+					&& ((TextType)aMetaPrim.getType()).getDomainValues().size() > 0)
 			{
 
 				AppTextType appTextType = (AppTextType) appAttr;
 				ChangeableObjectList<AppStringDomainModel> attrColl = new ChangeableObjectList<AppStringDomainModel>();
 				appTextType.setDomainValuesColl(attrColl);
-				for( DbDomainValue<String> domainVal : ((TextType)aMetaPrim.getType()).getDomainValues() ) 
+				for( DbDomainValue<String> domainVal : ((TextType)aMetaPrim.getType()).getDomainValues() )
 				{
 					AppStringDomainModel appDomainVal = new AppStringDomainModel();
 					appDomainVal.setDbValue(domainVal.getDbValue());
 					appDomainVal.setRepresentation(domainVal.getRepresentation());
 					appDomainVal.setType(appTextType);
+					attrColl.addObject(appDomainVal);
 					insertToDb(appDomainVal);
 				}
 			}
 		} else if(aMetaPrim.getType() instanceof LongType) {
-			if ( ((LongType)aMetaPrim.getType()).getDomainValues() != null 
-					&& ((LongType)aMetaPrim.getType()).getDomainValues().size() > 0) 
+			if ( ((LongType)aMetaPrim.getType()).getDomainValues() != null
+					&& ((LongType)aMetaPrim.getType()).getDomainValues().size() > 0)
 			{
 
 				AppLongType appType = (AppLongType) appAttr;
-				ChangeableObjectList<AppStringDomainModel> attrColl = new ChangeableObjectList<AppStringDomainModel>();
+				ChangeableObjectList<AppLongDomainModel> attrColl = new ChangeableObjectList<>();
 				appType.setDomainValuesColl(attrColl);
-				for( DbDomainValue<Long> domainVal : ((LongType)aMetaPrim.getType()).getDomainValues() ) 
+				for( DbDomainValue<Long> domainVal : ((LongType)aMetaPrim.getType()).getDomainValues() )
 				{
 					AppLongDomainModel appDomainVal = new AppLongDomainModel();
 					appDomainVal.setDbValue(domainVal.getDbValue());
 					appDomainVal.setRepresentation(domainVal.getRepresentation());
 					appDomainVal.setType(appType);
+					attrColl.addObject(appDomainVal);
 					insertToDb(appDomainVal);
 				}
 			}
 		} else if(aMetaPrim.getType() instanceof CurrencyType) {
-			if ( ((CurrencyType)aMetaPrim.getType()).getDomainValues() != null 
-					&& ((CurrencyType)aMetaPrim.getType()).getDomainValues().size() > 0) 
+			if ( ((CurrencyType)aMetaPrim.getType()).getDomainValues() != null
+					&& ((CurrencyType)aMetaPrim.getType()).getDomainValues().size() > 0)
 			{
 
 				AppDecimalType appType = (AppDecimalType) appAttr;
-				ChangeableObjectList<AppStringDomainModel> attrColl = new ChangeableObjectList<AppStringDomainModel>();
+				ChangeableObjectList<AppDecimalDomainModel> attrColl = new ChangeableObjectList<>();
 				appType.setDomainValuesColl(attrColl);
-				for( DbDomainValue<BigDecimal> domainVal : ((CurrencyType)aMetaPrim.getType()).getDomainValues() ) 
+				for( DbDomainValue<BigDecimal> domainVal : ((CurrencyType)aMetaPrim.getType()).getDomainValues() )
 				{
 					AppDecimalDomainModel appDomainVal = new AppDecimalDomainModel();
 					appDomainVal.setDbValue(domainVal.getDbValue());
 					appDomainVal.setRepresentation(domainVal.getRepresentation());
 					appDomainVal.setType(appType);
+					attrColl.addObject(appDomainVal);
 					insertToDb(appDomainVal);
 				}
 			}
-			
+
 		}
 	}
-	
-	
+
+
 	private AppPrimitiveAttribute createAppRepoAttr(PrimitiveAttributeInfo aMetaPrim)
-	{	
-		AppPrimitiveAttribute  appType = null; 
+	{
+		AppPrimitiveAttribute  appType = null;
 		if(aMetaPrim.getType() instanceof BlobType) {
 			appType = new AppBlobType();
 //			((AppBlobType)appType).setTypeHintId(((BlobType)aMetaPrim).getTypeHint().name());
@@ -402,7 +405,7 @@ public class MetaRepositoryCreator
 			} else {
 				appTextType.setTypeHint(null);
 			}
-			if ( ((TextType)aMetaPrim.getType()).getDomainValues() != null 
+			if ( ((TextType)aMetaPrim.getType()).getDomainValues() != null
 					&& ((TextType)aMetaPrim.getType()).getDomainValues().size() > 0) {
 				ChangeableObjectList<AppStringDomainModel> attrColl = new ChangeableObjectList<AppStringDomainModel>();
 				appTextType.setDomainValuesColl(attrColl);
@@ -412,9 +415,9 @@ public class MetaRepositoryCreator
 					appDomainVal.setRepresentation(domainVal.getRepresentation());
 					appDomainVal.setType(appTextType);
 				}
-				
+
 			}
-			
+
 			appType = appTextType;
 		} else if(aMetaPrim.getType() instanceof TimeStampType) {
 			appType = new AppTimestampType();
@@ -443,15 +446,15 @@ public class MetaRepositoryCreator
 
 		for (AssociationInfo metaAssocObj : aMetaClass.getAssociationInfoIterator())
 		{
-			AppClassInfo detailClass = getClassFromAppRepo(aAppRepo, metaAssocObj.getDetailClass()); 
-			AppClassInfo masterClass = getClassFromAppRepo(aAppRepo, metaAssocObj.getMasterClassReference().getReferencedClass()); 
+			AppClassInfo detailClass = getClassFromAppRepo(aAppRepo, metaAssocObj.getDetailClass());
+			AppClassInfo masterClass = getClassFromAppRepo(aAppRepo, metaAssocObj.getMasterClassReference().getReferencedClass());
 
 			// No superclass associations
 			if (masterClass.equals(appClass)) {
-				
+
 				AppObjectReference metaMasterClassRef = (AppObjectReference) getAttributeInfoForMetaAttr(detailClass, metaAssocObj.getMasterClassReference());
-				// AppClassInfo metaDetailClass = getClassFromAppRepo(aAppRepo,metaAssocObj.getDetailClass()); 
-				String metaAssocName = metaAssocObj.getNameResource();			
+				// AppClassInfo metaDetailClass = getClassFromAppRepo(aAppRepo,metaAssocObj.getDetailClass());
+				String metaAssocName = metaAssocObj.getNameResource();
 				AppAssociation appAssoc = new AppAssociation();
 				appAssoc.setMasterclass(masterClass);
 				appAssoc.setMasterClassReference(metaMasterClassRef);
@@ -464,12 +467,12 @@ public class MetaRepositoryCreator
 		}
 	}
 
-	private void buildSubclassesForAppRepo(AppRepository aAppRepo, ClassInfo aMetaClass) throws JdyPersistentException 
+	private void buildSubclassesForAppRepo(AppRepository aAppRepo, ClassInfo aMetaClass) throws JdyPersistentException
 	{
 		AppClassInfo appClass = getClassFromAppRepo(aAppRepo, aMetaClass);
 		ClassInfo metaSuper = aMetaClass.getSuperclass();
-		
-		if( metaSuper != null) 
+
+		if( metaSuper != null)
 		{
 			AppClassInfo appSuper = getClassFromAppRepo(aAppRepo, metaSuper);
 			appClass.setSuperclass(appSuper);
@@ -480,8 +483,8 @@ public class MetaRepositoryCreator
 			((EditableObjectList)appSuper.getSubclassesColl()).addObject(appClass);
 		}
 	}
-	
-	
+
+
 	/* (non-Javadoc)
 	 * @see de.comafra.model.metainfo.ClassInfo#getAttributeInfoForExternalName(java.lang.String)
 	 */
@@ -494,60 +497,60 @@ public class MetaRepositoryCreator
 				break;
 			}
 		}
-		return result;	
+		return result;
 	}
-	
+
 	/**
 	 * Get all  AttributeInfoModel
 	 *
 	 * @return get the Collection ofAttributeInfoModel
 	 */
-	public static ObjectList<AppAttribute> getAttributesColl(AppClassInfo anAppClass) 
+	public static ObjectList<AppAttribute> getAttributesColl(AppClassInfo anAppClass)
 	{
 		ObjectListSortWrapper<AppAttribute> sortedAttributes;
 
 		sortedAttributes = new ObjectListSortWrapper<AppAttribute>();
 		sortedAttributes.setSortComparator(AttributeComparator.comparator);
 		sortedAttributes.setWrappedObjectList((ObjectList<AppAttribute>) anAppClass.getValue(anAppClass.getClassInfo().getAssoc("Attributes")));
-		
+
 		return sortedAttributes;
-	}	
-	
+	}
+
 	/* (non-Javadoc)
 	 * @see de.comafra.model.metainfo.impl.DefaultClassInfo#getAllAttributeList()
 	 */
-	protected ArrayList<AppAttribute> getAllAttributeList(AppClassInfo anAppClass) 
+	protected ArrayList<AppAttribute> getAllAttributeList(AppClassInfo anAppClass)
 	{
-		ArrayList<AppAttribute> tmpAttrList = new ArrayList<AppAttribute>(getAttributesColl(anAppClass).size()); 
-		
+		ArrayList<AppAttribute> tmpAttrList = new ArrayList<AppAttribute>(getAttributesColl(anAppClass).size());
+
 		if( anAppClass.getSuperclass() != null) {
 			for(AppAttribute curAttr : getAllAttributeList(anAppClass.getSuperclass())) {
 				tmpAttrList.add((AppAttribute) curAttr);
 			}
 		}
-			
+
 		for(Iterator<AppAttribute> attrIter= getAttributesColl(anAppClass).iterator(); attrIter.hasNext();) {
 			tmpAttrList.add(attrIter.next());
 		}
-		
+
 		Collections.sort(tmpAttrList, AttributeComparator.comparator);
 		return 	tmpAttrList;
-	}	
-	
-	
+	}
+
+
 	@SuppressWarnings("serial")
 	private static class AttributeComparator implements Comparator<AppAttribute>, Serializable
 	{
 		private static final AttributeComparator comparator = new AttributeComparator();
-		
+
 		@Override
 		public int compare(AppAttribute aO1, AppAttribute aO2)
 		{
 			int comparePos = aO1.getPosValue().compareTo(aO2.getPosValue());
 			return (comparePos != 0) ? comparePos : aO1.getInternalName().compareTo(aO2.getInternalName());
 		}
-	}	
-	
+	}
+
 	private static class DomValue<Type> implements DbDomainValue<Type>
 	{
 		private final Type		domValue;
