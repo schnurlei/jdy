@@ -1,11 +1,11 @@
 import { JdyAssociationModel, JdyPersistentException, JdyTypedValueObject } from '@/js/jdy/jdy-base';
-import { FilterCreator, META_REPO_NAME } from '@/js/jdy/jdy-meta';
+import {convertAppRepositoryToRepository, createAppRepository, FilterCreator, META_REPO_NAME} from '@/js/jdy/jdy-meta';
 import { JsonCompactFileWriter, JsonFileReader, JsonFileWriter, Operation } from '@/js/jdy/jdy-json';
 
-class JsonHttpObjectReader {
+export class JsonHttpObjectReader {
 
     private basepath;
-    private reader = new JsonFileReader();
+    private jsonReader = new JsonFileReader();
     private writer = new JsonFileWriter();
     private filterCreator = new FilterCreator();
     private att2AbbrMap: { [name: string]: string };
@@ -30,6 +30,26 @@ class JsonHttpObjectReader {
 
     }
 
+    public loadMetadataFromDb (successFunct, failFunc) {
+
+        let deferredCall;
+        let rep = createAppRepository();
+        let appRep = rep.getClassInfo('AppRepository');
+
+        deferredCall = this.createAjaxGetCall('api/jdy/meta');
+        deferredCall.then(rtoData => {
+
+            var resultObjects = this.jsonReader.readObjectList(rtoData, appRep);
+            convertAppRepositoryToRepository(resultObjects[0], (metaRep) => {
+                successFunct(metaRep);
+            });
+        }).catch(data => {
+            if (failFunc) {
+                failFunc(data);
+            }
+        });
+    }
+
     public loadValuesFromDb (aFilter, successFunct, failFunc) {
         'use strict';
 
@@ -48,7 +68,7 @@ class JsonHttpObjectReader {
 
         deferredCall.done(function (rtoData) {
 
-            var resultObjects = that.reader.readObjectList(rtoData, aFilter.resultType);
+            var resultObjects = that.jsonReader.readObjectList(rtoData, aFilter.resultType);
             successFunct(resultObjects);
         });
         deferredCall.error(function (data) {

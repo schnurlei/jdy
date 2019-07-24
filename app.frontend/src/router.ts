@@ -3,21 +3,39 @@ import VueRouter from 'vue-router';
 import Home from './views/Home.vue';
 import { testCreatePlantShopRepository } from './jdy-test';
 import JdyHolder from './components/JdyHolder.vue';
+import { JsonHttpObjectReader } from '@/js/jdy/jdy-http';
 
 Vue.use(VueRouter);
 
-const plantRepository = testCreatePlantShopRepository();
+let metaRepo = null;
+
+const metaRepoPromise: Promise<any> = fetchMetaPromise();
 
 function convertRouteToClassInfo (route) {
 
-    const classInfo = plantRepository.getClassInfo(route.params.classinfo);
-    return {
-        classinfo: classInfo
-    };
-
+    if (metaRepo != null) {
+        // @ts-ignore
+        const classInfo = metaRepo.getClassInfo(route.params.classinfo);
+        return {
+            classinfo: classInfo
+        };
+    }
+    return null;
 }
 
-export default new VueRouter({
+function fetchMetaPromise (): Promise<any> {
+
+    var dfrd: Promise<any> = new Promise((resolve, reject) => {
+
+        let metaReader = new JsonHttpObjectReader('/', 'meta');
+        metaReader.loadMetadataFromDb(metaData => { resolve(metaData); },
+            error => { reject(error) });
+    });
+
+    return dfrd;
+}
+
+const jdyRouter = new VueRouter({
     routes: [
         {
             path: '/',
@@ -37,3 +55,11 @@ export default new VueRouter({
         }
     ]
 });
+
+jdyRouter.beforeEach((to, from, next) => {
+
+    metaRepoPromise.then(aMetaRepo => { metaRepo = aMetaRepo });
+    next();
+})
+
+export default jdyRouter

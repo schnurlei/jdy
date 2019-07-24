@@ -20,6 +20,12 @@ export class JdyRepository {
         this.classes = {};
     }
 
+    public getClasses (): { [name: string]: JdyClassInfo } {
+
+        return this.classes;
+
+    };
+
     public addClassInfo (aInternalName, aSuperclass: JdyClassInfo | null): JdyClassInfo {
 
         let newClass: JdyClassInfo;
@@ -153,6 +159,11 @@ export class JdyClassInfo {
         this.attrList.push(newAttr);
         return newAttr;
     };
+
+    public addSubclass (aSubclass): void {
+
+        this.subclasses.push(aSubclass);
+    }
 
     public addTextAttr (aInternalName, aLength, aDomainValueList?: null | string[]) {
         return this.addPrimitiveAttr(aInternalName, new JdyTextType(aLength, null, aDomainValueList));

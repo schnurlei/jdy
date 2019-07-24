@@ -1,12 +1,13 @@
 <template>
     <div class="home">
-        <img alt="Vue logo" src="../assets/logo.png">
+        <img alt="Vue logo" src="../assets/logo.png"/>
         <div>About: {{aboutMessage}}</div>
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { JsonHttpObjectReader } from '@/js/jdy/jdy-http';
 
 @Component({
     components: {
@@ -29,5 +30,6 @@ export default class Home extends Vue {
                 this.aboutMessage = '-error-';
             });
     }
+
 }
 </script>

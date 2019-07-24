@@ -15,7 +15,7 @@
                         <v-icon v-html="item.icon"></v-icon>
                     </v-list-tile-action>
                     <v-list-tile-content>
-                        <v-list-tile-title>{{ item.title }} - {{ item.href }}</v-list-tile-title>
+                        <v-list-tile-title>{{ item.title }}</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
             </v-list>
@@ -65,51 +65,59 @@
     </v-app>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld';
+<script lang="ts">
 
-export default {
+import HelloWorld from '@/components/HelloWorld.vue';
+import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
+import Component from 'vue-class-component';
+import {Vue} from 'vue-property-decorator';
+import {JdyRepository} from "@/js/jdy/jdy-base";
+
+@Component( {
     name: 'App',
     components: {
         HelloWorld
-    },
+    }
+})
+export default class App extends Vue {
+
+    clipped = false;
+    drawer = true;
+    fixed = false;
+    items = [{
+        icon: 'bubble_chart',
+        title: 'Inspire'
+    }];
+    menuitems = [
+        { title: 'Home', icon: 'dashboard', href: '#/jdy/Plant' }
+        ];
+    miniVariant = false;
+    right = true;
+    rightDrawer = false;
+    title = 'Jdy';
+    about = '-fetch-';
+
     mounted () {
+        this.fetchMeta();
+    }
 
-        this.fetchAbout();
-    },
-    data () {
+    fetchMeta () {
 
-        return {
-            clipped: false,
-            drawer: true,
-            fixed: false,
-            items: [{
-                icon: 'bubble_chart',
-                title: 'Inspire'
-            }],
-            menuitems: [
-                { title: 'Home', icon: 'dashboard', href: '#/jdy/Plant' },
-                { title: 'Foo', icon: 'question_answer', href: '#/jdy/Customer' },
-                { title: 'About', icon: 'question_answer', href: '#/jdy/Address' }
-            ],
-            miniVariant: false,
-            right: true,
-            rightDrawer: false,
-            title: 'Jdy',
-            about: '-fetch-'
-        };
-    },
-    methods: {
-        fetchAbout () {
+        let metaReader = new JsonHttpObjectReader('/', 'meta');
+        metaReader.loadMetadataFromDb(
+            metaRepo => {
 
-            fetch(new Request('api/about'))
-                .then(response => response.statusText)
-                .then(data => { this.about = data; return null; })
-                .catch(error => {
-                    console.log(error);
-                    this.about = '-error-';
+                let repo: JdyRepository = metaRepo;
+                Object.values(repo.getClasses()).forEach( value =>{
+                    this.menuitems.push( {
+                        title: value.getInternalName(),
+                        icon: 'dashboard',
+                        href: '#/jdy/' + value.getInternalName()
+                    })
                 });
-        }
+            },
+            error => { this.about = error; return null; });
+
     }
 };
 </script>

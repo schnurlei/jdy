@@ -1,7 +1,7 @@
 <template>
     <div>
         <div v-if="primAttr.getType().domainValues">
-            <v-combobox :label='fieldLabel ()' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
+            <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
         </div>
         <div v-else>
             <v-text-field  :error-messages="errors.collect('fieldValue')" data-vv-name="fieldValue" v-model="fieldValue" :prepend-icon="prependIcon"
@@ -68,7 +68,7 @@ export default Vue.extend({
         },
         fieldLabel () : string {
             let required = (this.primAttr.getNotNull()) ? '*' : '';
-            return this.primAttr.getInternalName() + required;
+            return (this.primAttr.getInternalName())? this.primAttr.getInternalName() + required : '';
         }
     }
 });

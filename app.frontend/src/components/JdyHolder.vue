@@ -123,7 +123,18 @@ export default {
                     .then(response => response.json())
                     .then(data => {
 
-                        this.holderItems = data; return null;
+                        if(data && data.error) {
+                            this.holderItems = [{
+                                text: '#Error: ' +  data.error ,
+                                left: true,
+                                sortable: false,
+                                value: item => ''
+                            }
+                            ];
+                        } else {
+                            this.holderItems = data;
+                        }
+                        return null;
                     })
                     .catch(error => {
 
