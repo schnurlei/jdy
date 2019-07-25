@@ -15,25 +15,25 @@ import java.util.Date;
  */
 @Entity
 public class Veranstaltung implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    private Long id;
 
     private String beschreibung;
-    
+
     @Temporal(TemporalType.DATE)
     private Date datum;
-    
+
     private boolean changable;
-    
-    public String getId() {
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -55,7 +55,7 @@ public class Veranstaltung implements Serializable {
         this.datum = datum;
     }
 
-    
+
     public boolean isChangable()
     {
         return changable;
@@ -66,8 +66,8 @@ public class Veranstaltung implements Serializable {
         this.changable = changable;
     }
 
-    
-    
+
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -92,5 +92,5 @@ public class Veranstaltung implements Serializable {
     public String toString() {
         return "de.spatentaten.spatentatenserver.entity.Veranstaltung[ id=" + id + " ]";
     }
-    
+
 }

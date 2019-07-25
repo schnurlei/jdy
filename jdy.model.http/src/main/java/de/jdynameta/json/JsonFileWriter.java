@@ -42,7 +42,7 @@ import java.util.Iterator;
  * @author Rainer Schneider
  *
  */
-public class JsonFileWriter 
+public class JsonFileWriter
 {
 	public static final String CLASS_INTERNAL_NAME_TAG = "@classInternalName";
 	public static final String NAMESPACE_TAG = "@namespace";
@@ -50,53 +50,53 @@ public class JsonFileWriter
 
 	private final ObjectMapper mapper;
 	private final JsonPrimitiveHandler primitiveHandler;
-	
+
 	private final WriteReferenceStrategy writeStrategy;
 	boolean flush;
-	
+
 	public JsonFileWriter(WriteReferenceStrategy aWriteStrategy, boolean doFlush)
 	{
 		this.mapper = new ObjectMapper();
 		this.primitiveHandler = new JsonPrimitiveHandler();
 		this.writeStrategy = aWriteStrategy;
 		this.flush = doFlush;
-	}	
-	
-	
+	}
+
+
 	public void writeObjectList(Writer out, ClassInfo aInfo, ObjectList<? extends TypedValueObject> aObjectList, Operation aPersistenceType )
 	 	throws TransformerConfigurationException, JdyPersistentException
 	{
-		
+
 		ArrayNode jsonObjects = writeModelCollection( aObjectList, aPersistenceType);
 		try {
 			 JsonGenerator jsonGenerator = mapper.getJsonFactory().createJsonGenerator(out);
 			 jsonGenerator.useDefaultPrettyPrinter();
-			 
+
 			mapper.configure(SerializationFeature.FLUSH_AFTER_WRITE_VALUE, this.flush);
 			mapper.writeValue(jsonGenerator, jsonObjects);
 		} catch (IOException ex) {
 			throw new JdyPersistentException(ex);
-		} 
+		}
 	}
-	
-	
-	private ArrayNode writeModelCollection( ObjectList<? extends TypedValueObject> aModelColl, Operation aPersistenceType) 
+
+
+	private ArrayNode writeModelCollection( ObjectList<? extends TypedValueObject> aModelColl, Operation aPersistenceType)
 		throws JdyPersistentException
 	{
         final ArrayNode jsonArray = mapper.createArrayNode();
 		for (Iterator<? extends TypedValueObject> modelIter = aModelColl.iterator(); modelIter.hasNext();) {
-			
+
 			TypedValueObject curObj = modelIter.next();
 			if(curObj != null) {
 				ObjectNode newJsonObj = writeObjectToJson(curObj, aPersistenceType);
 				jsonArray.add(newJsonObj);
 			}
 		}
-		
+
 		return jsonArray;
 	}
-	
-	private synchronized ObjectNode writeObjectToJson( TypedValueObject objToWrite, Operation aPersistenceType) 
+
+	private synchronized ObjectNode writeObjectToJson( TypedValueObject objToWrite, Operation aPersistenceType)
 		throws JdyPersistentException
 	{
 		ObjectNode jsonObject = createClassInfoNode(objToWrite, aPersistenceType, false);
@@ -107,11 +107,11 @@ public class JsonFileWriter
 	{
 		ObjectNode jsonObject = mapper.createObjectNode();
 		addMetaDataFields(jsonObject, objToWrite.getClassInfo(), (asProxy) ? Operation.PROXY : aPersistenceType);
-		
-		for (AttributeInfo attrInfo : objToWrite.getClassInfo().getAttributeInfoIterator()) 
+
+		for (AttributeInfo attrInfo : objToWrite.getClassInfo().getAttributeInfoIterator())
 		{
 			if( !asProxy || attrInfo.isKey()) {
-				if( attrInfo instanceof ObjectReferenceAttributeInfo) 
+				if( attrInfo instanceof ObjectReferenceAttributeInfo)
 				{
 					TypedValueObject refObj =  (TypedValueObject) objToWrite.getValue(attrInfo);
 					if( refObj != null) {
@@ -131,24 +131,24 @@ public class JsonFileWriter
 					throw new InvalidClassInfoException("Unknown Attribute Type");
 				}
 			}
-		}		
-		
+		}
+
 		for (AssociationInfo assocInfo :objToWrite.getClassInfo().getAssociationInfoIterator()) {
-			
+
 			if ( !writeStrategy.isWriteAsProxy(objToWrite.getClassInfo(), assocInfo) && !asProxy) {
 				ObjectList<? extends TypedValueObject> aModelColl = (ObjectList<? extends TypedValueObject>) objToWrite.getValue(assocInfo);
-				
+
 				ArrayNode jsonArray =  mapper.createArrayNode();
 				if( aModelColl!= null) {
 					jsonArray = writeModelCollection(aModelColl, aPersistenceType);
 				}
 				jsonObject.put(assocInfo.getNameResource(), jsonArray);
 			}
-			
+
 		}
 
-		
-		
+
+
 		return jsonObject;
 	}
 
@@ -159,12 +159,12 @@ public class JsonFileWriter
 		jsonObject.put(PERSISTENCE_TAG, (aPersistenceType == null) ? "" : aPersistenceType.name() );
 	}
 
-	
+
 	/**
 	 * Add Primitive values to a Json Object. Set #setCurPrimitivName before call o handleValue
 	 */
 	private static class JsonPrimitiveHandler implements PrimitiveTypeVisitor
-	{		 
+	{
 		private ObjectNode parentJsonObj;
 		private String curPrimitivName;
 
@@ -178,8 +178,8 @@ public class JsonFileWriter
 			this.curPrimitivName = curPrimitivName;
 		}
 
-		
-		
+
+
 		@Override
 		public void handleValue(BigDecimal aValue, CurrencyType aType) throws JdyPersistentException
 		{
@@ -194,7 +194,7 @@ public class JsonFileWriter
 
 		@Override
 		public void handleValue(Date aValue, TimeStampType aType) throws JdyPersistentException
-		{		
+		{
 			if( aValue != null ) {
 				parentJsonObj.put(curPrimitivName, ISO8601Utils.format(aValue));
 			} else {
@@ -231,70 +231,70 @@ public class JsonFileWriter
 		public void handleValue(BlobByteArrayHolder aValue, BlobType aType) throws JdyPersistentException
 		{
 			// TODO Auto-generated method stub
-			
+
 		}
 
 
 	}
-	
+
 	public static interface WriteReferenceStrategy
 	{
 		public boolean isWriteAsProxy(ClassInfo classInfo, ObjectReferenceAttributeInfo attrInfo, TypedValueObject refObj);
 
 		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo);
 	}
-	
+
 	public static class WriteAllDependentStrategy implements WriteReferenceStrategy
 	{
 
 		@Override
 		public boolean isWriteAsProxy(ClassInfo classInfo, 	ObjectReferenceAttributeInfo attrInfo, TypedValueObject refObj) {
-			
-			return !attrInfo.isDependent() || attrInfo.isInAssociation();
+
+			return false;
 		}
 
 		@Override
-		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo) 
+		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo)
 		{
 			return false;
 		}
-		
+
 	}
-	
+
 	public static class WriteDependentAsProxyStrategy implements WriteReferenceStrategy
 	{
 
 		@Override
 		public boolean isWriteAsProxy(ClassInfo classInfo, 	ObjectReferenceAttributeInfo attrInfo, TypedValueObject refObj) {
-			
+
 			return true;
 		}
 
 		@Override
-		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo) 
+		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo)
 		{
 			return true;
 		}
-		
+
 	}
-	
+
 	public static class WriteAllStrategy implements WriteReferenceStrategy
 	{
 
 		@Override
 		public boolean isWriteAsProxy(ClassInfo classInfo, 	ObjectReferenceAttributeInfo attrInfo, TypedValueObject refObj) {
-			
+
 			return false;
 		}
 
 		@Override
-		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo) 
+		public boolean isWriteAsProxy(ClassInfo classInfo,	AssociationInfo assocInfo)
 		{
 			return false;
 		}
-		
+
 	}
-//	private static String quoteString(String s) 
+//	private static String quoteString(String s)
 //	 {
 //		 if (s == null) {
 //			 return "null";
@@ -316,7 +316,7 @@ public class JsonFileWriter
 //					str.append("&amp;");
 //					break;
 //				}
-//            
+//
 //				case '\'': {
 //					str.append("&apos;");
 //					break;
@@ -354,6 +354,6 @@ public class JsonFileWriter
 //				}
 //			 }//switch
 //		 }//for
-//		 return str.toString();     
+//		 return str.toString();
 //	 }
 }

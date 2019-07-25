@@ -16,16 +16,16 @@
  */
 package de.jdynameta.base.metainfo.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import de.jdynameta.base.metainfo.PrimitiveAttributeHandler;
 import de.jdynameta.base.metainfo.primitive.PrimitiveTypeGetVisitor;
 import de.jdynameta.base.metainfo.primitive.PrimitiveTypeVisitor;
 import de.jdynameta.base.metainfo.primitive.TextType;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.view.DbDomainValue;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Rainer
@@ -84,7 +84,16 @@ public class JdyTextType extends JdyPrimitiveType implements TextType, Serializa
     @Override
     public void handlePrimitiveKey(PrimitiveTypeVisitor aHandler, Object objToHandle) throws JdyPersistentException
     {
-        aHandler.handleValue((String) objToHandle, this);
+
+        if (objToHandle == null) {
+            aHandler.handleValue(null, this);
+        } else if (objToHandle instanceof String) {
+            aHandler.handleValue((String) objToHandle, this);
+        } else if (objToHandle instanceof Enum) {
+            aHandler.handleValue(((Enum) objToHandle).name(), this);
+        } else {
+            throw new JdyPersistentException("Invalid data type " + objToHandle);
+        }
     }
 
     /**

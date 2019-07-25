@@ -17,13 +17,13 @@ public class LandkreisConverter implements AttributeConverter<Landkreis, String>
 
     @Override
     public String convertToDatabaseColumn(Landkreis attribute) {
-        return attribute.name();
+        return (attribute != null) ? attribute.name() : null;
     }
 
     @Override
     public Landkreis convertToEntityAttribute(String dbData) {
-        return Landkreis.valueOf(dbData);
+        return (dbData != null) ? Landkreis.valueOf(dbData): null;
     }
-    
-    
+
+
 }

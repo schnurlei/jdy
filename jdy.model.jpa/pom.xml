@@ -9,7 +9,7 @@
     <artifactId>jdy.model.jpa</artifactId>
     <name>JDY Model: JPA</name>
     <packaging>jar</packaging>
-    
+
     <dependencies>
         <dependency>
             <groupId>de.jdynameta</groupId>
@@ -47,8 +47,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
           <plugin>
