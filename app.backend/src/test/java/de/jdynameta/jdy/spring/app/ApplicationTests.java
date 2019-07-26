@@ -14,6 +14,9 @@ import de.jdynameta.jdy.spring.app.rest.GeneralRestException;
 import de.jdynameta.jdy.spring.app.rest.TypedReflectionValueObjectWrapper;
 import de.jdynameta.jdy.spring.app.rest.VeranstaltungRepository;
 import de.jdynameta.json.JsonFileWriter;
+import de.jdynameta.metamodel.application.AppRepository;
+import de.jdynameta.metamodel.application.ApplicationRepository;
+import de.jdynameta.metamodel.application.MetaRepositoryCreator;
 import de.jdynameta.persistence.manager.PersistentOperation;
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,7 +63,7 @@ public class ApplicationTests {
 
     @Test
     // Test to check the writing into json works
-	public void testGetEntitiesAsJson() {
+	public void testWriteEntitiesAsJson() {
 
         insertTeilnehmer("Teilnehmer1");
         insertTeilnehmer("Teilnehmer2");
@@ -136,5 +139,21 @@ public class ApplicationTests {
 
         this.veranstaltungRepo.save(veranstaltung);
         this.teilnehmerRepo.save(teilnehmer);
+    }
+
+    @Test
+    public void testWriteMetadataToJson() throws JdyPersistentException, TransformerConfigurationException {
+
+        JpaMetamodelReader reader = new JpaMetamodelReader();
+        ClassRepository repo = reader.createMetaRepository(entityManager.getMetamodel(), "TestApp");
+
+        AppRepository appRepository = new MetaRepositoryCreator(null).createAppRepository(repo);
+        ClassInfo repoClassInfo = ApplicationRepository.getSingleton().getClassForName("AppRepository");
+        DefaultObjectList<TypedValueObject> singleElementList = new DefaultObjectList<>(appRepository);
+
+        JsonFileWriter jsonFileWriter = new JsonFileWriter(new JsonFileWriter.WriteAllDependentStrategy(), true);
+        StringWriter writer = new StringWriter();
+        jsonFileWriter.writeObjectList(writer,repoClassInfo,singleElementList, PersistentOperation.Operation.READ);
+        writer.toString();
     }
 }

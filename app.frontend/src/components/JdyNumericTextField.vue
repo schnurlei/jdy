@@ -34,7 +34,7 @@ export default {
         validationString () {
             let validation = 'decimal';
             if (this.scale) {
-                validation += ':' +scale;
+                validation += ':' +this.scale;
             }
             if (this.minValue || this.minValue === 0) {
                 validation += '|min_value:' + this.minValue;

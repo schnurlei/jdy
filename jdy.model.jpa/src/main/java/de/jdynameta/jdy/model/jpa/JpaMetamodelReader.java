@@ -8,46 +8,23 @@ package de.jdynameta.jdy.model.jpa;
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
 import de.jdynameta.base.metainfo.PrimitiveType;
-import de.jdynameta.base.metainfo.impl.DefaultClassRepositoryValidator;
-import de.jdynameta.base.metainfo.impl.JdyAbstractAttributeModel;
-import de.jdynameta.base.metainfo.impl.JdyAssociationModel;
-import de.jdynameta.base.metainfo.impl.JdyBooleanType;
-import de.jdynameta.base.metainfo.impl.JdyClassInfoModel;
-import de.jdynameta.base.metainfo.impl.JdyDecimalType;
-import de.jdynameta.base.metainfo.impl.JdyFloatType;
-import de.jdynameta.base.metainfo.impl.JdyLongType;
-import de.jdynameta.base.metainfo.impl.JdyObjectReferenceModel;
-import de.jdynameta.base.metainfo.impl.JdyPrimitiveAttributeModel;
-import de.jdynameta.base.metainfo.impl.JdyRepositoryModel;
-import de.jdynameta.base.metainfo.impl.JdyTextType;
-import de.jdynameta.base.metainfo.impl.JdyTimeStampType;
+import de.jdynameta.base.metainfo.impl.*;
+import de.jdynameta.base.metainfo.primitive.CurrencyType;
 import de.jdynameta.base.view.DbDomainValue;
-import de.jdynameta.model.asm.jpa.info.JpaAsmClassInfo;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.BASIC;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.MANY_TO_MANY;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.MANY_TO_ONE;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.ONE_TO_MANY;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType.ONE_TO_ONE;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.*;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.*;
+
+import static javax.persistence.metamodel.Attribute.PersistentAttributeType.*;
 
 /**
  *
@@ -56,26 +33,26 @@ import javax.persistence.metamodel.Type;
 public class JpaMetamodelReader
 {
 
-     
+
     public ClassRepository createMetaRepository(final Metamodel metaModel, String anAppName) {
-       
+
         return createMetaRepository(metaModel.getEntities(), anAppName);
     }
-    
-    
+
+
     public ClassRepository createMetaRepository(Set<EntityType<?>> allEntityInfos, String anAppName)
     {
         JdyRepositoryModel metaRepo = new JdyRepositoryModel(anAppName);
         metaRepo.addListener(new DefaultClassRepositoryValidator());
         final Map<String, JdyClassInfoModel> className2InfoMap = new HashMap<>();
-       
+
         // build base classes
         for (EntityType<?> curEntity : allEntityInfos)
         {
             JdyClassInfoModel newModel = addClassToMetaRepo(metaRepo, curEntity);
             className2InfoMap.put(newModel.getInternalName(), newModel);
         }
-        
+
         for (EntityType<?> curEntity : allEntityInfos)
         {
             buildAttrForMetaRepo(metaRepo, curEntity, false);
@@ -84,13 +61,13 @@ public class JpaMetamodelReader
          for (EntityType<?> curEntity : allEntityInfos)
         {
             buildAssocsForMetaRepo(metaRepo, curEntity);
-        } 
+        }
 
          for (EntityType<?> curEntity : allEntityInfos)
         {
             buildSubclassesForMetaRepo(metaRepo, curEntity);
-        } 
-        
+        }
+
         return metaRepo;
     }
 
@@ -106,36 +83,36 @@ public class JpaMetamodelReader
         }
         metaClass.setShortName(aEntity.getName());
         metaClass.setNameSpace(aEntity.getJavaType().getName().replace('.', '_'));
-        
+
         return metaClass;
     }
-    
+
     private void buildAttrForMetaRepo(ClassRepository metaRepo, EntityType<?> anEntity,boolean embeddedId)
     {
         JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getName());
 
-        for (Attribute<?, ?> curAttr : anEntity.getAttributes()) 
+        for (Attribute<?, ?> curAttr : anEntity.getAttributes())
         {
             if (!curAttr.isCollection()) {
 
-                if (curAttr.getPersistentAttributeType() == BASIC) 
+                if (curAttr.getPersistentAttributeType() == BASIC)
                 {
                     JdyAbstractAttributeModel metaAttr = createPrimitiveField(curAttr, embeddedId);
                     if (metaAttr != null) {
                         metaClass.addAttributeInfo(metaAttr);
                     }
-                }else if (curAttr.getPersistentAttributeType() == ONE_TO_ONE || curAttr.getPersistentAttributeType() == MANY_TO_ONE) 
+                }else if (curAttr.getPersistentAttributeType() == ONE_TO_ONE || curAttr.getPersistentAttributeType() == MANY_TO_ONE)
                 {
                     JdyObjectReferenceModel metaAttr = createObjectReference(curAttr, embeddedId, metaRepo);
                     if (metaAttr != null) {
                         metaClass.addAttributeInfo(metaAttr);
                     }
-                } else 
+                } else
                 {
-                    
+
                 }
-                                
-            } 
+
+            }
         }
     }
 
@@ -143,7 +120,7 @@ public class JpaMetamodelReader
 	{
             JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getName());
 
-            for (Attribute<?, ?> curAttr : anEntity.getAttributes()) 
+            for (Attribute<?, ?> curAttr : anEntity.getAttributes())
             {
                 if (curAttr.isCollection()) {
                     if (curAttr.getPersistentAttributeType() == ELEMENT_COLLECTION) {
@@ -154,15 +131,15 @@ public class JpaMetamodelReader
                     } else if (curAttr.getPersistentAttributeType() == ONE_TO_MANY) {
                         JpaCollectionWrapper wrapper = new JpaCollectionWrapper(curAttr);
                         System.out.println(anEntity.getName());
-			JdyClassInfoModel metaDetailClass = (JdyClassInfoModel) metaRepo.getClassForName(wrapper.getReferencedType().getName()); 
+			JdyClassInfoModel metaDetailClass = (JdyClassInfoModel) metaRepo.getClassForName(wrapper.getReferencedType().getName());
 
                         OneToMany mapping = wrapper.getAnntotationInfo(OneToMany.class);
 			JdyObjectReferenceModel metaMasterClassRef = (JdyObjectReferenceModel) metaDetailClass.getAttributeInfoForExternalName(mapping.mappedBy());
-			String metaAssocName = curAttr.getName();			
+			String metaAssocName = curAttr.getName();
 			JdyAssociationModel metaAssoc = new JdyAssociationModel(metaMasterClassRef, metaDetailClass, metaAssocName);
 			metaClass.addAssociation(metaAssoc);
 
-                    
+
                     } else if (curAttr.getPersistentAttributeType() == MANY_TO_MANY) {
                         // not supported at the momment
                     }
@@ -189,9 +166,9 @@ public class JpaMetamodelReader
         }
 
     }
-    
-    
-    private JdyObjectReferenceModel createObjectReference(Attribute<?, ?> curAttr, boolean embeddedId, ClassRepository metaRepo) 
+
+
+    private JdyObjectReferenceModel createObjectReference(Attribute<?, ?> curAttr, boolean embeddedId, ClassRepository metaRepo)
     {
         JpaFieldWrapper wrapper = new JpaFieldWrapper(curAttr);
         Type type = wrapper.getType();
@@ -200,12 +177,12 @@ public class JpaMetamodelReader
         boolean isGenerated = wrapper.getGeneratedInfo() != null;
         String refTypeName = ((EntityType)type).getName();
         ClassInfo referenceType = metaRepo.getClassForName(refTypeName);
-        
+
         JdyObjectReferenceModel  metaAttr = new JdyObjectReferenceModel(referenceType, curAttr.getName(), curAttr.getName(), isKey, isNotNull);
         metaAttr.setGenerated(isGenerated);
         return metaAttr;
     }
-    
+
     private JdyAbstractAttributeModel createPrimitiveField(Attribute<?, ?> curAttr, boolean embeddedId) {
 
         JpaFieldWrapper wrapper = new JpaFieldWrapper(curAttr);
@@ -223,12 +200,12 @@ public class JpaMetamodelReader
             return null;
         }
     }
-    
+
 
     private PrimitiveType getPrimiviveType(JpaFieldWrapper wrapper)
     {
         Class aTypeClass = wrapper.getJavaType();
-        
+
         if (aTypeClass.isAssignableFrom(Integer.class))
         {
             return new JdyLongType((long) Integer.MIN_VALUE, (long) Integer.MAX_VALUE);
@@ -247,7 +224,7 @@ public class JpaMetamodelReader
             int length = (column != null) ? column.length() : 40;
 
             return new JdyTextType(length);
-        
+
         } else if (aTypeClass.isAssignableFrom(Date.class) || aTypeClass.isAssignableFrom(Timestamp.class))
         {
             Temporal temporal = wrapper.getAnntotationInfo(Temporal.class);
@@ -266,8 +243,12 @@ public class JpaMetamodelReader
             Column comlumn = wrapper.getAnntotationInfo(Column.class);
             int scale = comlumn.scale();
             int precision = comlumn.precision();
-            
-            return new JdyDecimalType();
+            DecimalMin decMin = wrapper.getAnntotationInfo(DecimalMin.class);
+            DecimalMax decMax = wrapper.getAnntotationInfo(DecimalMax.class);
+            BigDecimal minValue = (decMin != null) ? new BigDecimal(decMin.value()) : CurrencyType.MIN_VALUE;
+            BigDecimal maxValue = (decMax != null) ? new BigDecimal(decMax.value()) : CurrencyType.MAX_VALUE;
+
+            return new JdyDecimalType(minValue, maxValue, scale);
         } else
         {
             if (aTypeClass.isEnum()) {
@@ -277,20 +258,20 @@ public class JpaMetamodelReader
                 List<DbDomainValue<String>> domainValues = new ArrayList<>();
                 for (Field jpaField : aTypeClass.getDeclaredFields())
                 {
-                    if(jpaField.isEnumConstant()) 
+                    if(jpaField.isEnumConstant())
                     {
                         domainValues.add(new DomValue<>(jpaField.getName(), jpaField.getName()));
                     }
                 }
 
                 return new JdyTextType(length, null, domainValues);
-                
+
             }
             return null;
         }
     }
-    
-    
+
+
     private static class DomValue<Type> implements DbDomainValue<Type>
     {
         private final Type domValue;

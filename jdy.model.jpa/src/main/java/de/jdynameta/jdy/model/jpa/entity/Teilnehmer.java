@@ -6,6 +6,8 @@
 package de.jdynameta.jdy.model.jpa.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -19,7 +21,7 @@ import java.math.BigDecimal;
 @Entity
 @XmlRootElement
 public class Teilnehmer implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -35,18 +37,22 @@ public class Teilnehmer implements Serializable {
     private String beschreibung;
     private String url;
     @Column(precision = 17, scale = 14)
+    @DecimalMin("-100.0")
+    @DecimalMax("100.0")
     private BigDecimal lat;
     @Column(precision = 17, scale = 14)
+    @DecimalMin("-100.0")
+    @DecimalMax("100.0")
     private BigDecimal lng;
     private Integer plz;
 
     private Landkreis landkreis;
-    
+
     boolean freigegeben;
-    
+
     @OneToOne
     private Veranstaltung veranstaltung;
-    
+
     public Long getId() {
         return id;
     }
@@ -147,9 +153,9 @@ public class Teilnehmer implements Serializable {
         this.veranstaltung = veranstaltung;
     }
 
-    
-    
-    
+
+
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -174,5 +180,5 @@ public class Teilnehmer implements Serializable {
     public String toString() {
         return "de.spatentaten.jettytest.Teilnehmer[ id=" + id + " ]";
     }
-    
+
 }

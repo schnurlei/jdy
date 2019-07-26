@@ -4,15 +4,11 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
+import javax.persistence.*;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 /**
  *
@@ -30,6 +26,8 @@ public class Orderitem implements Serializable {
 	// @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
 	@Basic(optional = false)
     @Column(name = "PRICE")
+	@DecimalMin("-100000.0")
+	@DecimalMax("999999.99")
 	private BigDecimal price;
 	@JoinColumn(name = "PLANTORDER_ORDERNR", referencedColumnName = "ORDERNR", insertable = false, updatable = false)
     @ManyToOne(optional = false)
@@ -119,5 +117,5 @@ public class Orderitem implements Serializable {
 	public String toString() {
 		return "de.jdynameta.model.asm.jpa.Orderitem[ orderitemPK=" + orderitemPK + " ]";
 	}
-	
+
 }

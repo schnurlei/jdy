@@ -118,9 +118,15 @@ export default {
             if (newClassInfo) {
 
                 this.columns = convertToColumns(newClassInfo);
-                var myRequest = new Request('json/' + newClassInfo.internalName + '.json');
+                var myRequest = new Request('api/jdy/data/' + newClassInfo.internalName);
                 fetch(myRequest)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Something went wrong: ' + response.error);
+                        }
+                    })
                     .then(data => {
 
                         if(data && data.error) {

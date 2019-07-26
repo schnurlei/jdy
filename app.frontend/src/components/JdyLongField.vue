@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="primAttr.getType().domainValues">
+        <div v-if="primAttr.getType().domainValues.length > 0">
             <v-combobox :label='primAttr.getInternalName ()' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated"></v-combobox>
         </div>
         <div v-else>

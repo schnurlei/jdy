@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="primAttr.getType().domainValues">
+        <div v-if="hasDomainValues">
             <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated" item-text="representation" item-value="dbValue"></v-combobox>
         </div>
         <div v-else>
@@ -69,6 +69,9 @@ export default Vue.extend({
         fieldLabel () : string {
             let required = (this.primAttr.getNotNull()) ? '*' : '';
             return (this.primAttr.getInternalName())? this.primAttr.getInternalName() + required : '';
+        },
+        hasDomainValues () : boolean {
+            return this.primAttr.getType().domainValues && this.primAttr.getType().domainValues.length > 0;
         }
     }
 });

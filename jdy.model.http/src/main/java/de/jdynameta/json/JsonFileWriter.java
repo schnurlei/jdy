@@ -250,7 +250,7 @@ public class JsonFileWriter
 		@Override
 		public boolean isWriteAsProxy(ClassInfo classInfo, 	ObjectReferenceAttributeInfo attrInfo, TypedValueObject refObj) {
 
-			return false;
+			return !attrInfo.isDependent() || attrInfo.isInAssociation();
 		}
 
 		@Override
