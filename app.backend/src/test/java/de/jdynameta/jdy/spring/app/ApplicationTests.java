@@ -9,8 +9,12 @@ import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
 import de.jdynameta.jdy.model.jpa.entity.Landkreis;
 import de.jdynameta.jdy.model.jpa.entity.Teilnehmer;
 import de.jdynameta.jdy.model.jpa.entity.Veranstaltung;
-import de.jdynameta.jdy.spring.app.rest.TeilnehmerRepository;
+import de.jdynameta.jdy.model.jpa.example.Plant;
+import de.jdynameta.jdy.model.jpa.example.Plantorder;
+import de.jdynameta.jdy.spring.app.data.PlantOrderRepository;
+import de.jdynameta.jdy.spring.app.data.PlantRepository;
 import de.jdynameta.jdy.spring.app.rest.GeneralRestException;
+import de.jdynameta.jdy.spring.app.rest.TeilnehmerRepository;
 import de.jdynameta.jdy.spring.app.rest.TypedReflectionValueObjectWrapper;
 import de.jdynameta.jdy.spring.app.rest.VeranstaltungRepository;
 import de.jdynameta.json.JsonFileWriter;
@@ -50,6 +54,12 @@ public class ApplicationTests {
 
     @Autowired
     private VeranstaltungRepository veranstaltungRepo;
+
+    @Autowired
+    private PlantRepository plantRepo;
+
+    @Autowired
+    private PlantOrderRepository plantOrderRepo;
 
 	@Test
 	public void loadEntityObjects() {
@@ -155,5 +165,39 @@ public class ApplicationTests {
         StringWriter writer = new StringWriter();
         jsonFileWriter.writeObjectList(writer,repoClassInfo,singleElementList, PersistentOperation.Operation.READ);
         writer.toString();
+    }
+
+    @Test
+    public void testWriteAssociationDataToJson() throws JdyPersistentException, TransformerConfigurationException {
+
+        Plant createdPlant = PlantRepository.insertPlant(this.plantRepo);
+        Plantorder createdOrder = PlantOrderRepository.insertPlantorder(this.plantOrderRepo);
+
+        final String className = "Plantorder";
+        JpaMetamodelReader reader = new JpaMetamodelReader();
+        ClassRepository repo = reader.createMetaRepository(entityManager.getMetamodel(), "TestApp");
+        ClassInfo entityClassInfo = repo.getClassForName(className);
+        Optional<EntityType<?>> entityForName = entityManager.getMetamodel().getEntities()
+                .stream().filter(entity -> entity.getName().equals(className)).findFirst();
+
+        if( entityForName.isPresent() ) {
+
+            List<?> allEntities =  getAllObjectsFromEntity(entityForName.get());
+
+            final List<TypedValueObject> wrappedEnitites = allEntities.stream()
+                    .map(entity-> new TypedReflectionValueObjectWrapper(entity, entityClassInfo))
+                    .collect(Collectors.toList());
+
+            JsonFileWriter jsonFileWriter = new JsonFileWriter(new JsonFileWriter.WriteAllDependentStrategy(), true);
+            StringWriter writer = new StringWriter();
+            try {
+
+                jsonFileWriter.writeObjectList(writer, entityClassInfo, new DefaultObjectList<>(wrappedEnitites), PersistentOperation.Operation.READ);
+                Assert.assertEquals(writer.toString(), "");
+            } catch (JdyPersistentException | TransformerConfigurationException ex) {
+                ex.printStackTrace();
+                throw new GeneralRestException(ex);
+            }
+        }
     }
 }

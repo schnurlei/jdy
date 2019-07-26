@@ -4,19 +4,11 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
+import de.jdynameta.base.view.DbDomainValue;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Collection;
-
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-
-import de.jdynameta.base.view.DbDomainValue;
 
 /**
  *
@@ -25,10 +17,13 @@ import de.jdynameta.base.view.DbDomainValue;
 @Entity
 @Table(name = "PLANT")
 public class Plant implements Serializable {
-	
+
 	public enum PlantFamily implements DbDomainValue<String>
 	{
-		Iridaceae("Iridaceae", "Iridaceae"), Malvaceae("Malvaceae", "Malvaceae"), Geraniaceae("Geraniaceae", "Geraniaceae");
+		Iridaceae("Iridaceae", "Iridaceae")
+		, Malvaceae("Malvaceae", "Malvaceae")
+		, Geraniaceae("Geraniaceae", "Geraniaceae")
+		, Lamiaceae("Lamiaceae", "Lamiaceae");
 
 		private final String	domValue;
 		private final String	representation;
@@ -51,7 +46,7 @@ public class Plant implements Serializable {
 			return representation;
 		}
 	}
-	
+
 	private static final long serialVersionUID = 1L;
 	@Id
     @Basic(optional = false)
@@ -138,5 +133,5 @@ public class Plant implements Serializable {
 	public String toString() {
 		return "de.jdynameta.model.asm.jpa.Plant[ botanicname=" + botanicname + " ]";
 	}
-	
+
 }
