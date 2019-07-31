@@ -9,7 +9,7 @@ import java.io.Serializable;
  */
 
 @Embeddable
-public class Address implements Serializable {
+public class CustomerAddress implements Serializable {
 
     private String street;
 

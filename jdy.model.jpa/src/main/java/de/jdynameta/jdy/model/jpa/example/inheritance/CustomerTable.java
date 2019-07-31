@@ -24,7 +24,7 @@ public class CustomerTable implements Serializable {
     private String lastName;
 
     @Embedded
-    private Address address = new Address();
+    private CustomerAddress address = new CustomerAddress();
 
     @Column(name = "CUST_TYPE", length = 10)
     private String custType;
@@ -74,11 +74,11 @@ public class CustomerTable implements Serializable {
         return sb.toString();
     }
 
-    public Address getAddress() {
+    public CustomerAddress getAddress() {
         return address;
     }
 
-    public void setAddress(Address address) {
+    public void setAddress(CustomerAddress address) {
         this.address = address;
     }
 

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PlantRepository extends CrudRepository<Plant, Integer> {
 
-    public static Plant insertPlant(PlantRepository repo) {
+    public static Plant insertPlantHyssopus(PlantRepository repo) {
 
         Plant newPlant = new Plant();
 
@@ -15,6 +15,19 @@ public interface PlantRepository extends CrudRepository<Plant, Integer> {
         newPlant.setColor("blue");
         newPlant.setHeigthincm(50);
         newPlant.setPlantfamily(Plant.PlantFamily.Lamiaceae);
+
+        repo.save(newPlant);
+        return newPlant;
+    }
+
+    public static Plant insertPlantIris(PlantRepository repo) {
+
+        Plant newPlant = new Plant();
+
+        newPlant.setBotanicname("Iris barbata-elatior 'Bazaar'");
+        newPlant.setColor("auberginefarben mit weißgelber Mitte");
+        newPlant.setHeigthincm(80);
+        newPlant.setPlantfamily(Plant.PlantFamily.Iridaceae);
 
         repo.save(newPlant);
         return newPlant;

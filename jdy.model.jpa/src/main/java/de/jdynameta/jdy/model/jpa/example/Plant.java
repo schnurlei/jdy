@@ -8,7 +8,6 @@ import de.jdynameta.base.view.DbDomainValue;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Collection;
 
 /**
  *
@@ -59,8 +58,6 @@ public class Plant implements Serializable {
 	private PlantFamily plantfamily;
 	@Column(name = "COLOR")
 	private String color;
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "plantBotanicname")
-	private Collection<Orderitem> orderitemCollection;
 
 	public Plant() {
 	}
@@ -101,13 +98,6 @@ public class Plant implements Serializable {
 		this.color = color;
 	}
 
-	public Collection<Orderitem> getOrderitemCollection() {
-		return orderitemCollection;
-	}
-
-	public void setOrderitemCollection(Collection<Orderitem> orderitemCollection) {
-		this.orderitemCollection = orderitemCollection;
-	}
 
 	@Override
 	public int hashCode() {

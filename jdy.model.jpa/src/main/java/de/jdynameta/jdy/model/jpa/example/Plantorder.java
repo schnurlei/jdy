@@ -4,19 +4,10 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 /**
  *
@@ -34,8 +25,8 @@ public class Plantorder implements Serializable {
     @Column(name = "ORDERDATE")
     @Temporal(TemporalType.TIMESTAMP)
 	private Date orderdate;
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "plantorder")
-	private Collection<Orderitem> orderitemCollection;
+	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.EAGER, mappedBy = "plantorder")
+	private Collection<Orderitem> orderItemColl;
 
 	public Plantorder() {
 	}
@@ -66,12 +57,12 @@ public class Plantorder implements Serializable {
 	}
 
 	
-	public Collection<Orderitem> getOrderitemCollection() {
-		return orderitemCollection;
+	public Collection<Orderitem> getOrderitemColl() {
+		return orderItemColl;
 	}
 
-	public void setOrderitemCollection(Collection<Orderitem> orderitemCollection) {
-		this.orderitemCollection = orderitemCollection;
+	public void setOrderitemColl(Collection<Orderitem> orderitemCollection) {
+		this.orderItemColl = orderitemCollection;
 	}
 
 	@Override

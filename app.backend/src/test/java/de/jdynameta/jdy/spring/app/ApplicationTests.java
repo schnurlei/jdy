@@ -6,11 +6,10 @@ import de.jdynameta.base.objectlist.DefaultObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
-import de.jdynameta.jdy.model.jpa.entity.Landkreis;
 import de.jdynameta.jdy.model.jpa.entity.Teilnehmer;
-import de.jdynameta.jdy.model.jpa.entity.Veranstaltung;
 import de.jdynameta.jdy.model.jpa.example.Plant;
 import de.jdynameta.jdy.model.jpa.example.Plantorder;
+import de.jdynameta.jdy.spring.app.data.PlantOrderItemRepository;
 import de.jdynameta.jdy.spring.app.data.PlantOrderRepository;
 import de.jdynameta.jdy.spring.app.data.PlantRepository;
 import de.jdynameta.jdy.spring.app.rest.GeneralRestException;
@@ -36,8 +35,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 import javax.xml.transform.TransformerConfigurationException;
 import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,6 +58,10 @@ public class ApplicationTests {
     @Autowired
     private PlantOrderRepository plantOrderRepo;
 
+    @Autowired
+    private PlantOrderItemRepository itemRepo;
+
+
 	@Test
 	public void loadEntityObjects() {
 
@@ -75,8 +76,8 @@ public class ApplicationTests {
     // Test to check the writing into json works
 	public void testWriteEntitiesAsJson() {
 
-        insertTeilnehmer("Teilnehmer1");
-        insertTeilnehmer("Teilnehmer2");
+        TeilnehmerRepository.insertTeilnehmer(teilnehmerRepo, veranstaltungRepo, "Teilnehmer1");
+        TeilnehmerRepository.insertTeilnehmer(teilnehmerRepo, veranstaltungRepo, "Teilnehmer2");
 
 
 	    final String className = "Teilnehmer";
@@ -129,28 +130,6 @@ public class ApplicationTests {
     }
 
 
-    public void insertTeilnehmer(String name) {
-
-        final Veranstaltung veranstaltung = new Veranstaltung();
-        veranstaltung.setBeschreibung(name + "_Veranstaltung_Beschreibung");
-        veranstaltung.setDatum(new Date());
-        veranstaltung.setChangable(true);
-
-        Teilnehmer teilnehmer = new Teilnehmer();
-        teilnehmer.setName(name);
-        teilnehmer.setBeschreibung(name + "_Beschreibung");
-        teilnehmer.setFreigegeben(true);
-        teilnehmer.setLandkreis(Landkreis.AIC);
-        teilnehmer.setLat(new BigDecimal(12.33));
-        teilnehmer.setLng(new BigDecimal(77.22));
-        teilnehmer.setOrt("TestOrt");
-        teilnehmer.setPlz(89277);
-        teilnehmer.setVeranstaltung(veranstaltung);
-
-        this.veranstaltungRepo.save(veranstaltung);
-        this.teilnehmerRepo.save(teilnehmer);
-    }
-
     @Test
     public void testWriteMetadataToJson() throws JdyPersistentException, TransformerConfigurationException {
 
@@ -170,8 +149,9 @@ public class ApplicationTests {
     @Test
     public void testWriteAssociationDataToJson() throws JdyPersistentException, TransformerConfigurationException {
 
-        Plant createdPlant = PlantRepository.insertPlant(this.plantRepo);
-        Plantorder createdOrder = PlantOrderRepository.insertPlantorder(this.plantOrderRepo);
+        Plant hyssopus = PlantRepository.insertPlantHyssopus(this.plantRepo);
+        Plant iris = PlantRepository.insertPlantIris(this.plantRepo);
+        Plantorder createdOrder = PlantOrderRepository.createPlantorder(this.plantOrderRepo, this.itemRepo, hyssopus, iris);
 
         final String className = "Plantorder";
         JpaMetamodelReader reader = new JpaMetamodelReader();

@@ -34,9 +34,22 @@ public class Orderitem implements Serializable {
 	private Plantorder plantorder;
 	@JoinColumn(name = "PLANT_BOTANICNAME", referencedColumnName = "BOTANICNAME")
     @ManyToOne(optional = false)
-	private Plant plantBotanicname;
+	private Plant plant;
 
 	public Orderitem() {
+
+	}
+
+	public Orderitem(Plantorder order, Plant plant, int itemcount, String price ) {
+
+		this.plantorder = order;
+		this.plant = plant;
+		this.itemcount = itemcount;
+		this.price = new BigDecimal(price);
+		this.orderitemPK = new OrderitemPK();
+		this.orderitemPK.setPlantorderOrdernr(order.getOrdernr());
+		this.orderitemPK.setItemnr(order.getOrderitemColl().size());
+		order.getOrderitemColl().add(this);
 	}
 
 	public Orderitem(OrderitemPK orderitemPK) {
@@ -85,12 +98,12 @@ public class Orderitem implements Serializable {
 		this.plantorder = plantorder;
 	}
 
-	public Plant getPlantBotanicname() {
-		return plantBotanicname;
+	public Plant getPlant() {
+		return plant;
 	}
 
-	public void setPlantBotanicname(Plant plantBotanicname) {
-		this.plantBotanicname = plantBotanicname;
+	public void setPlant(Plant plant) {
+		this.plant = plant;
 	}
 
 	@Override

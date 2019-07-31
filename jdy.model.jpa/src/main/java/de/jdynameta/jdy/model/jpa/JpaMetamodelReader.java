@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
+import static java.util.stream.Collectors.toMap;
 import static javax.persistence.metamodel.Attribute.PersistentAttributeType.*;
 
 /**
@@ -36,12 +37,16 @@ public class JpaMetamodelReader
 
     public ClassRepository createMetaRepository(final Metamodel metaModel, String anAppName) {
 
-        return createMetaRepository(metaModel.getEntities(), anAppName);
+        return createMetaRepository(metaModel.getEntities(),metaModel.getEmbeddables(), anAppName);
     }
 
 
-    public ClassRepository createMetaRepository(Set<EntityType<?>> allEntityInfos, String anAppName)
+    public ClassRepository createMetaRepository(Set<EntityType<?>> allEntityInfos, Set<EmbeddableType<?>> allEmbeddableInfos,String anAppName)
     {
+        Collection<? extends EmbeddableType<?>> uniqueEmbeddableInfos = allEmbeddableInfos.stream()
+                .collect(toMap(entity -> entity.getJavaType().getSimpleName(), entity->entity, (oldValue, newValue) -> oldValue))
+                .values();
+
         JdyRepositoryModel metaRepo = new JdyRepositoryModel(anAppName);
         metaRepo.addListener(new DefaultClassRepositoryValidator());
         final Map<String, JdyClassInfoModel> className2InfoMap = new HashMap<>();
@@ -53,12 +58,24 @@ public class JpaMetamodelReader
             className2InfoMap.put(newModel.getInternalName(), newModel);
         }
 
+        // build EmbeddableType classes
+        for (EmbeddableType<?> curEntity : uniqueEmbeddableInfos)
+        {
+            JdyClassInfoModel newModel = addEmbeddableToMetaRepo(metaRepo, curEntity);
+            className2InfoMap.put(newModel.getInternalName(), newModel);
+        }
+
         for (EntityType<?> curEntity : allEntityInfos)
         {
             buildAttrForMetaRepo(metaRepo, curEntity, false);
         }
 
-         for (EntityType<?> curEntity : allEntityInfos)
+        for (EmbeddableType<?> curEntity : uniqueEmbeddableInfos)
+        {
+            buildAttrForEmbeddableMetaRepo(metaRepo, curEntity, false);
+        }
+
+        for (EntityType<?> curEntity : allEntityInfos)
         {
             buildAssocsForMetaRepo(metaRepo, curEntity);
         }
@@ -87,6 +104,17 @@ public class JpaMetamodelReader
         return metaClass;
     }
 
+    private JdyClassInfoModel addEmbeddableToMetaRepo(JdyRepositoryModel metaRepo, EmbeddableType aEntity)
+    {
+        JdyClassInfoModel metaClass = metaRepo.addClassInfo(aEntity.getJavaType().getSimpleName());
+        metaClass.setExternalName(aEntity.getJavaType().getSimpleName());
+        metaClass.setShortName(aEntity.getJavaType().getSimpleName());
+        metaClass.setNameSpace(aEntity.getJavaType().getName().replace('.', '_'));
+
+        return metaClass;
+    }
+
+
     private void buildAttrForMetaRepo(ClassRepository metaRepo, EntityType<?> anEntity,boolean embeddedId)
     {
         JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getName());
@@ -107,16 +135,60 @@ public class JpaMetamodelReader
                     if (metaAttr != null) {
                         metaClass.addAttributeInfo(metaAttr);
                     }
+                }else if (curAttr.getPersistentAttributeType() == EMBEDDED )
+                {
+                    JdyObjectReferenceModel metaAttr = createObjectReferenceEmbedded(curAttr, embeddedId, metaRepo);
+                    if (metaAttr != null) {
+                        metaClass.addAttributeInfo(metaAttr);
+                    }
+
                 } else
                 {
-
+                    // s. buildAssocsForMetaRepo
                 }
 
             }
         }
     }
 
-    	private void buildAssocsForMetaRepo(ClassRepository metaRepo, EntityType<?> anEntity)
+    private void buildAttrForEmbeddableMetaRepo(ClassRepository metaRepo, EmbeddableType<?> anEntity,boolean embeddedId)
+    {
+        JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getJavaType().getSimpleName());
+
+        for (Attribute<?, ?> curAttr : anEntity.getAttributes())
+        {
+            if (!curAttr.isCollection()) {
+
+                if (curAttr.getPersistentAttributeType() == BASIC)
+                {
+                    JdyAbstractAttributeModel metaAttr = createPrimitiveField(curAttr, embeddedId);
+                    if (metaAttr != null) {
+                        metaClass.addAttributeInfo(metaAttr);
+                    }
+                }else if (curAttr.getPersistentAttributeType() == ONE_TO_ONE || curAttr.getPersistentAttributeType() == MANY_TO_ONE)
+                {
+                    JdyObjectReferenceModel metaAttr = createObjectReference(curAttr, embeddedId, metaRepo);
+                    if (metaAttr != null) {
+                        metaClass.addAttributeInfo(metaAttr);
+                    }
+                }else if (curAttr.getPersistentAttributeType() == EMBEDDED )
+                {
+                    JdyObjectReferenceModel metaAttr = createObjectReferenceEmbedded(curAttr, embeddedId, metaRepo);
+                    if (metaAttr != null) {
+                        metaClass.addAttributeInfo(metaAttr);
+                    }
+
+                } else
+                {
+                    // s. buildAssocsForMetaRepo
+                }
+
+            }
+        }
+    }
+
+
+    private void buildAssocsForMetaRepo(ClassRepository metaRepo, EntityType<?> anEntity)
 	{
             JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getName());
 
@@ -183,6 +255,22 @@ public class JpaMetamodelReader
         return metaAttr;
     }
 
+    private JdyObjectReferenceModel createObjectReferenceEmbedded(Attribute<?, ?> curAttr, boolean embeddedId, ClassRepository metaRepo)
+    {
+        JpaFieldWrapper wrapper = new JpaFieldWrapper(curAttr);
+        Type type = wrapper.getType();
+        boolean isKey = ((SingularAttribute)curAttr).isId() || embeddedId;
+        boolean isNotNull = !((SingularAttribute)curAttr).isOptional()|| !wrapper.isNullable();
+        boolean isGenerated = wrapper.getGeneratedInfo() != null;
+        String refTypeName = ((EmbeddableType)type).getJavaType().getSimpleName();
+        ClassInfo referenceType = metaRepo.getClassForName(refTypeName);
+
+        JdyObjectReferenceModel  metaAttr = new JdyObjectReferenceModel(referenceType, curAttr.getName(), curAttr.getName(), isKey, isNotNull);
+        metaAttr.setGenerated(isGenerated);
+        return metaAttr;
+    }
+
+
     private JdyAbstractAttributeModel createPrimitiveField(Attribute<?, ?> curAttr, boolean embeddedId) {
 
         JpaFieldWrapper wrapper = new JpaFieldWrapper(curAttr);
@@ -206,13 +294,13 @@ public class JpaMetamodelReader
     {
         Class aTypeClass = wrapper.getJavaType();
 
-        if (aTypeClass.isAssignableFrom(Integer.class))
+        if (aTypeClass.isAssignableFrom(Integer.class) || int.class.isAssignableFrom(aTypeClass))
         {
             return new JdyLongType((long) Integer.MIN_VALUE, (long) Integer.MAX_VALUE);
-        } else if (aTypeClass.isAssignableFrom(Long.class))
+        } else if (aTypeClass.isAssignableFrom(Long.class) || long.class.isAssignableFrom(aTypeClass))
         {
             return new JdyLongType(Long.MIN_VALUE, Long.MAX_VALUE);
-        } else if (aTypeClass.isAssignableFrom(Short.class))
+        } else if (aTypeClass.isAssignableFrom(Short.class) || short.class.isAssignableFrom(aTypeClass))
         {
             return new JdyLongType((long) Short.MIN_VALUE, (long) Short.MAX_VALUE);
         } else if (aTypeClass.isAssignableFrom(Byte.class))
@@ -235,7 +323,8 @@ public class JpaMetamodelReader
         } else if (aTypeClass.isAssignableFrom(Boolean.class))
         {
             return new JdyBooleanType();
-        } else if (aTypeClass.isAssignableFrom(Double.class) || aTypeClass.isAssignableFrom(Float.class))
+        } else if (aTypeClass.isAssignableFrom(Double.class) || aTypeClass.isAssignableFrom(Float.class)
+                || double.class.isAssignableFrom(aTypeClass) || float.class.isAssignableFrom(aTypeClass))
         {
             return new JdyFloatType();
         } else if (aTypeClass.isAssignableFrom(BigDecimal.class))
