@@ -309,7 +309,7 @@ export class JdyAttributeInfo {
     };
 
     public isGenerated () {
-        return (this.isGenerated) ? this.isGenerated : false;
+        return (this.generated) ? this.generated : false;
     };
 
     public setIsKey (isKey) {
@@ -327,7 +327,7 @@ export class JdyAttributeInfo {
     };
 
     public setGenerated (isGenerated) {
-        this.isGenerated = isGenerated;
+        this.generated = isGenerated;
         return this;
     };
 

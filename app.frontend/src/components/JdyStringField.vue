@@ -1,11 +1,11 @@
 <template>
     <div>
         <div v-if="hasDomainValues">
-            <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="primAttr.isGenerated" item-text="representation" item-value="dbValue"></v-combobox>
+            <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="isFieldReadonly" item-text="representation" item-value="dbValue"></v-combobox>
         </div>
         <div v-else>
             <v-text-field  :error-messages="errors.collect('fieldValue')" data-vv-name="fieldValue" v-model="fieldValue" :prepend-icon="prependIcon"
-                           v-validate="validationString" :label="fieldLabel" clearable :counter="primAttr.getType().length" :readonly="primAttr.isGenerated"></v-text-field>
+                           v-validate="validationString" :label="fieldLabel" clearable :counter="primAttr.getType().length" :readonly="isFieldReadonly"></v-text-field>
         </div>
     </div>
 </template>
@@ -72,7 +72,11 @@ export default Vue.extend({
         },
         hasDomainValues () : boolean {
             return this.primAttr.getType().domainValues && this.primAttr.getType().domainValues.length > 0;
+        },
+        isFieldReadonly () : boolean {
+            return this.primAttr.isGenerated();
         }
+
     }
 });
 </script>

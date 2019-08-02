@@ -58,8 +58,8 @@ const jdyRouter = new VueRouter({
 
 jdyRouter.beforeEach((to, from, next) => {
 
-    metaRepoPromise.then(aMetaRepo => { metaRepo = aMetaRepo });
+    metaRepoPromise.then(aMetaRepo => { metaRepo = aMetaRepo; });
     next();
-})
+});
 
-export default jdyRouter
+export default jdyRouter;

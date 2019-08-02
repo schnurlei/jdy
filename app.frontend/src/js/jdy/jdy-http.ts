@@ -1,6 +1,7 @@
 import { JdyAssociationModel, JdyPersistentException, JdyTypedValueObject } from '@/js/jdy/jdy-base';
 import {convertAppRepositoryToRepository, createAppRepository, FilterCreator, META_REPO_NAME} from '@/js/jdy/jdy-meta';
 import { JsonCompactFileWriter, JsonFileReader, JsonFileWriter, Operation } from '@/js/jdy/jdy-json';
+import {testCreatePlantShopRepository} from "@/jdy-test";
 
 export class JsonHttpObjectReader {
 
@@ -10,6 +11,8 @@ export class JsonHttpObjectReader {
     private filterCreator = new FilterCreator();
     private att2AbbrMap: { [name: string]: string };
     private jsonWriter;
+    private plantRepository = testCreatePlantShopRepository();
+
 
     public constructor (aBasePath, aMetaRepoName) {
 
@@ -32,6 +35,7 @@ export class JsonHttpObjectReader {
 
     public loadMetadataFromDb (successFunct, failFunc) {
 
+/*
         let deferredCall;
         let rep = createAppRepository();
         let appRep = rep.getClassInfo('AppRepository');
@@ -48,6 +52,8 @@ export class JsonHttpObjectReader {
                 failFunc(data);
             }
         });
+*/
+        successFunct(this.plantRepository);
     }
 
     public loadValuesFromDb (aFilter, successFunct, failFunc) {

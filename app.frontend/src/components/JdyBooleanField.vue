@@ -1,5 +1,5 @@
 <template>
-    <v-switch :label='primAttr.getInternalName ()' :readonly="primAttr.isGenerated"></v-switch>
+    <v-switch :label='primAttr.getInternalName ()' :readonly="primAttr.isGenerated()"></v-switch>
 </template>
 
 <script>
