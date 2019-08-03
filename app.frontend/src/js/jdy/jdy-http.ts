@@ -33,6 +33,49 @@ export class JsonHttpObjectReader {
 
     }
 
+    public loadDataForClassInfo(aClassInfo): Promise<any> {
+
+/*
+        let myRequest = new Request('api/jdy/data/' + aClassInfo.internalName);
+        return fetch(myRequest)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    if (response.error) {
+                        throw new Error('Error reading data from server: ' + response.error);
+                    } else {
+                        throw new Error('Error reading data from server:');
+                    }
+                }
+            });
+*/
+
+
+        let myRequest = new Request('json/' + aClassInfo.internalName + '.json');
+        return fetch(myRequest)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    // @ts-ignore
+                    if (response.error) {
+                        // @ts-ignore
+                        throw new Error('Error reading data from server: ' + response.error);
+                    } else {
+                        throw new Error('Error reading data from server:');
+                    }
+                }
+            }).then(data => {
+
+                if(data && data.error) {
+                    throw new Error('Error reading data from server:');
+                } else {
+                    return data;
+                }
+            })
+    }
+
     public loadMetadataFromDb (successFunct, failFunc) {
 
 /*

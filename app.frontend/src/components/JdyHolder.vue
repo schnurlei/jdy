@@ -8,153 +8,137 @@
     </div>
 </template>
 
-<script>
+<script  lang='ts'>
 
-function primitiveTypeToColumnHandler (attrInfo) {
-    return {
-        handleBoolean: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()],
-                left: true
-            };
-        },
+import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
+import {Prop, Vue, Watch} from 'vue-property-decorator';
+import Component from 'vue-class-component';
 
-        handleDecimal: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()]
-            };
-        },
-
-        handleTimeStamp: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()]
-            };
-        },
-
-        handleFloat: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()]
-            };
-        },
-
-        handleLong: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()]
-            };
-        },
-
-        handleText: function (aType) {
-            return {
-                text: attrInfo.getInternalName(),
-                align: 'left',
-                value: item => item[attrInfo.getInternalName()],
-                left: true
-            };
-        },
-
-        handleVarChar: function (aType) {
-            return null;
-        },
-
-        handleBlob: function (aType) {
-            return null;
-        }
-    };
-};
-
-function convertToColumns (classInfo) {
-    const allColumns = [];
-    classInfo.forEachAttr(attrInfo => {
-        if (attrInfo.isPrimitive()) {
-            let newCol = attrInfo.getType().handlePrimitiveKey(primitiveTypeToColumnHandler(attrInfo));
-            if (newCol) {
-                allColumns.push(newCol);
-            }
-        }
-    });
-    return allColumns;
-};
-
-const undefinedColumns =
-    [{
-        text: '#Undefined',
-        left: true,
-        sortable: false,
-        value: item => item['BotanicName']
+@Component( {
+    name: 'JdyHolder',
+    components: {
     }
+})
+export default class JdyHolder extends Vue {
+
+    @Prop() classinfo;
+    readonly undefinedColumns = [{
+            text: '#Undefined',
+            left: true,
+            sortable: false,
+            value: item => item['BotanicName']
+        }
+        ];
+    readonly undefinedData = [
+        {
+            '#Undefined': '#Undefined'
+        }
     ];
 
-const undefinedData = [
-    {
-        '#Undefined': '#Undefined'
-    }
-];
+    columns = this.undefinedColumns;
+    holderItems = this.undefinedData;
+    showMessage = false;
+    errorMessage = '';
+    reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta');
 
-export default {
-    data () {
-
+    primitiveTypeToColumnHandler (attrInfo) {
         return {
-            columns: undefinedColumns,
-            holderItems: undefinedData,
-            showMessage: false,
-            errorMessage: ''
-        };
-    },
-    props: ['classinfo'],
-    watch: {
-        // whenever question changes, this function will run
-        classinfo: function (newClassInfo) {
+            handleBoolean: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()],
+                    left: true
+                };
+            },
 
-            if (newClassInfo) {
+            handleDecimal: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()]
+                };
+            },
 
-                this.columns = convertToColumns(newClassInfo);
-                var myRequest = new Request('api/jdy/data/' + newClassInfo.internalName);
-                fetch(myRequest)
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('Something went wrong: ' + response.error);
-                        }
-                    })
-                    .then(data => {
+            handleTimeStamp: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()]
+                };
+            },
 
-                        if(data && data.error) {
-                            this.holderItems = [{
-                                text: '#Error: ' +  data.error ,
-                                left: true,
-                                sortable: false,
-                                value: item => ''
-                            }
-                            ];
-                        } else {
-                            this.holderItems = data;
-                        }
-                        return null;
-                    })
-                    .catch(error => {
+            handleFloat: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()]
+                };
+            },
 
-                        this.columns = undefinedColumns;
-                        this.holderItems = undefinedData;
-                        this.errorMessage = error.message;
-                        this.showMessage = true;
-                    });
-            } else {
+            handleLong: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()]
+                };
+            },
 
-                this.columns = undefinedColumns;
-                this.holderItems = undefinedData;
+            handleText: function (aType) {
+                return {
+                    text: attrInfo.getInternalName(),
+                    align: 'left',
+                    value: item => item[attrInfo.getInternalName()],
+                    left: true
+                };
+            },
+
+            handleVarChar: function (aType) {
+                return null;
+            },
+
+            handleBlob: function (aType) {
+                return null;
             }
+        };
+    };
+
+    convertToColumns (classInfo) {
+        const allColumns: any[]  = [];
+        classInfo.forEachAttr(attrInfo => {
+            if (attrInfo.isPrimitive()) {
+                let newCol = attrInfo.getType().handlePrimitiveKey(this.primitiveTypeToColumnHandler(attrInfo));
+                if (newCol) {
+                    allColumns.push(newCol);
+                }
+            }
+        });
+        return allColumns;
+    };
+
+    @Watch('classinfo') onClassinfoChanged(newClassInfo) {
+
+        if (newClassInfo) {
+
+            this.columns = this.convertToColumns(newClassInfo);
+            this.reader.loadDataForClassInfo(newClassInfo)
+                .then(data => {
+                     this.holderItems = data;
+                    return null;
+                })
+                .catch(error => {
+
+                    this.columns = this.undefinedColumns;
+                    this.holderItems = this.undefinedData;
+                    this.errorMessage = error.message;
+                    this.showMessage = true;
+                });
+        } else {
+
+            this.columns = this.undefinedColumns;
+            this.holderItems = this.undefinedData;
         }
     }
+
 };
 </script>
