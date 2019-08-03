@@ -1,20 +1,14 @@
 [
     {
-        "BotanicName": "Meehania urticifolia 'Japanblau'",
-        "HeigthInCm": 30,
-        "Color": "kobaltblau",
-        "PlantFamily": "Lamiaceae"
+        "OrderNr": "11111",
+        "OrderDate": null
     },
         {
-        "BotanicName": "Achillea tomentosa 'Aurea'",
-        "HeigthInCm": 10,
-        "Color": "goldgelb",
-        "PlantFamily": "Asteraceae"
+        "OrderNr": "2222",
+        "OrderDate": null
     },
         {
-        "BotanicName": "Linum flavum 'Compactum'",
-        "HeigthInCm": 20,
-        "Color": "gelb",
-        "PlantFamily": "Linaceae"
+        "OrderNr": "3333",
+        "OrderDate": null
     }
 ]
