@@ -1,6 +1,7 @@
 import '@babel/polyfill';
 import Vue from 'vue';
-import './plugins/vuetify';
+import Vuetify from 'vuetify/lib';
+import vuetify from './plugins/vuetify';
 import VeeValidate from 'vee-validate';
 import App from './App.vue';
 import JdyHolder from './components/JdyHolder.vue';
@@ -32,22 +33,18 @@ Vue.component('jdy-text', JdyTextField);
 
 Vue.component('jdy-numeric', JdyNumericTextField);
 Vue.use(VeeValidate);
+Vue.use(Vuetify);
 
+export default new Vuetify({
+    icons: {
+        iconfont: 'mdi',
+    }
+});
 
-/*
-var readerWriter = new JDY.taffy.TaffyObjectReaderWriter(),
-    repoHandler = JDY.app.getRepositoryHandlers(readerWriter),
-*/
-
-// repoFilter = new JDY.base.QueryCreator(JDY.meta.createAppRepository().getClassInfo("AppRepository"))
-//     .query();
-//
-// readerWriter.loadValuesFromDb(repoFilter, function (loadedRepos) {
-
-
-
+Vue.config.productionTip = false;
 
 new Vue({
     router,
+    vuetify,
     render: h => h(App)
 }).$mount('#app');

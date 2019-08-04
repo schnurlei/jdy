@@ -1,11 +1,10 @@
 import Vue from 'vue';
-import VueRouter from 'vue-router';
+import Router from 'vue-router';
 import Home from './views/Home.vue';
-import { testCreatePlantShopRepository } from './jdy-test';
 import JdyHolder from './components/JdyHolder.vue';
 import { JsonHttpObjectReader } from '@/js/jdy/jdy-http';
 
-Vue.use(VueRouter);
+Vue.use(Router);
 
 let metaRepo = null;
 
@@ -35,7 +34,7 @@ function fetchMetaPromise (): Promise<any> {
     return dfrd;
 }
 
-const jdyRouter = new VueRouter({
+const jdyRouter = new Router({
     routes: [
         {
             path: '/',

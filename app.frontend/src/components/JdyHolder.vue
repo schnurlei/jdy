@@ -2,7 +2,7 @@
     <div>
         <v-snackbar v-model="showMessage" color='error' :top='true' :multi-line=true :timeout='6000' >
             {{ errorMessage }}
-            <v-btn dark flat @click="showMessage = false"> Close </v-btn>
+            <v-btn dark text @click="showMessage = false"> Close </v-btn>
         </v-snackbar>
         <jdy-table :items="holderItems" :columns="columns" :classinfo="classinfo"></jdy-table>
     </div>
@@ -47,7 +47,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()],
+                    value: attrInfo.getInternalName(),
                     left: true
                 };
             },
@@ -56,7 +56,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()]
+                    value: attrInfo.getInternalName()
                 };
             },
 
@@ -64,7 +64,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()]
+                    value: attrInfo.getInternalName()
                 };
             },
 
@@ -72,7 +72,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()]
+                    value: attrInfo.getInternalName()
                 };
             },
 
@@ -80,7 +80,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()]
+                    value: attrInfo.getInternalName()
                 };
             },
 
@@ -88,7 +88,7 @@ export default class JdyHolder extends Vue {
                 return {
                     text: attrInfo.getInternalName(),
                     align: 'left',
-                    value: item => item[attrInfo.getInternalName()],
+                    value: attrInfo.getInternalName(),
                     left: true
                 };
             },

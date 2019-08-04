@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-toolbar flat color="white">
-            <v-toolbar-title>My CRUD</v-toolbar-title>
+            <v-toolbar-title>Data</v-toolbar-title>
             <v-divider
                     class="mx-2"
                     inset
@@ -9,7 +9,9 @@
             ></v-divider>
             <v-spacer></v-spacer>
             <v-dialog v-model="isEditDialogVisible" max-width="500px">
-                <v-btn slot="activator" color="primary" dark class="mb-2">New Item</v-btn>
+                <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" color="primary" dark class="mb-2">New Item</v-btn>
+                </template>
                 <v-card>
                     <v-card-title>
                         <span class="headline">{{ formTitle }}</span>
@@ -20,13 +22,13 @@
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="blue darken-1" flat @click.native="close">Cancel</v-btn>
-                        <v-btn color="blue darken-1" flat @click.native="save">Save</v-btn>
+                        <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
+                        <v-btn color="blue darken-1" text @click="save">Save</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
         </v-toolbar>
-        <v-data-table  :headers="headers"  :items="items"  hide-actions  class="elevation-1">
+        <v-data-table  :headers="headers"  :items="items"   class="elevation-1">
         <template slot="items" slot-scope="props">
             <td class="justify-center layout px-0">
                 <v-icon small class="mr-2" @click="editInDialog(props.item)">edit</v-icon>

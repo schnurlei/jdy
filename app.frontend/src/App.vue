@@ -1,66 +1,37 @@
 <template>
-    <v-app>
-        <v-navigation-drawer
-                persistent
-                :mini-variant="miniVariant"
-                :clipped="clipped"
-                v-model="drawer"
-                enable-resize-watcher
-                fixed
-                app
-        >
-            <v-list>
-                <v-list-tile value="true" v-for="(item, i) in menuitems" :key="i" :href="item.href">
-                    <v-list-tile-action>
-                        <v-icon v-html="item.icon"></v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-content>
-                        <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-                    </v-list-tile-content>
-                </v-list-tile>
+    <v-app id="inspire">
+        <v-navigation-drawer  app>
+            <v-list rounded>
+                <v-subheader>ENTITIES</v-subheader>
+                <v-list-item-group color="primary">
+                    <v-list-item value="true" v-for="(item, i) in menuitems" :key="i" :href="item.href">
+                        <v-list-item-icon>
+                            <v-icon v-html="item.icon"></v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-content>
+                            <v-list-item-title  v-text="item.title"></v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list-item-group>
             </v-list>
         </v-navigation-drawer>
-        <v-toolbar
+        <v-app-bar
                 app
-                :clipped-left="clipped"
+                color="indigo"
+                dark
         >
-            <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-            <v-btn icon @click.stop="miniVariant = !miniVariant">
-                <v-icon v-html="miniVariant ? 'chevron_right' : 'chevron_left'"></v-icon>
-            </v-btn>
-            <v-btn icon @click.stop="clipped = !clipped">
-                <v-icon>web</v-icon>
-            </v-btn>
-            <v-btn icon @click.stop="fixed = !fixed">
-                <v-icon>remove</v-icon>
-            </v-btn>
-            <v-toolbar-title v-text="title"></v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-btn icon @click.stop="rightDrawer = !rightDrawer">
-                <v-icon>menu</v-icon>
-            </v-btn>
-        </v-toolbar>
+            <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+            <v-toolbar-title>Application</v-toolbar-title>
+        </v-app-bar>
+
         <v-content>
             <router-view></router-view>
         </v-content>
-        <v-navigation-drawer
-                temporary
-                :right="right"
-                v-model="rightDrawer"
-                fixed
+        <v-footer
+                color="indigo"
                 app
         >
-            <v-list>
-                <v-list-tile @click="right = !right">
-                    <v-list-tile-action>
-                        <v-icon>compare_arrows</v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-title>Switch drawer (click me)</v-list-tile-title>
-                </v-list-tile>
-            </v-list>
-        </v-navigation-drawer>
-        <v-footer :fixed="fixed" app>
-            <span>&copy; 2017</span>
+            <span class="white--text">&copy; 2019</span>
         </v-footer>
     </v-app>
 </template>
@@ -81,19 +52,10 @@ import {JdyRepository} from "@/js/jdy/jdy-base";
 })
 export default class App extends Vue {
 
-    clipped = false;
-    drawer = true;
-    fixed = false;
-    items = [{
-        icon: 'bubble_chart',
-        title: 'Inspire'
-    }];
     menuitems = [
-        { title: 'Home', icon: 'dashboard', href: '#/jdy/Plant' }
+        { title: 'Home', icon: 'dashboard', href: '#/' }
         ];
-    miniVariant = false;
     right = true;
-    rightDrawer = false;
     title = 'Jdy';
     about = '-fetch-';
 
