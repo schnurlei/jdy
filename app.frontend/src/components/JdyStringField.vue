@@ -4,28 +4,35 @@
             <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="isFieldReadonly" item-text="representation" item-value="dbValue"></v-combobox>
         </div>
         <div v-else>
-            <v-text-field  :error-messages="errors.collect('fieldValue')" data-vv-name="fieldValue" v-model="fieldValue" :prepend-icon="prependIcon"
+            <v-text-field  :error-messages="errors.collect('fieldValue')" v-model="fieldValue" :prepend-icon="prependIcon"
                            v-validate="validationString" :label="fieldLabel" clearable :counter="primAttr.getType().length" :readonly="isFieldReadonly"></v-text-field>
         </div>
     </div>
 </template>
 
-<script lang='ts'>
+<script>
 
 import * as JDY from '../js/jdy/jdy-base';
 import Vue from 'vue';
 
-export default Vue.extend({
+export default{
 
     props: ['selectedItem', 'primAttr'],
     data () {
         return {
-            fieldValue: '',
-            formFields: []
         };
     },
     computed: {
-
+        fieldValue: {
+            get: function () {
+                return (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : "";
+            },
+            set: function (val) {
+                if (this.selectedItem) {
+                    this.selectedItem[this.primAttr.getInternalName()] = val;
+                }
+            }
+        },
         prependIcon () {
             let icon = '';
             if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.EMAIL) {
@@ -40,7 +47,7 @@ export default Vue.extend({
 
             return icon;
         },
-        validationString () : string {
+        validationString () {
             let validation = '';
             if (this.primAttr.getType().length > 0) {
                 validation += 'max:'+this.primAttr.getType().length;
@@ -66,17 +73,17 @@ export default Vue.extend({
 
             return validation;
         },
-        fieldLabel () : string {
+        fieldLabel ()  {
             let required = (this.primAttr.getNotNull()) ? '*' : '';
             return (this.primAttr.getInternalName())? this.primAttr.getInternalName() + required : '';
         },
-        hasDomainValues () : boolean {
+        hasDomainValues ()  {
             return this.primAttr.getType().domainValues && this.primAttr.getType().domainValues.length > 0;
         },
-        isFieldReadonly () : boolean {
+        isFieldReadonly ()  {
             return this.primAttr.isGenerated();
         }
 
     }
-});
+};
 </script>

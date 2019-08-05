@@ -4,7 +4,7 @@
             <v-list rounded>
                 <v-subheader>ENTITIES</v-subheader>
                 <v-list-item-group color="primary">
-                    <v-list-item value="true" v-for="(item, i) in menuitems" :key="i" :href="item.href">
+                    <v-list-item v-for="(item, i) in menuitems" :key="i" :href="item.href">
                         <v-list-item-icon>
                             <v-icon v-html="item.icon"></v-icon>
                         </v-list-item-icon>

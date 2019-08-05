@@ -1,7 +1,7 @@
 <template>
     <v-form ref="form" lazy-validation>
         <div v-for="(formfield,index) in formFields" :key="index">
-            <jdy-primitive :selectedItem="selectedItem" :primitiveAttribute="formfield.attr"></jdy-primitive>
+            <jdy-primitive :selectedItem="editedItem" :primitiveAttribute="formfield.attr"></jdy-primitive>
         </div>
     </v-form>
 </template>
@@ -59,7 +59,7 @@ function convertToFields (classInfo) {
 
 export default {
 
-    props: ['selectedItem', 'classinfo'],
+    props: ['editedItem', 'classinfo'],
     data () {
         return {
             formFields: []
@@ -69,12 +69,12 @@ export default {
     methods: {
 
         getItemValue: function (value) {
-            const result = this.selectedItem ? value(this.selectedItem) : null;
+            const result = this.editedItem ? value(this.editedItem) : null;
             return result;
         },
         updateItemValue: function (value, newValue) {
-            if (this.selectedItem) {
-                this.selectedItem[value] = newValue;
+            if (this.editedItem) {
+                this.editedItem[value] = newValue;
             }
         }
     },
