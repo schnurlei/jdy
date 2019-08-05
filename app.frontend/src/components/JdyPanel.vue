@@ -67,16 +67,6 @@ export default {
     },
     computed: {},
     methods: {
-
-        getItemValue: function (value) {
-            const result = this.editedItem ? value(this.editedItem) : null;
-            return result;
-        },
-        updateItemValue: function (value, newValue) {
-            if (this.editedItem) {
-                this.editedItem[value] = newValue;
-            }
-        }
     },
     watch: {
         classinfo: function (newClassInfo) {

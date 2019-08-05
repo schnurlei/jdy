@@ -1,6 +1,6 @@
 <template>
     <div>
-        {{validationString}}
+        {{numericValue}}
     <v-text-field :error-messages="errors.collect('numericValue')" data-vv-name="numericValue" :label="fieldLabelComputed"
                   v-validate="validationString" clearable :readonly="fieldReadonly" v-bind:value="numericValue" v-on:keydown="updateNumericValue($event)"/>
 
@@ -20,7 +20,7 @@ function isKeyCursor (key) {
 export default {
 
     name: 'JdyNumericTextField',
-    props: ['fieldLabel', 'fieldReadonly', 'minValue', 'maxValue', 'scale', 'isNotNull'],
+    props: ['selectedItem', 'primAttr', 'fieldLabel', 'fieldReadonly', 'minValue', 'maxValue', 'scale', 'isNotNull'],
     data () {
         return {
             numericValue: ''

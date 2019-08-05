@@ -19,7 +19,7 @@
                             <span class="headline">{{ formTitle }}</span>
                         </v-card-title>
                         <v-card-text>
-                            <jdy-panel :selectedItem="editedItem" :classinfo="classinfo"></jdy-panel>
+                            <jdy-panel :editedItem="editedItem" :classinfo="classinfo"></jdy-panel>
                         </v-card-text>
 
                         <v-card-actions>
@@ -42,6 +42,7 @@
         <template v-slot:no-data>
             <v-btn color="primary" @click="initialize">Reset</v-btn>
         </template>
+
     </v-data-table>
 
 
