@@ -5,7 +5,9 @@
         "Color": "kobaltblau",
         "PlantFamily": "Lamiaceae",
         "wintergreen": false,
-        "Color": "blue"
+        "Price": 12.34,
+        "Description": "",
+        "LastChanged": "1995-12-17T03:12:00"
     },
         {
         "BotanicName": "Achillea tomentosa 'Aurea'",
@@ -13,7 +15,9 @@
         "Color": "goldgelb",
         "PlantFamily": "Asteraceae",
         "wintergreen": true,
-        "Color": null
+        "Price": 99.88,
+         "Description": "",
+         "LastChanged": "1995-12-17T03:18:00"
     },
         {
         "BotanicName": "Linum flavum 'Compactum'",
@@ -21,6 +25,8 @@
         "Color": "gelb",
         "PlantFamily": "Linaceae",
         "wintergreen": false,
-        "Color": "red"
+        "Price": 77.33,
+        "Description": "Nice Plant for most places",
+        "LastChanged": "2019-12-01T03:24:00"
         }
 ]

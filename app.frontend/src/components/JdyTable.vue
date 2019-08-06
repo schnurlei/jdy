@@ -42,10 +42,13 @@
         <template v-slot:no-data>
             <v-btn color="primary" @click="initialize">Reset</v-btn>
         </template>
-
+        <template  v-for="attr in booleanAttrs" v-slot:[attr.item]="{ item }">
+            <v-checkbox v-model="item[attr.attr]" class="mx-2"></v-checkbox>
+        </template>
+        <template  v-for="dateItem in dateAttrs" v-slot:[dateItem.item]="{ item }">
+            {{new Date(item[dateItem.attr]).toLocaleDateString()}}
+        </template>
     </v-data-table>
-
-
 </template>
 
 <script>
@@ -73,7 +76,14 @@ export default {
         },
         formTitle () {
             return this.editedIndex === -1 ? 'New Item' : 'Edit Item';
+        },
+        booleanAttrs() {
+            return [{ item: 'item.wintergreen', attr: 'wintergreen'}];
+        },
+        dateAttrs() {
+            return [{ item: 'item.LastChanged', attr: 'LastChanged'}];
         }
+
 
     },
     methods: {
