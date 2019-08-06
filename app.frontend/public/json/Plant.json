@@ -5,7 +5,8 @@
         "Color": "kobaltblau",
         "PlantFamily": "Lamiaceae",
         "wintergreen": false,
-        "Color": "blue"
+        "Color": "blue",
+        "Description": "asadaaaada"
     },
         {
         "BotanicName": "Achillea tomentosa 'Aurea'",
@@ -13,7 +14,8 @@
         "Color": "goldgelb",
         "PlantFamily": "Asteraceae",
         "wintergreen": true,
-        "Color": null
+        "Color": null,
+        "Description": "bbbbbbfjkdfksölkfösdlf"
     },
         {
         "BotanicName": "Linum flavum 'Compactum'",
@@ -21,6 +23,7 @@
         "Color": "gelb",
         "PlantFamily": "Linaceae",
         "wintergreen": false,
-        "Color": "red"
+        "Color": "red",
+        "Description": "89sdfösldkmfpöeo"
         }
 ]

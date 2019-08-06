@@ -1,7 +1,7 @@
 <template>
     <div>
         {{numericValue}}
-    <v-text-field :error-messages="errors.collect('numericValue')" data-vv-name="numericValue" :label="fieldLabelComputed"
+    <v-text-field v-model="fieldValue" :error-messages="errors.collect('numericValue')" data-vv-name="numericValue" :label="fieldLabelComputed"
                   v-validate="validationString" clearable :readonly="fieldReadonly" v-bind:value="numericValue" v-on:keydown="updateNumericValue($event)"/>
 
     </div>
@@ -27,6 +27,16 @@ export default {
         };
     },
     computed: {
+        fieldValue: {
+            get: function () {
+                return (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : "";
+            },
+            set: function (val) {
+                if (this.selectedItem) {
+                    this.selectedItem[this.primAttr.getInternalName()] = val;
+                }
+            }
+        },
         fieldLabelComputed () {
             let required = (this.isNotNull) ? '*' : '';
             return this.fieldLabel + required;
