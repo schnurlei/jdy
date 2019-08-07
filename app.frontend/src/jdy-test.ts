@@ -20,6 +20,11 @@ export const testCreatePlantShopRepository = function (): JDY.JdyRepository {
     orderItemType.addDecimalAttr('Price', 0.0000, 1000.0000, 4).setNotNull(true);
     orderItemType.addReference('Plant', plantType).setIsDependent(false).setNotNull(true);
 
+    let bankAccountType = rep.addClassInfo('BankAccount', null);
+    bankAccountType.addTextAttr('IBAN', 24).setIsKey(true);
+    bankAccountType.addTextAttr('BIC', 11);
+    bankAccountType.addTextAttr('Bank', 100);
+
     let addressType = rep.addClassInfo('Address', null);
     addressType.addTextAttr('AddressId', 30).setIsKey(true);
     addressType.addTextAttr('Street', 30).setNotNull(true);
@@ -40,5 +45,8 @@ export const testCreatePlantShopRepository = function (): JDY.JdyRepository {
 
     rep.addAssociation('Items', orderType, orderItemType, 'Items', 'Items'
         , false, false, false);
+    rep.addAssociation('Accounts', orderType, bankAccountType, 'Accounts', 'Accounts'
+        , false, false, false);
+
     return rep;
 };

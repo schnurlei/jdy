@@ -4,7 +4,7 @@
             {{ errorMessage }}
             <v-btn dark text @click="showMessage = false"> Close </v-btn>
         </v-snackbar>
-        <jdy-table :items="holderItems" :columns="columns" :classinfo="classinfo"></jdy-table>
+        <jdy-table :items="holderItems" :columns="columns" :classinfo="classInfo"></jdy-table>
     </div>
 </template>
 
@@ -15,13 +15,14 @@ import {Prop, Vue, Watch} from 'vue-property-decorator';
 import Component from 'vue-class-component';
 
 @Component( {
-    name: 'JdyHolder',
+    name: 'JdyDetailTableHolder',
     components: {
     }
 })
-export default class JdyHolder extends Vue {
+export default class JdyDetailTableHolder extends Vue {
 
-    @Prop() classinfo;
+    @Prop() associationInfo;
+    @Prop() editedItem;
     readonly undefinedColumns = [{
             text: '#Undefined',
             left: true,
@@ -29,12 +30,25 @@ export default class JdyHolder extends Vue {
             value: item => item['BotanicName']
         }
         ];
-    readonly undefinedData = [];
+    readonly undefinedData = [
+    ];
 
-    holderItems = this.undefinedData;
     showMessage = false;
     errorMessage = '';
-    reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta');
+
+    get columns() {
+        return (this.associationInfo) ? this.convertToColumns(this.associationInfo.getDetailClass ()) : this.undefinedColumns;
+    }
+
+    get classInfo() {
+        return (this.associationInfo) ? this.associationInfo.getDetailClass () : null;
+    }
+
+    get holderItems() {
+        return (this.associationInfo && this.editedItem)
+            ? this.editedItem.assocVals(this.associationInfo).getObjects()
+            : this.undefinedData;
+    }
 
     primitiveTypeToColumnHandler (attrInfo) {
         return {
@@ -110,31 +124,6 @@ export default class JdyHolder extends Vue {
         });
         return allColumns;
     };
-
-    get columns() {
-        return (this.classinfo) ? this.convertToColumns(this.classinfo) : this.undefinedColumns;
-    }
-
-    @Watch('classinfo') onClassinfoChanged(newClassInfo) {
-
-        if (newClassInfo) {
-
-            this.reader.loadDataForClassInfo(newClassInfo)
-                .then(data => {
-                     this.holderItems = data;
-                    return null;
-                })
-                .catch(error => {
-
-                    this.holderItems = this.undefinedData;
-                    this.errorMessage = error.message;
-                    this.showMessage = true;
-                });
-        } else {
-
-            this.holderItems = this.undefinedData;
-        }
-    }
 
 };
 </script>

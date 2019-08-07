@@ -1,14 +1,29 @@
 [
     {
-        "OrderNr": "11111",
-        "OrderDate": null
+        "@namespace": "PlantShop",
+        "@classInternalName": "PlantOrder",
+        "OrderNr": 11111,
+        "OrderDate": null,
+        "Accounts": [],
+        "Items": []
     },
         {
-        "OrderNr": "2222",
-        "OrderDate": null
+        "@namespace": "PlantShop",
+        "@classInternalName": "PlantOrder",
+        "OrderNr": 2222,
+        "OrderDate": null,
+        "Accounts": [],
+        "Items": []
     },
-        {
-        "OrderNr": "3333",
-        "OrderDate": null
-    }
+     {
+       "@namespace": "PlantShop",
+       "@classInternalName": "PlantOrder",
+        "OrderNr": 3333,
+        "OrderDate": null,
+         "Accounts": [
+             {"IBAN": "DE12kkalsdkalsk", "BIC" : "GNODEF001" , "Bank" :  "Raiba Ulm"},
+             {"IBAN": "36345wtw3423", "BIC" : "GNODEF002" , "Bank" :  "Raiba Krumbach"}
+         ],
+        "Items": []
+     }
 ]

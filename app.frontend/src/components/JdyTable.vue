@@ -40,7 +40,7 @@
             </v-icon>
         </template>
         <template v-slot:no-data>
-            <v-btn color="primary" @click="initialize">Reset</v-btn>
+            No Data found
         </template>
         <template  v-for="attr in booleanAttrs" v-slot:[attr.item]="{ item }">
             <v-checkbox v-model="item[attr.attr]" class="mx-2"></v-checkbox>

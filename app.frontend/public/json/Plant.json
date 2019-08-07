@@ -1,5 +1,7 @@
 [
     {
+        "@namespace": "PlantShop",
+        "@classInternalName": "Plant",
         "BotanicName": "Meehania urticifolia 'Japanblau'",
         "HeigthInCm": 30,
         "Color": "kobaltblau",
@@ -9,7 +11,9 @@
         "Description": "",
         "LastChanged": "1995-12-17T03:12:00"
     },
-        {
+    {
+        "@namespace": "PlantShop",
+        "@classInternalName": "Plant",
         "BotanicName": "Achillea tomentosa 'Aurea'",
         "HeigthInCm": 10,
         "Color": "goldgelb",
@@ -19,7 +23,9 @@
          "Description": "",
          "LastChanged": "1995-12-17T03:18:00"
     },
-        {
+    {
+        "@namespace": "PlantShop",
+        "@classInternalName": "Plant",
         "BotanicName": "Linum flavum 'Compactum'",
         "HeigthInCm": 20,
         "Color": "gelb",
@@ -28,5 +34,5 @@
         "Price": 77.33,
         "Description": "Nice Plant for most places",
         "LastChanged": "2019-12-01T03:24:00"
-        }
+    }
 ]

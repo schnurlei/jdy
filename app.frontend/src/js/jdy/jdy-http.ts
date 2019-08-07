@@ -13,7 +13,6 @@ export class JsonHttpObjectReader {
     private jsonWriter;
     private plantRepository = testCreatePlantShopRepository();
 
-
     public constructor (aBasePath, aMetaRepoName) {
 
         this.basepath = aBasePath;
@@ -33,24 +32,13 @@ export class JsonHttpObjectReader {
 
     }
 
-    public loadDataForClassInfo(aClassInfo): Promise<any> {
+    public loadDataForClassInfo (aClassInfo): Promise<any> {
 
-/*
-        let myRequest = new Request('api/jdy/data/' + aClassInfo.internalName);
-        return fetch(myRequest)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    if (response.error) {
-                        throw new Error('Error reading data from server: ' + response.error);
-                    } else {
-                        throw new Error('Error reading data from server:');
-                    }
-                }
-            });
-*/
+        // return loadDataFromServer (aClassInfo);
+        return this.loadDataFromFile(aClassInfo);
+    }
 
+    private loadDataFromFile (aClassInfo): Promise<any> {
 
         let myRequest = new Request('json/' + aClassInfo.internalName + '.json');
         return fetch(myRequest)
@@ -68,17 +56,39 @@ export class JsonHttpObjectReader {
                 }
             }).then(data => {
 
-                if(data && data.error) {
+                if (data && data.error) {
                     throw new Error('Error reading data from server:');
                 } else {
-                    return data;
+                    return this.jsonReader.readObjectList(data, aClassInfo);
                 }
             })
     }
 
+    private loadDataFromServer (aClassInfo): Promise<any> {
+
+        let myRequest = new Request('api/jdy/data/' + aClassInfo.internalName);
+        return fetch(myRequest)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    if (response.error) {
+                        throw new Error('Error reading data from server: ' + response.error);
+                    } else {
+                        throw new Error('Error reading data from server:');
+                    }
+                }
+            });
+    }
+
     public loadMetadataFromDb (successFunct, failFunc) {
 
-/*
+        // this.loadMetadataFromServer(successFunct, failFunc);
+        successFunct(this.plantRepository);
+    }
+
+    private loadMetadataFromServer (successFunct, failFunc) {
+
         let deferredCall;
         let rep = createAppRepository();
         let appRep = rep.getClassInfo('AppRepository');
@@ -95,7 +105,6 @@ export class JsonHttpObjectReader {
                 failFunc(data);
             }
         });
-*/
         successFunct(this.plantRepository);
     }
 

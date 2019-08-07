@@ -1,5 +1,7 @@
 [
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb890505a75dd39d47be4",
     "FirstName": "Lelia",
     "LastName": "Frye",
@@ -17,6 +19,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb890255416e755408816",
     "FirstName": "Brandy",
     "LastName": "Cabrera",
@@ -34,6 +38,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb890a075a6d895c95dc7",
     "FirstName": "Meadows",
     "LastName": "Hull",
@@ -51,6 +57,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb890c21571a750a82d96",
     "FirstName": "Mary",
     "LastName": "Reese",
@@ -68,6 +76,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb890193496dae6a22ae8",
     "FirstName": "Leann",
     "LastName": "Carey",
@@ -85,6 +95,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb89071d298fb2456a164",
     "FirstName": "Hardy",
     "LastName": "Stafford",
@@ -102,6 +114,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb89014578622171665a2",
     "FirstName": "Kelly",
     "LastName": "Long",
@@ -119,6 +133,8 @@
     }
   },
   {
+    "@namespace": "PlantShop",
+    "@classInternalName": "Customer",
     "CustomerId": "59bcb89008818400b629b934",
     "FirstName": "Alberta",
     "LastName": "Osborne",

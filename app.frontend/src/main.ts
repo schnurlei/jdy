@@ -18,9 +18,11 @@ import JdyNumericTextField from './components/JdyNumericTextField.vue';
 
 import router from './router';
 import './registerServiceWorker';
+import JdyDetailTableHolder from '@/components/JdyDetailTableHolder.vue';
 
 Vue.config.productionTip = false;
 Vue.component('jdy-holder', JdyHolder);
+Vue.component('jdy-detail-table', JdyDetailTableHolder);
 Vue.component('jdy-table', JdyTable);
 Vue.component('jdy-panel', JdyPanel);
 Vue.component('jdy-primitive', JdyPrimitiveComponentHolder);
@@ -37,7 +39,7 @@ Vue.use(Vuetify);
 
 export default new Vuetify({
     icons: {
-        iconfont: 'mdi',
+        iconfont: 'mdi'
     }
 });
 
