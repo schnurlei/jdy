@@ -1,6 +1,5 @@
 <template>
     <div>
-        {{selectedItem}}
         <v-switch :label='primAttr.getInternalName ()' :readonly="primAttr.isGenerated()"  v-model="fieldValue"></v-switch>
     </div>
 </template>
