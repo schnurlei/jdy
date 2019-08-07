@@ -36,16 +36,16 @@ export const testCreatePlantShopRepository = function (): JDY.JdyRepository {
     customerType.addTextAttr('CustomerId', 30).setIsKey(true);
     customerType.addTextAttr('FirstName', 30).setNotNull(true);
     customerType.addTextAttr('LastName', 30).setNotNull(true);
-    orderItemType.addReference('PrivateAddress', addressType).setIsDependent(true).setNotNull(true);
-    orderItemType.addReference('InvoiceAddress', addressType).setIsDependent(true).setNotNull(false);
+    customerType.addReference('PrivateAddress', addressType).setIsDependent(true).setNotNull(true);
+    customerType.addReference('InvoiceAddress', addressType).setIsDependent(true).setNotNull(false);
 
     let orderType = rep.addClassInfo('PlantOrder', null);
     orderType.addLongAttr('OrderNr', 0, 999999999).setIsKey(true);
     orderType.addTimeStampAttr('OrderDate', true, false).setNotNull(true);
 
-    rep.addAssociation('Items', orderType, orderItemType, 'Items', 'Items'
+    rep.addAssociation('Items', orderType, orderItemType, 'Order', 'Order'
         , false, false, false);
-    rep.addAssociation('Accounts', orderType, bankAccountType, 'Accounts', 'Accounts'
+    rep.addAssociation('Accounts', orderType, bankAccountType, 'Order', 'Order'
         , false, false, false);
 
     return rep;

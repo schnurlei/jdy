@@ -1063,6 +1063,25 @@ export class JdyTypedValueObject {
         );
     }
 
+    public copy () : JdyTypedValueObject {
+
+        let objectCopy: JdyTypedValueObject = new JdyTypedValueObject(this.$typeInfo, this.$proxyResolver, this.$proxy);
+
+        this.$typeInfo.forEachAttr(
+            curAttrInfo => {
+                objectCopy[curAttrInfo.getInternalName()] = this.val(curAttrInfo);
+            }
+        );
+
+        this.$typeInfo.forEachAssoc(
+            curAssocInfo => {
+                objectCopy.$assocs[curAssocInfo.getAssocName()] = this.assocVals(curAssocInfo);
+            }
+        );
+
+        return objectCopy;
+    }
+
     public setAssocVals (anAssoc, anObjectList: JdyObjectList) {
 
         let assocName = (typeof anAssoc === 'string') ? anAssoc : anAssoc.getAssocName();

@@ -26,8 +26,7 @@ export default class JdyDetailTableHolder extends Vue {
     readonly undefinedColumns = [{
             text: '#Undefined',
             left: true,
-            sortable: false,
-            value: item => item['BotanicName']
+            sortable: false
         }
         ];
     readonly undefinedData = [
@@ -44,8 +43,14 @@ export default class JdyDetailTableHolder extends Vue {
         return (this.associationInfo) ? this.associationInfo.getDetailClass () : null;
     }
 
+    get holderItemsList() {
+        return (this.associationInfo && this.editedItem && this.editedItem.assocVals)
+            ? this.editedItem.assocVals(this.associationInfo)
+            : this.undefinedData;
+    }
+
     get holderItems() {
-        return (this.associationInfo && this.editedItem)
+        return (this.associationInfo && this.editedItem && this.editedItem.assocVals)
             ? this.editedItem.assocVals(this.associationInfo).getObjects()
             : this.undefinedData;
     }

@@ -3,14 +3,16 @@
         <div v-for="(formfield,index) in formFields" :key="index">
             <jdy-primitive :selectedItem="editedItem" :primitiveAttribute="formfield.attr"></jdy-primitive>
         </div>
-        <v-tabs background-color="indigo">
-            <v-tab  v-for="(assoc,index2) in formAssocs"  :key="index2">
-                {{ assoc.getAssocName () }}
-            </v-tab>
-            <v-tab-item v-for="(assocItem,index3) in formAssocs"  :key="index3">
-                <jdy-detail-table :associationInfo="assocItem" :editedItem="editedItem" ></jdy-detail-table>
-            </v-tab-item>
-        </v-tabs>
+        <template v-if="formAssocs.length > 0">
+            <v-tabs background-color="#b3d4fc">
+                <v-tab  v-for="(assoc,index2) in formAssocs"  :key="index2">
+                    {{ assoc.getAssocName () }}
+                </v-tab>
+                    <v-tab-item v-for="(assocItem,index3) in formAssocs"  :key="index3">
+                        <jdy-detail-table :associationInfo="assocItem" :editedItem="editedItem" ></jdy-detail-table>
+                    </v-tab-item>
+            </v-tabs>
+        </template>
     </v-form>
 </template>
 

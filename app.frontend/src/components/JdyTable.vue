@@ -3,13 +3,13 @@
     <v-data-table :headers="headers"  :items="items"   class="elevation-1">
         <template v-slot:top>
             <v-toolbar flat color="white">
-                <v-toolbar-title>Data</v-toolbar-title>
+                <v-toolbar-title>{{typeName}}</v-toolbar-title>
                 <v-divider
                         class="mx-2"
                         inset
                         vertical
                 ></v-divider>
-                <v-spacer></v-spacer>
+                <v-spacer>{{dateAttrs}}</v-spacer>
                 <v-dialog v-model="isEditDialogVisible" max-width="500px">
                     <template v-slot:activator="{ on }">
                         <v-btn v-on="on" color="primary" dark class="mb-2">New Item</v-btn>
@@ -75,21 +75,37 @@ export default {
             return editHeader.concat(this.columns);
         },
         formTitle () {
-            return this.editedIndex === -1 ? 'New Item' : 'Edit Item';
+            return this.editedIndex === -1 ? 'New ' + this.classinfo.getInternalName() : 'Edit ' + this.classinfo.getInternalName();
         },
         booleanAttrs() {
             return [{ item: 'item.wintergreen', attr: 'wintergreen'}];
         },
         dateAttrs() {
-            return [{ item: 'item.LastChanged', attr: 'LastChanged'}];
+
+            let allDateAttrs = [];
+            if (this.classinfo) {
+                this.classinfo.forEachAttr(attrInfo => {
+                    if (attrInfo.isPrimitive()) {
+
+                        if (attrInfo.getType().getType() === 'TIMESTAMP') {
+                            allDateAttrs.push({item: 'item.' + attrInfo.getInternalName(), attr: attrInfo.getInternalName()});
+                        }
+                    }
+                });
+            }
+            return allDateAttrs;
+        },
+        typeName() {
+            return (this.classinfo) ? this.classinfo.getInternalName(): "";
         }
 
 
     },
     methods: {
         editInDialog: function (listItem, event) {
+
             this.editedIndex = this.items.indexOf(listItem)
-            this.editedItem = Object.assign({}, listItem)
+            this.editedItem = listItem.copy();
             this.isEditDialogVisible = true;
         },
         deleteItem: function (listItem, event) {

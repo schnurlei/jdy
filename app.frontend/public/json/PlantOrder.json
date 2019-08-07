@@ -21,9 +21,26 @@
         "OrderNr": 3333,
         "OrderDate": null,
          "Accounts": [
-             {"IBAN": "DE12kkalsdkalsk", "BIC" : "GNODEF001" , "Bank" :  "Raiba Ulm"},
-             {"IBAN": "36345wtw3423", "BIC" : "GNODEF002" , "Bank" :  "Raiba Krumbach"}
+             {
+               "@namespace": "PlantShop",
+               "@classInternalName": "BankAccount",
+               "IBAN": "DE12kkalsdkalsk", "BIC" : "GNODEF001" , "Bank" :  "Raiba Ulm",
+               "Order": null
+             },
+             {
+               "@namespace": "PlantShop",
+               "@classInternalName": "BankAccount",
+               "IBAN": "36345wtw3423", "BIC" : "GNODEF002" , "Bank" :  "Raiba Krumbach",
+               "Order": null
+             }
          ],
-        "Items": []
+        "Items": [
+          {
+            "@namespace": "PlantShop",
+            "@classInternalName": "OrderItem",
+            "ItemNr": 1, "ItemCount" : 5 , "Price" :  343.88, "Plant": null,
+            "Order": null
+          }
+        ]
      }
 ]

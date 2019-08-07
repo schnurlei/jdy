@@ -1,6 +1,5 @@
 <template>
     <v-container grid-list-md text-xs-left>
-        {{selectedItem}}
         <v-layout row wrap>
             <v-flex xs6>
                 <v-dialog ref="dialog" v-model="modal" :return-value.sync="dateValue" persistent  full-width width="290px">
@@ -14,7 +13,7 @@
                     </v-date-picker>
                 </v-dialog>
             </v-flex>
-            <v-flex xs6>
+<!--            <v-flex xs6>
                 <v-menu ref="menu" v-model="menu2" :close-on-content-click="false" :nudge-right="40"
                         :return-value.sync="timeValue" transition="scale-transition" offset-y full-width
                         max-width="290px" min-width="290px">
@@ -23,7 +22,7 @@
                     </template>
                     <v-time-picker v-if="menu2" v-model="timeValue" full-width @click:minute="$refs.menu.save(timeValue)" format="24hr"></v-time-picker>
                 </v-menu>
-            </v-flex>
+            </v-flex>-->
         </v-layout>
     </v-container>
 </template>
@@ -53,12 +52,12 @@ export default {
         },
         dateValue: {
             get: function () {
-                return (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : "";
+                let timestamp = (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : null;
+                return (timestamp) ? timestamp.toISOString().substr(0, 10) : "";
             },
             set: function (val) {
-                console.log("date: " + val);
                 if (this.selectedItem) {
-                    this.selectedItem[this.primAttr.getInternalName()] = val;
+                    this.selectedItem[this.primAttr.getInternalName()] = new Date(val);
                 }
             }
         }

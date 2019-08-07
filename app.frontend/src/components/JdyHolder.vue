@@ -121,7 +121,7 @@ export default class JdyHolder extends Vue {
 
             this.reader.loadDataForClassInfo(newClassInfo)
                 .then(data => {
-                     this.holderItems = data;
+                    this.holderItems = data;
                     return null;
                 })
                 .catch(error => {

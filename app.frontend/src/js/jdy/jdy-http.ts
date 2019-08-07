@@ -59,7 +59,8 @@ export class JsonHttpObjectReader {
                 if (data && data.error) {
                     throw new Error('Error reading data from server:');
                 } else {
-                    return this.jsonReader.readObjectList(data, aClassInfo);
+                    let convertedData =  this.jsonReader.readObjectList(data, aClassInfo);
+                    return convertedData;
                 }
             })
     }

@@ -422,7 +422,6 @@ export class JsonCompactFileWriter {
         let clmnVisib = aClmnVisibility;
 
         this.addMetaDataFields(jsonObject, objToWrite.$typeInfo, (asProxy) ? 'PROXY' : aPersistenceType);
-        console.log('t: ' + objToWrite.$typeInfo.getInternalName());
         objToWrite.$typeInfo.forEachAttr(function (curAttrInfo) {
 
             if (!clmnVisib || clmnVisib.isAttributeVisible(curAttrInfo)) {
@@ -442,7 +441,6 @@ export class JsonCompactFileWriter {
                                     jsonObject[that.nameForAttr(curAttrInfo)] = primAttrType.getType().handlePrimitiveKey(jsonWriterValueGetVisitor(attrValue));
                                 }
                             } else {
-                                console.log(curAttrInfo.getInternalName());
 
                                 isProxy = asProxy || that.writeStrategy.isWriteAsProxy();
                                 refJsonNode = that.createClassInfoNode(attrValue, aPersistenceType, isProxy, null);
