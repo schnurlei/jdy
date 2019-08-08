@@ -23,11 +23,23 @@ export default class Home extends Vue {
 
     fetchAbout () {
         fetch(new Request('api/about'))
-            .then(response => response.text())
-            .then(data => { this.aboutMessage = data; return null; })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    // @ts-ignore
+                    if (response.error) {
+                        // @ts-ignore
+                        throw new Error('Error reading data from server: ' + response.error);
+                    } else {
+                        throw new Error('Error reading data from server:');
+                    }
+                }
+            })
+            .then(data => { this.aboutMessage = 'done'/*data*/; return null; })
             .catch(error => {
                 console.log(error);
-                this.aboutMessage = '-error-';
+                this.aboutMessage = '-Error reading data from server-';
             });
     }
 

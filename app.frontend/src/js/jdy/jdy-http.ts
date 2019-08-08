@@ -1,7 +1,7 @@
 import { JdyAssociationModel, JdyPersistentException, JdyTypedValueObject } from '@/js/jdy/jdy-base';
-import {convertAppRepositoryToRepository, createAppRepository, FilterCreator, META_REPO_NAME} from '@/js/jdy/jdy-meta';
+import { convertAppRepositoryToRepository, createAppRepository, FilterCreator, META_REPO_NAME } from '@/js/jdy/jdy-meta';
 import { JsonCompactFileWriter, JsonFileReader, JsonFileWriter, Operation } from '@/js/jdy/jdy-json';
-import {testCreatePlantShopRepository} from "@/jdy-test";
+import { testCreatePlantShopRepository } from '@/jdy-test';
 
 export class JsonHttpObjectReader {
 

@@ -4,16 +4,10 @@
         <template v-slot:top>
             <v-toolbar flat color="white">
                 <v-toolbar-title>{{typeName}}</v-toolbar-title>
-                <v-divider
-                        class="mx-2"
-                        inset
-                        vertical
-                ></v-divider>
-                <v-spacer>{{dateAttrs}}</v-spacer>
+                <v-divider class="mx-2" inset vertical></v-divider>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" dark class="mb-2" @click="editInDialog(null)">New Item</v-btn>
                 <v-dialog v-model="isEditDialogVisible" max-width="500px">
-                    <template v-slot:activator="{ on }">
-                        <v-btn v-on="on" color="primary" dark class="mb-2">New Item</v-btn>
-                    </template>
                     <v-card>
                         <v-card-title>
                             <span class="headline">{{ formTitle }}</span>
@@ -52,6 +46,8 @@
 </template>
 
 <script>
+import {JdyTypedValueObject} from "@/js/jdy/jdy-base";
+
 var editHeader = [
     {
         text: 'Edit',
@@ -75,7 +71,7 @@ export default {
             return editHeader.concat(this.columns);
         },
         formTitle () {
-            return this.editedIndex === -1 ? 'New ' + this.classinfo.getInternalName() : 'Edit ' + this.classinfo.getInternalName();
+            return this.editedIndex === -1 ? 'New ' + this.typeName : 'Edit ' + this.typeName;
         },
         booleanAttrs() {
             return [{ item: 'item.wintergreen', attr: 'wintergreen'}];
@@ -104,8 +100,13 @@ export default {
     methods: {
         editInDialog: function (listItem, event) {
 
-            this.editedIndex = this.items.indexOf(listItem)
-            this.editedItem = listItem.copy();
+            if(listItem) {
+                this.editedIndex = this.items.indexOf(listItem)
+                this.editedItem = listItem.copy();
+            } else {
+                this.editedIndex = -1;
+                this.editedItem = new JdyTypedValueObject(this.classinfo, null, false);
+            }
             this.isEditDialogVisible = true;
         },
         deleteItem: function (listItem, event) {
