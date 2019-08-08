@@ -173,7 +173,7 @@ function buildAssocsForMetaRepo (metaRepo, anAppClassInfo): Promise<null> {
 
                 metaMasterClass = metaRepo.getClassInfo(appAssoc.masterClassReference.Masterclass.InternalName);
                 metaMasterClassRef = metaMasterClass.getAttr(appAssoc.masterClassReference.InternalName);
-                appAssocName = appAssoc.NameResource;
+                appAssocName = appAssoc.nameResource;
                 metaAssoc = new JdyAssociationModel(metaMasterClassRef, metaMasterClass, appAssocName);
                 metaClass.addAssociation(metaAssoc);
             }

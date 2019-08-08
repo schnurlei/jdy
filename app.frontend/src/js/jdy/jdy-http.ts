@@ -34,8 +34,8 @@ export class JsonHttpObjectReader {
 
     public loadDataForClassInfo (aClassInfo): Promise<any> {
 
-        // return loadDataFromServer (aClassInfo);
-        return this.loadDataFromFile(aClassInfo);
+        return this.loadDataFromServer(aClassInfo);
+        // return this.loadDataFromFile(aClassInfo);
     }
 
     private loadDataFromFile (aClassInfo): Promise<any> {
@@ -59,10 +59,10 @@ export class JsonHttpObjectReader {
                 if (data && data.error) {
                     throw new Error('Error reading data from server:');
                 } else {
-                    let convertedData =  this.jsonReader.readObjectList(data, aClassInfo);
+                    let convertedData = this.jsonReader.readObjectList(data, aClassInfo);
                     return convertedData;
                 }
-            })
+            });
     }
 
     private loadDataFromServer (aClassInfo): Promise<any> {
@@ -73,19 +73,29 @@ export class JsonHttpObjectReader {
                 if (response.ok) {
                     return response.json();
                 } else {
+                    // @ts-ignore
                     if (response.error) {
+                        // @ts-ignore
                         throw new Error('Error reading data from server: ' + response.error);
                     } else {
                         throw new Error('Error reading data from server:');
                     }
+                }
+            }).then(data => {
+
+                if (data && data.error) {
+                    throw new Error('Error reading data from server:');
+                } else {
+                    let convertedData = this.jsonReader.readObjectList(data, aClassInfo);
+                    return convertedData;
                 }
             });
     }
 
     public loadMetadataFromDb (successFunct, failFunc) {
 
-        // this.loadMetadataFromServer(successFunct, failFunc);
-        successFunct(this.plantRepository);
+        this.loadMetadataFromServer(successFunct, failFunc);
+        // successFunct(this.plantRepository);
     }
 
     private loadMetadataFromServer (successFunct, failFunc) {
@@ -106,7 +116,6 @@ export class JsonHttpObjectReader {
                 failFunc(data);
             }
         });
-        successFunct(this.plantRepository);
     }
 
     public loadValuesFromDb (aFilter, successFunct, failFunc) {
