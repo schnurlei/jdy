@@ -37,7 +37,7 @@
             No Data found
         </template>
         <template  v-for="attr in booleanAttrs" v-slot:[attr.item]="{ item }">
-            <v-checkbox v-model="item[attr.attr]" class="mx-2"></v-checkbox>
+            <v-checkbox v-model="item[attr.attr]" class="mx-2" disabled></v-checkbox>
         </template>
         <template  v-for="dateItem in dateAttrs" v-slot:[dateItem.item]="{ item }">
             {{new Date(item[dateItem.attr]).toLocaleDateString()}}
@@ -74,7 +74,18 @@ export default {
             return this.editedIndex === -1 ? 'New ' + this.typeName : 'Edit ' + this.typeName;
         },
         booleanAttrs() {
-            return [{ item: 'item.wintergreen', attr: 'wintergreen'}];
+            let allBooleanAttrs = [];
+            if (this.classinfo) {
+                this.classinfo.forEachAttr(attrInfo => {
+                    if (attrInfo.isPrimitive()) {
+
+                        if (attrInfo.getType().getType() === 'BOOLEAN') {
+                            allBooleanAttrs.push({item: 'item.' + attrInfo.getInternalName(), attr: attrInfo.getInternalName()});
+                        }
+                    }
+                });
+            }
+            return allBooleanAttrs;
         },
         dateAttrs() {
 

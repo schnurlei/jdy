@@ -26,7 +26,7 @@ function fetchMetaPromise (): Promise<any> {
 
     var dfrd: Promise<any> = new Promise((resolve, reject) => {
 
-        let metaReader = new JsonHttpObjectReader('/', 'meta');
+        let metaReader = new JsonHttpObjectReader('/', 'meta', process.env.VUE_APP_READ_LOCAL);
         metaReader.loadMetadataFromDb(metaData => { resolve(metaData); },
             error => { reject(error) });
     });

@@ -12,9 +12,11 @@ export class JsonHttpObjectReader {
     private att2AbbrMap: { [name: string]: string };
     private jsonWriter;
     private plantRepository = testCreatePlantShopRepository();
+    private readLocal;
 
-    public constructor (aBasePath, aMetaRepoName) {
+    public constructor (aBasePath, aMetaRepoName, readLocalFlag) {
 
+        this.readLocal = readLocalFlag;
         this.basepath = aBasePath;
         this.att2AbbrMap = {}
         this.att2AbbrMap.repoName = 'rn';
@@ -34,8 +36,11 @@ export class JsonHttpObjectReader {
 
     public loadDataForClassInfo (aClassInfo): Promise<any> {
 
-        return this.loadDataFromServer(aClassInfo);
-        // return this.loadDataFromFile(aClassInfo);
+        if (this.readLocal) {
+            return this.loadDataFromFile(aClassInfo);
+        } else {
+            return this.loadDataFromServer(aClassInfo);
+        }
     }
 
     private loadDataFromFile (aClassInfo): Promise<any> {
@@ -94,8 +99,11 @@ export class JsonHttpObjectReader {
 
     public loadMetadataFromDb (successFunct, failFunc) {
 
-        this.loadMetadataFromServer(successFunct, failFunc);
-        // successFunct(this.plantRepository);
+        if (this.readLocal) {
+            successFunct(this.plantRepository);
+        } else {
+            this.loadMetadataFromServer(successFunct, failFunc);
+        }
     }
 
     private loadMetadataFromServer (successFunct, failFunc) {
@@ -414,9 +422,9 @@ class JsonHttpPersistentService {
     private reader;
     private writer;
 
-    public constructor (aBasePath, aMetaRepoName) {
+    public constructor (aBasePath, aMetaRepoName, readLocalFlag) {
 
-        this.reader = new JsonHttpObjectReader(aBasePath, null);
+        this.reader = new JsonHttpObjectReader(aBasePath, null, readLocalFlag);
         this.writer = new JsonHttpObjectWriter(aBasePath, null);
 
     }

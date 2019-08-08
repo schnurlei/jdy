@@ -2,7 +2,7 @@
     <div>
         {{numericValue}}
     <v-text-field v-model="fieldValue" :error-messages="errors.collect('numericValue')" data-vv-name="numericValue" :label="fieldLabelComputed"
-                  v-validate="validationString" clearable :readonly="fieldReadonly" v-bind:value="numericValue" v-on:keydown="updateNumericValue($event)"/>
+                  v-validate="validationString" clearable :readonly="fieldReadonly" :disabled="fieldReadonly" v-bind:value="numericValue" v-on:keydown="updateNumericValue($event)"/>
 
     </div>
 </template>

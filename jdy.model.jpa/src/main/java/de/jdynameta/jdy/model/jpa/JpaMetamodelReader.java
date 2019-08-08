@@ -319,7 +319,7 @@ public class JpaMetamodelReader
             boolean hasDate = (temporalType==TemporalType.TIMESTAMP) || (temporalType==TemporalType.DATE);
             boolean hasTime = (temporalType==TemporalType.TIMESTAMP) || (temporalType==TemporalType.TIME);
             return new JdyTimeStampType(hasDate, hasTime);
-        } else if (aTypeClass.isAssignableFrom(Boolean.class))
+        } else if (aTypeClass.isAssignableFrom(Boolean.class) || boolean.class.isAssignableFrom(aTypeClass))
         {
             return new JdyBooleanType();
         } else if (aTypeClass.isAssignableFrom(Double.class) || aTypeClass.isAssignableFrom(Float.class)

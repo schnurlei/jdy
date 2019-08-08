@@ -65,7 +65,7 @@ export default class App extends Vue {
 
     fetchMeta () {
 
-        let metaReader = new JsonHttpObjectReader('/', 'meta');
+        let metaReader = new JsonHttpObjectReader('/', 'meta',  process.env.VUE_APP_READ_LOCAL);
         metaReader.loadMetadataFromDb(
             metaRepo => {
 

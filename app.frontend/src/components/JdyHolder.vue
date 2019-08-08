@@ -34,7 +34,7 @@ export default class JdyHolder extends Vue {
     holderItems = this.undefinedData;
     showMessage = false;
     errorMessage = '';
-    reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta');
+    reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta',  process.env.VUE_APP_READ_LOCAL);
 
     primitiveTypeToColumnHandler (attrInfo) {
         return {

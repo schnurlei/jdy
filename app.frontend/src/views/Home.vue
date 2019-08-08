@@ -2,12 +2,13 @@
     <div class="home">
         <img alt="Vue logo" src="../assets/logo.png"/>
         <div>About: {{aboutMessage}}</div>
+        <div>Mode: {{readMode}}</div>
     </div>
 </template>
 
 <script lang="ts">
+
 import { Component, Vue } from 'vue-property-decorator';
-import { JsonHttpObjectReader } from '@/js/jdy/jdy-http';
 
 @Component({
     components: {
@@ -16,6 +17,8 @@ import { JsonHttpObjectReader } from '@/js/jdy/jdy-http';
 export default class Home extends Vue {
 
     aboutMessage: string = '-not initialized';
+    // @ts-ignore
+    readMode: string = (process.env.VUE_APP_READ_LOCAL) ? "Read Local" : "Read from Server";
 
     mounted () {
         this.fetchAbout();

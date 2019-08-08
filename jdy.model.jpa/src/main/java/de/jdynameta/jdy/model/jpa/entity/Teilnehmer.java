@@ -133,6 +133,11 @@ public class Teilnehmer implements Serializable {
         this.landkreis = landkreis;
     }
 
+    public boolean getFreigegeben()
+    {
+        return freigegeben;
+    }
+
     public boolean isFreigegeben()
     {
         return freigegeben;
