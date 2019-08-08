@@ -202,7 +202,6 @@ public class JpaMetamodelReader
 //                        System.out.println((wrapper.getType()).name());
                     } else if (curAttr.getPersistentAttributeType() == ONE_TO_MANY) {
                         JpaCollectionWrapper wrapper = new JpaCollectionWrapper(curAttr);
-                        System.out.println(anEntity.getName());
 			JdyClassInfoModel metaDetailClass = (JdyClassInfoModel) metaRepo.getClassForName(wrapper.getReferencedType().getName());
 
                         OneToMany mapping = wrapper.getAnntotationInfo(OneToMany.class);
