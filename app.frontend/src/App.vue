@@ -1,6 +1,6 @@
 <template>
     <v-app id="inspire">
-        <v-navigation-drawer  app>
+        <v-navigation-drawer  v-model="drawer" app>
             <v-list rounded>
                 <v-subheader>ENTITIES</v-subheader>
                 <v-list-item-group color="primary">
@@ -58,6 +58,7 @@ export default class App extends Vue {
     right = true;
     title = 'Jdy';
     about = '-fetch-';
+    drawer = null;
 
     mounted () {
         this.fetchMeta();
