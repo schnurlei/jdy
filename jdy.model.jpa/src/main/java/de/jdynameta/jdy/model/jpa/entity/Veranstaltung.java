@@ -55,6 +55,10 @@ public class Veranstaltung implements Serializable {
         this.datum = datum;
     }
 
+    public boolean getChangable() {
+
+        return changable;
+    }
 
     public boolean isChangable()
     {
