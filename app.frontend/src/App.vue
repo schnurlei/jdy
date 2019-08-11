@@ -38,7 +38,6 @@
 
 <script lang="ts">
 
-import HelloWorld from '@/components/HelloWorld.vue';
 import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
 import Component from 'vue-class-component';
 import {Vue} from 'vue-property-decorator';
@@ -47,7 +46,6 @@ import {JdyRepository} from "@/js/jdy/jdy-base";
 @Component( {
     name: 'App',
     components: {
-        HelloWorld
     }
 })
 export default class App extends Vue {

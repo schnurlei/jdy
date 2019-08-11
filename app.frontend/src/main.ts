@@ -19,6 +19,8 @@ import JdyNumericTextField from './components/JdyNumericTextField.vue';
 import router from './router';
 import './registerServiceWorker';
 import JdyDetailTableHolder from '@/components/JdyDetailTableHolder.vue';
+import JdyFilterPanel from '@/components/JdyFilterPanel.vue';
+import JdyExpressionForm from '@/components/JdyExpressionForm.vue';
 
 Vue.config.productionTip = false;
 Vue.component('jdy-holder', JdyHolder);
@@ -32,6 +34,8 @@ Vue.component('jdy-decimal', JdyDecimalField);
 Vue.component('jdy-timestamp', JdyTimestampField);
 Vue.component('jdy-boolean', JdyBooleanField);
 Vue.component('jdy-text', JdyTextField);
+Vue.component('jdy-filter', JdyFilterPanel);
+Vue.component('jdy-expr-form', JdyExpressionForm);
 
 Vue.component('jdy-numeric', JdyNumericTextField);
 Vue.use(VeeValidate);

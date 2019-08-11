@@ -10,7 +10,6 @@
 
 <script  lang='ts'>
 
-import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
 import {Prop, Vue, Watch} from 'vue-property-decorator';
 import Component from 'vue-class-component';
 

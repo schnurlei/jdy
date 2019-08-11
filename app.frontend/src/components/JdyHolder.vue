@@ -4,6 +4,7 @@
             {{ errorMessage }}
             <v-btn dark text @click="showMessage = false"> Close </v-btn>
         </v-snackbar>
+        <jdy-filter :classinfo="classinfo"></jdy-filter>
         <jdy-table :items="holderItems" :columns="columns" :classinfo="classinfo"></jdy-table>
     </div>
 </template>
