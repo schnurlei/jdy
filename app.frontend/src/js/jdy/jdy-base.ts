@@ -496,6 +496,10 @@ export class JdyLongType extends JdyPrimitiveType {
     public getMaxValue () {
         return this.maxValue;
     }
+
+    public getDomainValues (): string[] | null | undefined {
+        return this.domainValues;
+    }
 }
 
 export class JdyDecimalType extends JdyPrimitiveType {
@@ -528,6 +532,10 @@ export class JdyDecimalType extends JdyPrimitiveType {
     public getScale () {
         return this.scale;
     }
+
+    public getDomainValues (): string[] | null | undefined {
+        return this.domainValues;
+    }
 }
 
 export class JdyTextType extends JdyPrimitiveType {
@@ -552,6 +560,10 @@ export class JdyTextType extends JdyPrimitiveType {
 
     public getTypeHint (): JdyTextTypeHint | null {
         return this.typeHint;
+    }
+
+    public getDomainValues (): string[] | null | undefined {
+        return this.domainValues;
     }
 }
 
@@ -1063,7 +1075,7 @@ export class JdyTypedValueObject {
         );
     }
 
-    public copy () : JdyTypedValueObject {
+    public copy (): JdyTypedValueObject {
 
         let objectCopy: JdyTypedValueObject = new JdyTypedValueObject(this.$typeInfo, this.$proxyResolver, this.$proxy);
 

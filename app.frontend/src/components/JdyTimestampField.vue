@@ -27,40 +27,62 @@
     </v-container>
 </template>
 
-<script>
-export default {
+<script  lang='ts'>
 
-    props: ['selectedItem', 'primAttr'],
-    data () {
-        return {
-            formFields: [],
-            menu2: false,
-            modal: false
-        };
-    },
-    computed: {
-        timeValue: {
-            get: function () {
-                return (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : "";
-            },
-            set: function (val) {
-                console.log("time: " + val);
-                if (this.selectedItem) {
-                    this.selectedItem[this.primAttr.getInternalName()] = val;
-                }
-            }
-        },
-        dateValue: {
-            get: function () {
-                let timestamp = (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : null;
-                return (timestamp) ? timestamp.toISOString().substr(0, 10) : "";
-            },
-            set: function (val) {
-                if (this.selectedItem) {
-                    this.selectedItem[this.primAttr.getInternalName()] = new Date(val);
-                }
+    import {Prop, Vue} from 'vue-property-decorator';
+    import Component from 'vue-class-component';
+    import {JdyPrimitiveAttributeInfo} from "@/js/jdy/jdy-base";
+
+    @Component( {
+        name: 'JdyTimestampField',
+        components: {
+        }
+    })
+    export default class JdyTimestampField extends Vue {
+
+        @Prop({default: null}) primAttr: JdyPrimitiveAttributeInfo | null | undefined;
+        @Prop() itemToEdit;
+        // property to get/set the value from the itemToEdit, when null use this.primAttr.getInternalName()
+        @Prop({default: null}) valueProperty: string | null | undefined;
+
+        menu2 = false;
+        modal = false;
+
+        get timeValue() {
+            if (this.valueProperty) {
+                return (this.itemToEdit) ? this.itemToEdit[this.valueProperty] : "";
+            } else {
+                return (this.itemToEdit  && this.primAttr) ? this.itemToEdit[this.primAttr.getInternalName()] : "";
             }
         }
-    }
-};
+
+        set timeValue (val) {
+            if (this.valueProperty) {
+                this.itemToEdit[this.valueProperty] = val;
+            } else if (this.itemToEdit  && this.primAttr) {
+                this.itemToEdit[this.primAttr.getInternalName()] = new Date(val);
+            }
+        }
+
+        get dateValue () {
+
+            let timestamp: Date | null = null;
+            if (this.valueProperty) {
+                timestamp =  (this.itemToEdit) ? this.itemToEdit[this.valueProperty] : "";
+            } else {
+                timestamp =  (this.itemToEdit  && this.primAttr) ? this.itemToEdit[this.primAttr.getInternalName()] : null;
+            }
+
+            return (timestamp) ? timestamp.toISOString().substr(0, 10) : "";
+        };
+
+        set dateValue (val) {
+            if (this.valueProperty) {
+                this.itemToEdit[this.valueProperty] = val;
+            } else if (this.itemToEdit  && this.primAttr) {
+                this.itemToEdit[this.primAttr.getInternalName()] = new Date(val);
+            }
+        }
+    };
+
 </script>

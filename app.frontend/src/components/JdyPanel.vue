@@ -18,50 +18,11 @@
 
 <script>
 
-function primitiveTypeToColumnHandler (attrInfo) {
-    return {
-        handleBoolean: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleDecimal: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleTimeStamp: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleFloat: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleLong: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleText: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleVarChar: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        },
-
-        handleBlob: function (aType) {
-            return {attr: attrInfo, text: attrInfo.getInternalName(), value: item => item[attrInfo.getInternalName()]};
-        }
-    };
-};
-
 function convertToFields (classInfo) {
     const allFields = [];
     classInfo.forEachAttr(attrInfo => {
         if (attrInfo.isPrimitive()) {
-            let newField = attrInfo.getType().handlePrimitiveKey(primitiveTypeToColumnHandler(attrInfo));
-            if (newField) {
-                allFields.push(newField);
-            }
+            allFields.push({attr: attrInfo});
         }
     });
     return allFields;

@@ -1,5 +1,6 @@
 <template>
 
+    <div>
     <v-data-table :headers="headers" :items="filterExpressions" hide-default-footer class="elevation-1">
         <template v-slot:top>
             <v-banner max-width="300" single-line transition="slide-y-transition">
@@ -27,14 +28,25 @@
 
         </template>
         <template v-slot:item.action="{ item }">
-            <v-icon small @click="editInDialog(item)">
+            <v-icon small @click="editExpressionInDialog(item)">
                 mdi-pencil
             </v-icon>
             <v-icon small @click="deleteItem(item)">
                 mdi-delete
             </v-icon>
         </template>
+        <template v-slot:item.attribute="{ item }">
+            {{item["attribute"].internalName}}
+        </template>
+        <template v-slot:item.operator="{ item }">
+            {{item["operator"].toString()}}
+        </template>
+        <template v-slot:item.value="{ item }">
+            {{item["value"]}}
+        </template>
+
     </v-data-table>
+    </div>
 </template>
 
 <script  lang='ts'>
@@ -56,7 +68,7 @@
         headers = [
             { text: 'Attribute', align: 'left', sortable: false, value: 'attribute' },
             { text: 'Operator', align: 'left', sortable: false, value: 'operator' },
-            { text: 'Value', value: 'value' },
+            { text: 'Value', value: 'value', sortable: false },
             { text: 'Aktion', value: 'action' }];
         isEditDialogVisible = false;
 
@@ -64,12 +76,18 @@
 
             if(expressionToEdit) {
                 this.editedIndex = this.filterExpressions.indexOf(expressionToEdit)
-                this.editedExpression = expressionToEdit;
+                this.editedExpression = Object.assign({}, expressionToEdit);
             } else {
                 this.editedIndex = -1;
-                this.editedExpression = {};
+                this.editedExpression = { attribute: null, operator: null, value: null};
             }
             this.isEditDialogVisible = true;
+        }
+
+        deleteItem (listItem, event) {
+            if (confirm('Are you sure you want to delete this item?') ) {
+                this.filterExpressions.splice(this.filterExpressions.findIndex(x => x === listItem), 1);
+            }
         }
 
         close () {

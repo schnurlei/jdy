@@ -1,5 +1,6 @@
 <template>
     <div>
+        ValueProperty: {{valueProperty}}
         <div v-if="hasDomainValues">
             <v-combobox :label='fieldLabel' clearable :items="primAttr.getType().domainValues" :readonly="isFieldReadonly" item-text="representation" v-model="fieldValue" item-value="dbValue"></v-combobox>
         </div>
@@ -10,61 +11,76 @@
     </div>
 </template>
 
-<script>
+<script  lang='ts'>
 
-import * as JDY from '../js/jdy/jdy-base';
-import Vue from 'vue';
+    import {Prop, Vue} from 'vue-property-decorator';
+    import Component from 'vue-class-component';
+    import {JdyPrimitiveAttributeInfo, JdyTextType, JdyTextTypeHint} from "@/js/jdy/jdy-base";
 
-export default{
+    @Component( {
+        name: 'JdyStringField',
+        components: {
+        }
+    })
+    export default class JdyStringField extends Vue {
 
-    props: ['selectedItem', 'primAttr'],
-    data () {
-        return {
-        };
-    },
-    computed: {
-        fieldValue: {
-            get: function () {
-                return (this.selectedItem) ? this.selectedItem[this.primAttr.getInternalName()] : "";
-            },
-            set: function (val) {
-                if (this.selectedItem) {
-                    this.selectedItem[this.primAttr.getInternalName()] = val;
-                }
+        @Prop({default: null}) primAttr: JdyPrimitiveAttributeInfo | null | undefined;
+        @Prop() itemToEdit;
+        // property to get/set the value from the itemToEdit, when null use this.primAttr.getInternalName()
+        @Prop({default: null}) valueProperty: string | null | undefined;
+
+        get fieldValue() {
+            if (this.valueProperty) {
+                return (this.itemToEdit) ? this.itemToEdit[this.valueProperty] : "";
+            } else {
+                return (this.itemToEdit  && this.primAttr) ? this.itemToEdit[this.primAttr.getInternalName()] : "";
             }
-        },
-        prependIcon () {
+        }
+
+        set fieldValue (val) {
+            if (this.valueProperty) {
+                this.itemToEdit[this.valueProperty] = val;
+            } else if (this.itemToEdit  && this.primAttr) {
+                this.itemToEdit[this.primAttr.getInternalName()] = val;
+            }
+        }
+
+        get prependIcon () {
             let icon = '';
-            if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.EMAIL) {
+            let textType = (this.primAttr) ? this.primAttr.getType() as JdyTextType : null;
+            if (textType && textType.getTypeHint()=== JdyTextTypeHint.EMAIL) {
                 icon += 'alternate_email';
             }
-            if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.URL) {
+            if (textType && textType.getTypeHint()=== JdyTextTypeHint.URL) {
                 icon += 'http';
             }
-            if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.TELEPHONE) {
+            if (textType && textType.getTypeHint()=== JdyTextTypeHint.TELEPHONE) {
                 icon += 'phone';
             }
 
             return icon;
-        },
-        validationString () {
+        };
+
+        get validationString () {
+
+            let textType = (this.primAttr) ? this.primAttr.getType() as JdyTextType : null;
             let validation = '';
-            if (this.primAttr.getType().length > 0) {
-                validation += 'max:'+this.primAttr.getType().length;
+            if (textType && textType.getLength() > 0) {
+                validation += 'max:'+ textType.getLength();
             }
-            if (this.primAttr.getNotNull()) {
+            if (this.primAttr && this.primAttr.getNotNull()) {
                 if (validation.length > 0) {
                     validation += '|';
                 }
                 validation += 'required';
             }
-            if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.EMAIL) {
+            if (textType && textType.getTypeHint()=== JdyTextTypeHint.EMAIL) {
                 if (validation.length > 0) {
                     validation += '|';
                 }
                 validation += 'email';
             }
-            if (this.primAttr.getType().getTypeHint()=== JDY.JdyTextTypeHint.URL) {
+            if (textType && textType.getTypeHint()=== JdyTextTypeHint.URL) {
                 if (validation.length > 0) {
                     validation += '|';
                 }
@@ -72,18 +88,23 @@ export default{
             }
 
             return validation;
-        },
-        fieldLabel ()  {
-            let required = (this.primAttr.getNotNull()) ? '*' : '';
-            return (this.primAttr.getInternalName())? this.primAttr.getInternalName() + required : '';
-        },
-        hasDomainValues ()  {
-            return this.primAttr.getType().domainValues && this.primAttr.getType().domainValues.length > 0;
-        },
-        isFieldReadonly ()  {
-            return this.primAttr.isGenerated();
-        }
+        };
 
-    }
-};
+        get fieldLabel ()  {
+            let required = (this.primAttr && this.primAttr.getNotNull()) ? '*' : '';
+            return (this.primAttr && this.primAttr.getInternalName())? this.primAttr.getInternalName() + required : '';
+        };
+
+        get hasDomainValues ()  {
+
+            let textType = (this.primAttr) ? this.primAttr.getType() as JdyTextType : null;
+            let domainValues = (textType) ? textType.getDomainValues() : null;
+            return !!(domainValues && domainValues.length);
+        };
+
+        get isFieldReadonly ()  {
+
+            return (this.primAttr) ? this.primAttr.isGenerated() : false;
+        }
+}
 </script>
