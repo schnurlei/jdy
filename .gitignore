@@ -3,3 +3,4 @@
 *.iml
 /app.frontend/node/
 /app.frontend/target/
+/app.backend/target/
