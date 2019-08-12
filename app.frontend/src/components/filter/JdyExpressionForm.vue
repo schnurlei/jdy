@@ -11,7 +11,7 @@
                 </v-flex>
 
                 <v-flex xs12 md4>
-                    <jdy-primitive :selectedItem="expression" :primitiveAttribute="selectedAttribute"  valueProperty="value"></jdy-primitive>
+                    <jdy-filter-field :selectedItem="expression" :primitiveAttribute="selectedAttribute"  valueProperty="value"></jdy-filter-field>
                 </v-flex>
             </v-layout>
         </v-container>

@@ -39,7 +39,7 @@
             {{item["attribute"].internalName}}
         </template>
         <template v-slot:item.operator="{ item }">
-            {{item["operator"].toString()}}
+            {{(item["operator"]) ? item["operator"].toString() : ''}}
         </template>
         <template v-slot:item.value="{ item }">
             {{item["value"]}}
