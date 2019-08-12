@@ -1,3 +1,5 @@
 /.idea
 /jdy.iml
 *.iml
+/app.frontend/node/
+/app.frontend/target/
