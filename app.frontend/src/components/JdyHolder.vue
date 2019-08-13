@@ -14,6 +14,7 @@
 import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
 import {Prop, Vue, Watch} from 'vue-property-decorator';
 import Component from 'vue-class-component';
+import {JdyQueryCreator} from "@/js/jdy/jdy-base";
 
 @Component( {
     name: 'JdyHolder',
@@ -120,7 +121,13 @@ export default class JdyHolder extends Vue {
 
         if (newClassInfo) {
 
-            this.reader.loadDataForClassInfo(newClassInfo)
+            let creator = new JdyQueryCreator(newClassInfo);
+            let query = creator.and()
+                                    .equal("BotanicName", "Iris")
+                                    .greater("HeigthInCm", 23)
+                                .end().query();
+
+            this.reader.loadValuesFromDb(query)
                 .then(data => {
                     this.holderItems = data;
                     return null;

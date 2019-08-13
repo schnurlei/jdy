@@ -132,7 +132,7 @@ export class JsonHttpObjectReader {
         });
     }
 
-    public loadValuesFromDb (aFilter: JdyClassInfoQuery, successFunct, failFunc) {
+    public loadValuesFromDb (aFilter: JdyClassInfoQuery): Promise<any> {
         'use strict';
 
         let uri = this.createUriForClassInfo(aFilter.getResultInfo());
@@ -144,17 +144,13 @@ export class JsonHttpObjectReader {
             uri = uri + '?' + 'filer=' + this.fixedEncodeURIComponent(JSON.stringify(expr));
         }
 
-        this.createAjaxGetJsonCall(uri).then(jsonData => {
+        return this.createAjaxGetJsonCall(uri).then(jsonData => {
 
             if (jsonData && jsonData.error) {
                 throw new Error('Error reading data from server:');
             } else {
                 let convertedData = this.jsonReader.readObjectList(jsonData, aFilter.getResultInfo());
-                successFunct(convertedData);
-            }
-        }).catch(data => {
-            if (failFunc) {
-                failFunc(data);
+                return convertedData;
             }
         });
     };

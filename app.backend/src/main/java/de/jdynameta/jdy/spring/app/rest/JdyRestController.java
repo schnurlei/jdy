@@ -2,19 +2,16 @@ package de.jdynameta.jdy.spring.app.rest;
 
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
-import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.DefaultObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
 import de.jdynameta.json.JsonCompactFileReader;
-import de.jdynameta.json.JsonCompactFileWriter;
 import de.jdynameta.json.JsonFileWriter;
 import de.jdynameta.metamodel.application.AppRepository;
 import de.jdynameta.metamodel.application.ApplicationRepository;
 import de.jdynameta.metamodel.application.MetaRepositoryCreator;
-import de.jdynameta.metamodel.filter.AppQuery;
 import de.jdynameta.metamodel.filter.FilterRepository;
 import de.jdynameta.persistence.manager.PersistentOperation;
 import de.jdynameta.persistence.state.ApplicationObj;
@@ -83,13 +80,17 @@ public class JdyRestController {
         if( entityClassInfo != null && jpaEntityForName.isPresent() ) {
 
             final List<?> allDbObjects;
-            if(filter != null) {
-                allDbObjects =  this.readObjectsFromDbForEntity(jpaEntityForName.get(), filter);
-            } else {
-                allDbObjects =  this.readAllObjectsFromDbForEntity(jpaEntityForName.get());
-            }
+            try {
+                if(filter != null) {
+                    allDbObjects =  this.readObjectsFromDbForEntity(jpaEntityForName.get(), filter);
+                } else {
+                    allDbObjects =  this.readAllObjectsFromDbForEntity(jpaEntityForName.get());
+                }
 
-            return this.createJsonResponse(entityClassInfo, allDbObjects);
+                return this.createJsonResponse(entityClassInfo, allDbObjects);
+            } catch(JdyPersistentException ex) {
+                throw new GeneralRestException(ex);
+            }
         } else {
             return "";
         }
@@ -139,7 +140,7 @@ public class JdyRestController {
         final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
         final Root<?> entityRoot = query.from(entityType.getJavaType());
 
-        JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), new JsonCompactFileReader.GeneratedValueCreator() );
+        JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
         ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
 
 
