@@ -618,7 +618,7 @@ export class JdyClassInfoQuery {
         this.filterExpression = aFilterExpr;
     }
 
-    public getResultInfo () {
+    public getResultInfo (): JdyClassInfo {
         return this.resultInfo;
     };
 
