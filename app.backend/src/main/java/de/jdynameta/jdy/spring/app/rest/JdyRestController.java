@@ -2,22 +2,26 @@ package de.jdynameta.jdy.spring.app.rest;
 
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
+import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.DefaultObjectList;
+import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
+import de.jdynameta.json.JsonCompactFileReader;
+import de.jdynameta.json.JsonCompactFileWriter;
 import de.jdynameta.json.JsonFileWriter;
 import de.jdynameta.metamodel.application.AppRepository;
 import de.jdynameta.metamodel.application.ApplicationRepository;
 import de.jdynameta.metamodel.application.MetaRepositoryCreator;
+import de.jdynameta.metamodel.filter.AppQuery;
+import de.jdynameta.metamodel.filter.FilterRepository;
 import de.jdynameta.persistence.manager.PersistentOperation;
+import de.jdynameta.persistence.state.ApplicationObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -25,7 +29,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 import javax.xml.transform.TransformerConfigurationException;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,44 +73,75 @@ public class JdyRestController {
         }
     }
 
-    @RequestMapping(value = "jdy/data/{className}", method = RequestMethod.GET)
-    public String getDataForEntity( @PathVariable("className") String className) {
+    @GetMapping(value = "jdy/data/{className}")
+    public String getDataForEntity( final @PathVariable("className") String className
+                            , final @RequestParam("filter") String filter) {
 
-        JpaMetamodelReader reader = new JpaMetamodelReader();
-        ClassRepository repo = reader.createMetaRepository(entityManager.getMetamodel(), "TestApp");
-        ClassInfo entityClassInfo = repo.getClassForName(className);
+        final ClassInfo entityClassInfo = this.getMetaInfoClassForClassName(className);
+        final Optional<EntityType<?>> jpaEntityForName = this.getJpaEntityTypeForClassName(className);
 
-        Optional<EntityType<?>> entityForName = entityManager.getMetamodel().getEntities()
-                .stream().filter(entity -> entity.getName().equals(className)).findFirst();
+        if( entityClassInfo != null && jpaEntityForName.isPresent() ) {
 
-        if( entityForName.isPresent() ) {
-
-            List<?> allEntities =  getAllObjectsFromEntity(entityForName.get());
-
-            final List<TypedValueObject> wrappedEnitites = allEntities.stream()
-                    .map(entity-> new TypedReflectionValueObjectWrapper(entity, entityClassInfo))
-                    .collect(Collectors.toList());
-
-            JsonFileWriter jsonFileWriter = new JsonFileWriter(new JsonFileWriter.WriteAllDependentStrategy(), true);
-            StringWriter writer = new StringWriter();
-            try {
-
-                jsonFileWriter.writeObjectList(writer, entityClassInfo, new DefaultObjectList<>(wrappedEnitites), PersistentOperation.Operation.READ);
-                return writer.toString();
-            } catch (JdyPersistentException | TransformerConfigurationException ex) {
-                ex.printStackTrace();
-                throw new GeneralRestException(ex);
+            final List<?> allDbObjects;
+            if(filter != null) {
+                allDbObjects =  this.readObjectsFromDbForEntity(jpaEntityForName.get(), filter);
+            } else {
+                allDbObjects =  this.readAllObjectsFromDbForEntity(jpaEntityForName.get());
             }
+
+            return this.createJsonResponse(entityClassInfo, allDbObjects);
         } else {
             return "";
         }
     }
 
-    public List<?> getAllObjectsFromEntity(EntityType<?> entityType) {
+    private Optional<EntityType<?>> getJpaEntityTypeForClassName(final String className) {
 
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
-        Root<?> entityRoot = query.from(entityType.getJavaType());
+        return this.entityManager.getMetamodel().getEntities()
+                    .stream()
+                    .filter(entity -> entity.getName().equals(className)).findFirst();
+    }
+
+    private ClassInfo getMetaInfoClassForClassName(final String className) {
+
+        final ClassRepository metaRepo = new JpaMetamodelReader().createMetaRepository(this.entityManager.getMetamodel(), "TestApp");
+        return metaRepo.getClassForName(className);
+    }
+
+    private String createJsonResponse(final ClassInfo entityClassInfo, final List<?> allEntities) {
+
+        final List<TypedValueObject> wrappedEnitites = allEntities.stream()
+                .map(entity-> new TypedReflectionValueObjectWrapper(entity, entityClassInfo))
+                .collect(Collectors.toList());
+
+        final JsonFileWriter jsonFileWriter = new JsonFileWriter(new JsonFileWriter.WriteAllDependentStrategy(), true);
+        final StringWriter writer = new StringWriter();
+        try {
+            jsonFileWriter.writeObjectList(writer, entityClassInfo, new DefaultObjectList<>(wrappedEnitites), PersistentOperation.Operation.READ);
+            return writer.toString();
+        } catch (JdyPersistentException | TransformerConfigurationException ex) {
+            LOG.error("Error creating JSON Response", ex);
+            throw new GeneralRestException(ex);
+        }
+    }
+
+    private List<?> readAllObjectsFromDbForEntity(final EntityType<?> entityType) {
+
+        final CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
+        final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
+
+        return this.entityManager.createQuery(query).getResultList();
+    }
+
+    private List<?> readObjectsFromDbForEntity(final EntityType<?> entityType, String filter) throws JdyPersistentException {
+
+        final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
+        final Root<?> entityRoot = query.from(entityType.getJavaType());
+
+        JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), new JsonCompactFileReader.GeneratedValueCreator() );
+        ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
+
 
 /*
         Path<String> emailPath = user.get("email");
@@ -116,6 +153,23 @@ public class JdyRestController {
                 .where(cb.or(predicates.toArray(new Predicate[predicates.size()])));
 */
 
-        return entityManager.createQuery(query).getResultList();
+        return this.entityManager.createQuery(query).getResultList();
+    }
+
+    private HashMap<String, String> getMapping()
+    {
+        final HashMap<String, String> att2AbbrMap = new HashMap<>();
+        att2AbbrMap.put("repoName", "rn");
+        att2AbbrMap.put("className", "cn");
+        att2AbbrMap.put("expr", "ex");
+        att2AbbrMap.put("orSubExpr", "ose");
+        att2AbbrMap.put("andSubExpr", "ase");
+        att2AbbrMap.put("attrName", "an");
+        att2AbbrMap.put("operator", "op");
+        att2AbbrMap.put("isNotEqual", "ne");
+        att2AbbrMap.put("isAlsoEqual", "ae");
+        att2AbbrMap.put("longVal", "lv");
+        att2AbbrMap.put("textVal", "tv");
+        return att2AbbrMap;
     }
 }

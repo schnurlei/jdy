@@ -1,4 +1,10 @@
-import { JdyAssociationModel, JdyPersistentException, JdyTypedValueObject } from '@/js/jdy/jdy-base';
+import {
+    JdyAssociationModel,
+    JdyClassInfo,
+    JdyClassInfoQuery,
+    JdyPersistentException,
+    JdyTypedValueObject
+} from '@/js/jdy/jdy-base';
 import { convertAppRepositoryToRepository, createAppRepository, FilterCreator, META_REPO_NAME } from '@/js/jdy/jdy-meta';
 import { JsonCompactFileWriter, JsonFileReader, JsonFileWriter, Operation } from '@/js/jdy/jdy-json';
 import { testCreatePlantShopRepository } from '@/jdy-test';
@@ -34,7 +40,7 @@ export class JsonHttpObjectReader {
 
     }
 
-    public loadDataForClassInfo (aClassInfo): Promise<any> {
+    public loadDataForClassInfo (aClassInfo: JdyClassInfo): Promise<any> {
 
         if (this.readLocal) {
             return this.loadDataFromFile(aClassInfo);
@@ -43,9 +49,9 @@ export class JsonHttpObjectReader {
         }
     }
 
-    private loadDataFromFile (aClassInfo): Promise<any> {
+    private loadDataFromFile (aClassInfo: JdyClassInfo): Promise<any> {
 
-        let myRequest = new Request('json/' + aClassInfo.internalName + '.json');
+        let myRequest = new Request(this.createUriForClassInfo(aClassInfo));
         return fetch(myRequest)
             .then(response => {
                 if (response.ok) {
@@ -70,9 +76,9 @@ export class JsonHttpObjectReader {
             });
     }
 
-    private loadDataFromServer (aClassInfo): Promise<any> {
+    private loadDataFromServer (aClassInfo: JdyClassInfo): Promise<any> {
 
-        let myRequest = new Request('api/jdy/data/' + aClassInfo.internalName);
+        let myRequest = new Request('api/jdy/data/' + aClassInfo.getInternalName());
         return fetch(myRequest)
             .then(response => {
                 if (response.ok) {
@@ -108,14 +114,14 @@ export class JsonHttpObjectReader {
 
     private loadMetadataFromServer (successFunct, failFunc) {
 
-        let deferredCall;
+        let deferredCall: Promise<any>;
         let rep = createAppRepository();
         let appRep = rep.getClassInfo('AppRepository');
 
-        deferredCall = this.createAjaxGetCall('api/jdy/meta');
-        deferredCall.then(rtoData => {
+        deferredCall = this.createAjaxGetJsonCall('api/jdy/meta');
+        deferredCall.then(jsonData => {
 
-            var resultObjects = this.jsonReader.readObjectList(rtoData, appRep);
+            var resultObjects = this.jsonReader.readObjectList(jsonData, appRep);
             convertAppRepositoryToRepository(resultObjects[0], (metaRep) => {
                 successFunct(metaRep);
             });
@@ -126,63 +132,60 @@ export class JsonHttpObjectReader {
         });
     }
 
-    public loadValuesFromDb (aFilter, successFunct, failFunc) {
+    public loadValuesFromDb (aFilter: JdyClassInfoQuery, successFunct, failFunc) {
         'use strict';
 
-        let uri = this.createUriForClassInfo(aFilter.resultType, META_REPO_NAME, this.basepath);
-        let deferredCall;
-        let that = this;
+        let uri = this.createUriForClassInfo(aFilter.getResultInfo());
         let appQuery = this.filterCreator.convertMetaFilter2AppFilter(aFilter);
         let expr;
 
         if (appQuery && appQuery.val('expr')) {
             expr = this.jsonWriter.writeObjectList([appQuery.val('expr')], Operation.INSERT);
-            uri = uri + '?' + this.fixedEncodeURIComponent(JSON.stringify(expr));
+            uri = uri + '?' + 'filer=' + this.fixedEncodeURIComponent(JSON.stringify(expr));
         }
 
-        deferredCall = this.createAjaxGetCall(uri);
+        this.createAjaxGetJsonCall(uri).then(jsonData => {
 
-        deferredCall.done(function (rtoData) {
-
-            var resultObjects = that.jsonReader.readObjectList(rtoData, aFilter.resultType);
-            successFunct(resultObjects);
-        });
-        deferredCall.error(function (data) {
+            if (jsonData && jsonData.error) {
+                throw new Error('Error reading data from server:');
+            } else {
+                let convertedData = this.jsonReader.readObjectList(jsonData, aFilter.getResultInfo());
+                successFunct(convertedData);
+            }
+        }).catch(data => {
             if (failFunc) {
-                failFunc();
+                failFunc(data);
             }
         });
-
     };
 
     private fixedEncodeURIComponent (str) {
         return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, '%2A');
     };
 
-    private createAjaxGetCall (aUrl) {
-        'use strict';
+    private createAjaxGetJsonCall (aUrl): Promise<any> {
 
-        var myRequest = new Request(aUrl);
+        let myRequest = new Request(aUrl);
+
         return fetch(myRequest)
-            .then(response => response.json());
-
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    // @ts-ignore
+                    if (response.error) {
+                        // @ts-ignore
+                        throw new Error('Error reading data from server: ' + response.error);
+                    } else {
+                        throw new Error('Error reading data from server:');
+                    }
+                }
+            })
     };
 
-    private createUriForClassInfo (aClassInfo, aMetaModelReponame, aBasePath) {
-        'use strict';
+    private createUriForClassInfo (aClassInfo: JdyClassInfo) {
 
-        let reponame = aClassInfo.repoName;
-        let repoPart = '@jdy';// pseudo repo for meta information
-        let infoPath = (aBasePath === null) ? '' : aBasePath;
-
-        if (reponame !== aMetaModelReponame) {
-            repoPart = reponame;
-        }
-        // check whether path ends with /
-        infoPath = (infoPath.charAt(infoPath.length - 1) === '/') ? infoPath : infoPath + '/';
-        infoPath += repoPart + '/' + aClassInfo.getInternalName();
-
-        return infoPath;
+        return 'api/jdy/data/' + aClassInfo.getInternalName();
     };
 
 };

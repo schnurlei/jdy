@@ -1,4 +1,4 @@
-package de.jdynameta.jdy.spring.app.rest;
+package de.jdynameta.jdy.spring.app.data;
 
 import de.jdynameta.jdy.model.jpa.entity.Landkreis;
 import de.jdynameta.jdy.model.jpa.entity.Teilnehmer;
