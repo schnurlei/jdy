@@ -889,6 +889,9 @@ export class JdyQueryCreator {
 
     public addOperatorExpression (anAttrName: string, aCompareValue, aOperator: ExpressionPrimitiveOperator) {
         let attributeInfo: JdyAttributeInfo = this.resultInfo.getAttr(anAttrName);
+        if (!attributeInfo) {
+            throw new JdyFilterCreationException('No attribute for attribute name in Operator Expression exists');
+        }
         let opExpr = new JdyOperatorExpression(aOperator, attributeInfo, aCompareValue);
         this.addExpression(opExpr);
         return this;

@@ -35,11 +35,11 @@ public class FilterCreatorTest
 	@Test
 	public void testCreateAppFilter() throws JdyPersistentException, TransformerConfigurationException, ObjectCreationException
 	{
-		ClassRepository plantShop = PlantShopRepository.createPlantShopRepository();
-		ClassInfo plantType = plantShop.getClassForName(PlantShopRepository.Type.Plant.name());
+		final ClassRepository plantShop = PlantShopRepository.createPlantShopRepository();
+		final ClassInfo plantType = plantShop.getClassForName(PlantShopRepository.Type.Plant.name());
 
 		// create filter
-		DefaultClassInfoQuery query = QueryCreator.start(plantType)
+		final DefaultClassInfoQuery query = QueryCreator.start(plantType)
 				.or()
 					.equal("BotanicName", "Iris")
 					.and()
@@ -49,25 +49,25 @@ public class FilterCreatorTest
 				.end().query();
 
 		// convert filter to applcation filter
-		FilterCreator creator = new FilterCreator();
-		AppQuery appQuery = creator.createAppFilter(query);
+		final FilterCreator creator = new FilterCreator();
+		final AppQuery appQuery = creator.createAppFilter(query);
 
 		// write filter expressionto json string
-		StringWriter writerOut = new StringWriter();
-		HashMap<String, String> att2AbbrMap = writExpreToJsonString(appQuery, writerOut);
+		final StringWriter writerOut = new StringWriter();
+		final HashMap<String, String> att2AbbrMap = writExpreToJsonString(appQuery, writerOut);
 		System.out.println(writerOut.toString());
 
-		GeneratedValueCreator valueGenerator = new GeneratedValueCreator()
+		final GeneratedValueCreator valueGenerator = new GeneratedValueCreator()
 		{
 			public long nextValue = 0;
 			@Override
-			public Object createValue(ClassInfo aClassInfo, AttributeInfo aAttrInfo)
+			public Object createValue(final ClassInfo aClassInfo, final AttributeInfo aAttrInfo)
 			{
 				return new Long(nextValue++);
 			}
 
 			@Override
-			public boolean canGenerateValue(ClassInfo aClassInfo,	AttributeInfo aAttrInfo)
+			public boolean canGenerateValue(final ClassInfo aClassInfo, final AttributeInfo aAttrInfo)
 			{
 				return (aAttrInfo instanceof PrimitiveAttributeInfo)
 						&& ((PrimitiveAttributeInfo) aAttrInfo).getType() instanceof LongType
@@ -75,29 +75,29 @@ public class FilterCreatorTest
 			}
 		};
 		// convert filter string back to expr
-		JsonCompactFileReader reader = new JsonCompactFileReader(att2AbbrMap, FilterRepository.getSingleton().getRepoName(), valueGenerator );
-		ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(writerOut.toString()), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
+		final JsonCompactFileReader reader = new JsonCompactFileReader(att2AbbrMap, FilterRepository.getSingleton().getRepoName(), valueGenerator );
+		final ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(writerOut.toString()), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
 
-		FilterTransformator  transformator = new FilterTransformator(FilterRepository.NAME_CREATOR);
-		ObjectList<ReflectionChangeableValueObject> convertedList = JsonHttpObjectReader.convertValObjList(result, transformator);
+		final FilterTransformator  transformator = new FilterTransformator(FilterRepository.NAME_CREATOR);
+		final ObjectList<ReflectionChangeableValueObject> convertedList = JsonHttpObjectReader.convertValObjList(result, transformator);
 
-		AppFilterExpr expr =  (AppFilterExpr) convertedList.get(0);
-		AppQuery newAppQuery = new AppQuery();
+		final AppFilterExpr expr =  (AppFilterExpr) convertedList.get(0);
+		final AppQuery newAppQuery = new AppQuery();
 		newAppQuery.setExpr(expr);
 		newAppQuery.setRepoName(plantShop.getRepoName());
 		newAppQuery.setClassName(plantType.getInternalName());
 
-		ClassInfoQuery resultQuery = creator.createMetaFilter(newAppQuery, plantShop);
+		final ClassInfoQuery resultQuery = creator.createMetaFilter(newAppQuery, plantShop);
 		System.out.println(resultQuery);
 
 	}
 
-	private HashMap<String, String> writExpreToJsonString(AppQuery appQuery,
-			StringWriter writerOut) throws TransformerConfigurationException,
+	private HashMap<String, String> writExpreToJsonString(final AppQuery appQuery,
+														  final StringWriter writerOut) throws TransformerConfigurationException,
 			JdyPersistentException
 	{
-		ObjectList<? extends TypedValueObject> queryColl = new ChangeableObjectList<TypedValueObject>(appQuery.getExpr());
-		HashMap<String, String> att2AbbrMap = new HashMap<String, String>();
+		final ObjectList<? extends TypedValueObject> queryColl = new ChangeableObjectList<TypedValueObject>(appQuery.getExpr());
+		final HashMap<String, String> att2AbbrMap = new HashMap<String, String>();
 		att2AbbrMap.put("repoName", "rn");
 		att2AbbrMap.put("className", "cn");
 		att2AbbrMap.put("expr", "ex");
@@ -117,19 +117,19 @@ public class FilterCreatorTest
 	@Test
 	public void readCompactfilterExpression() throws JdyPersistentException
 	{
-		String aFilterExpr = "[{\"@t\":\"FEA\",\"ase\":[{\"@t\":\"OEX\",\"an\":\"HeigthInCm\",\"op\":{\"@t\":\"FPG\",\"ae\":false},\"lv\":100}]}]";
+		final String aFilterExpr = "[{\"@t\":\"FEA\",\"ase\":[{\"@t\":\"OEX\",\"an\":\"HeigthInCm\",\"op\":{\"@t\":\"FPG\",\"ae\":false},\"lv\":100}]}]";
 
-		GeneratedValueCreator valueGenerator = new GeneratedValueCreator()
+		final GeneratedValueCreator valueGenerator = new GeneratedValueCreator()
 		{
 			public long nextValue = 0;
 			@Override
-			public Object createValue(ClassInfo aClassInfo, AttributeInfo aAttrInfo)
+			public Object createValue(final ClassInfo aClassInfo, final AttributeInfo aAttrInfo)
 			{
 				return new Long(nextValue++);
 			}
 
 			@Override
-			public boolean canGenerateValue(ClassInfo aClassInfo,	AttributeInfo aAttrInfo)
+			public boolean canGenerateValue(final ClassInfo aClassInfo, final AttributeInfo aAttrInfo)
 			{
 				return (aAttrInfo instanceof PrimitiveAttributeInfo)
 						&& ((PrimitiveAttributeInfo) aAttrInfo).getType() instanceof LongType
@@ -137,15 +137,15 @@ public class FilterCreatorTest
 			}
 		};
 
-		HashMap<String, String> att2AbbrMap = FilterCreator.createAbbreviationMap();
-		JsonCompactFileReader reader = new JsonCompactFileReader(att2AbbrMap, FilterRepository.getSingleton().getRepoName(), valueGenerator );
-		ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(aFilterExpr), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
-		ApplicationObj exprObj = result.get(0);
+		final HashMap<String, String> att2AbbrMap = FilterCreator.createAbbreviationMap();
+		final JsonCompactFileReader reader = new JsonCompactFileReader(att2AbbrMap, FilterRepository.getSingleton().getRepoName(), valueGenerator );
+		final ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(aFilterExpr), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
+		final ApplicationObj exprObj = result.get(0);
 
-		ObjectList<? extends TypedValueObject> exprList = exprObj.getValues("andSubExpr");
-		ApplicationObj operatorExpr = (ApplicationObj) exprList.get(0);
+		final ObjectList<? extends TypedValueObject> exprList = exprObj.getValues("andSubExpr");
+		final ApplicationObj operatorExpr = (ApplicationObj) exprList.get(0);
 		Assert.assertEquals("HeigthInCm", operatorExpr.getValue("attrName"));
-		Assert.assertEquals(new Long(100), operatorExpr.getValue("longVal"));
+		Assert.assertEquals(100L, operatorExpr.getValue("longVal"));
 		Assert.assertEquals(Boolean.FALSE, ((ApplicationObj) operatorExpr.getValue("operator")).getValue("isAlsoEqual"));
 
 	}
@@ -153,34 +153,34 @@ public class FilterCreatorTest
 
 
 	@SuppressWarnings("serial")
-	private class FilterTransformator extends AbstractReflectionCreator<ReflectionChangeableValueObject>
+	private static class FilterTransformator extends AbstractReflectionCreator<ReflectionChangeableValueObject>
 		implements ObjectTransformator<ValueObject, ReflectionChangeableValueObject> {
 
 
-		public FilterTransformator(ClassNameCreator aNameCreator)
+		public FilterTransformator(final ClassNameCreator aNameCreator)
 		{
 			super(aNameCreator);
 		}
 
 		@Override
-		public TypedValueObject getValueObjectFor(ClassInfo aClassinfo,
-				ValueObject aObjectToTransform)
+		public TypedValueObject getValueObjectFor(final ClassInfo aClassinfo,
+												  final ValueObject aObjectToTransform)
 		{
 			return new TypedWrappedValueObject(aObjectToTransform, aClassinfo);
 		}
 
 		@Override
 		protected ReflectionChangeableValueObject createProxyObjectFor(
-				TypedValueObject aObjToHandle)
+				final TypedValueObject aObjToHandle)
 		{
 			return null;
 		}
 
 
 		@Override
-		protected void setProxyListForAssoc(AssociationInfo aCurAssocInfo,
-				ReflectionChangeableValueObject aObjoSetVals,
-				TypedValueObject aObjToGetVals) throws ObjectCreationException
+		protected void setProxyListForAssoc(final AssociationInfo aCurAssocInfo,
+											final ReflectionChangeableValueObject aObjoSetVals,
+											final TypedValueObject aObjToGetVals) throws ObjectCreationException
 		{
 
 		}

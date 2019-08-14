@@ -7,7 +7,9 @@
                 Filter
                 <template v-slot:actions="{ dismiss }">
                     <v-btn text color="primary" @click="editExpressionInDialog(null)"><v-icon>mdi-plus</v-icon></v-btn>
+                    <slot name="refresh-btn">x</slot>
                 </template>
+
             </v-banner>
             <v-dialog v-model="isEditDialogVisible" max-width="800px">
                 <v-card>
@@ -62,7 +64,7 @@
     export default class JdyFilterPanel extends Vue {
 
         @Prop() classinfo;
-        filterExpressions: any[] = [];
+        @Prop({default: []}) filterExpressions: any[]  | null | undefined;
         editedExpression = {};
         editedIndex;
         headers = [

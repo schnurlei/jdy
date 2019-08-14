@@ -433,6 +433,9 @@ export class FilterCreator {
     public visitOperatorExpression (aOpExpr) {
 
         let classInfo: JdyClassInfo | null = this.rep.getClassInfo('AppOperatorExpr');
+        if (!aOpExpr.attributeInfo) {
+            throw new JdyFilterCreationException('Attribute info in Operator Expression not set');
+        }
         if (classInfo) {
             var appOpExpr = new JdyTypedValueObject(classInfo, null, false);
             appOpExpr.setVal('ExprId', this.idCounter++);

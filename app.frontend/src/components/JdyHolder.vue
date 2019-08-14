@@ -4,7 +4,11 @@
             {{ errorMessage }}
             <v-btn dark text @click="showMessage = false"> Close </v-btn>
         </v-snackbar>
-        <jdy-filter :classinfo="classinfo"></jdy-filter>
+        <jdy-filter :classinfo="classinfo" :filterExpressions="filterExpressions">
+            <template v-slot:refresh-btn>
+                <v-btn text color="primary" @click="reloadFilteredData()"><v-icon>mdi-refresh</v-icon></v-btn>
+            </template>
+        </jdy-filter>
         <jdy-table :items="holderItems" :columns="columns" :classinfo="classinfo"></jdy-table>
     </div>
 </template>
@@ -34,6 +38,7 @@ export default class JdyHolder extends Vue {
     readonly undefinedData = [];
 
     holderItems = this.undefinedData;
+    filterExpressions = [];
     showMessage = false;
     errorMessage = '';
     reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta',  process.env.VUE_APP_READ_LOCAL);
@@ -115,6 +120,10 @@ export default class JdyHolder extends Vue {
 
     get columns() {
         return (this.classinfo) ? this.convertToColumns(this.classinfo) : this.undefinedColumns;
+    }
+
+    reloadFilteredData() {
+        console.log("refresh data");
     }
 
     @Watch('classinfo') onClassinfoChanged(newClassInfo) {
