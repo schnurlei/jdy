@@ -53,8 +53,9 @@
 
 <script  lang='ts'>
 
-    import {Prop, Vue, Watch} from 'vue-property-decorator';
+    import {Prop, Vue} from 'vue-property-decorator';
     import Component from 'vue-class-component';
+    import {OperatorExprHolder} from "@/js/jdy/jdy-view";
 
     @Component( {
         name: 'JdyFilterPanel',
@@ -64,8 +65,8 @@
     export default class JdyFilterPanel extends Vue {
 
         @Prop() classinfo;
-        @Prop({default: []}) filterExpressions: any[]  | null | undefined;
-        editedExpression = {};
+        @Prop({default: []}) filterExpressions:  OperatorExprHolder[] | null | undefined;
+        editedExpression:  OperatorExprHolder = {operator: null, attribute: null, value: null};
         editedIndex;
         headers = [
             { text: 'Attribute', align: 'left', sortable: false, value: 'attribute' },
@@ -76,37 +77,44 @@
 
         editExpressionInDialog (expressionToEdit) {
 
-            if(expressionToEdit) {
-                this.editedIndex = this.filterExpressions.indexOf(expressionToEdit)
-                this.editedExpression = Object.assign({}, expressionToEdit);
-            } else {
-                this.editedIndex = -1;
-                this.editedExpression = { attribute: null, operator: null, value: null};
+            if (this.filterExpressions) {
+
+                if(expressionToEdit) {
+                    this.editedIndex = this.filterExpressions.indexOf(expressionToEdit);
+                    this.editedExpression = Object.assign({}, expressionToEdit);
+                } else {
+                    this.editedIndex = -1;
+                    this.editedExpression = { attribute: null, operator: null, value: null};
+                }
+                this.isEditDialogVisible = true;
             }
-            this.isEditDialogVisible = true;
         }
 
         deleteItem (listItem, event) {
             if (confirm('Are you sure you want to delete this item?') ) {
-                this.filterExpressions.splice(this.filterExpressions.findIndex(x => x === listItem), 1);
+                if (this.filterExpressions) {
+                    this.filterExpressions.splice(this.filterExpressions.findIndex(x => x === listItem), 1);
+                }
             }
         }
 
         close () {
             this.isEditDialogVisible = false;
             setTimeout(() => {
-                this.editedExpression = {};
+                this.editedExpression = {operator: null, attribute: null, value: null};
             }, 300);
         }
 
         save () {
-            if (this.editedIndex > -1) {
-                Object.assign(this.filterExpressions[this.editedIndex], this.editedExpression);
-            } else {
-                this.filterExpressions.push(this.editedExpression);
+            if (this.filterExpressions) {
+                if (this.editedIndex > -1) {
+                    Object.assign(this.filterExpressions[this.editedIndex], this.editedExpression);
+                } else {
+                    this.filterExpressions.push(this.editedExpression);
+                }
+                this.close();
             }
-            this.close();
         }
-    };
+    }
 
 </script>

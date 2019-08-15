@@ -72,7 +72,7 @@ public class JdyRestController {
 
     @GetMapping(value = "jdy/data/{className}")
     public String getDataForEntity( final @PathVariable("className") String className
-                            , final @RequestParam("filter") String filter) {
+                            , final @RequestParam(name = "filter", required=false) String filter) {
 
         final ClassInfo entityClassInfo = this.getMetaInfoClassForClassName(className);
         final Optional<EntityType<?>> jpaEntityForName = this.getJpaEntityTypeForClassName(className);
@@ -130,6 +130,7 @@ public class JdyRestController {
 
         final CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
         final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
+        Root<?> entityRoot = query.from(entityType.getJavaType());
 
         return this.entityManager.createQuery(query).getResultList();
     }

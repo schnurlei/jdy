@@ -51,7 +51,7 @@ export class JsonHttpObjectReader {
 
     private loadDataFromFile (aClassInfo: JdyClassInfo): Promise<any> {
 
-        let myRequest = new Request(this.createUriForClassInfo(aClassInfo));
+        let myRequest = new Request('json/' + aClassInfo.getInternalName() + '.json');
         return fetch(myRequest)
             .then(response => {
                 if (response.ok) {
@@ -78,7 +78,7 @@ export class JsonHttpObjectReader {
 
     private loadDataFromServer (aClassInfo: JdyClassInfo): Promise<any> {
 
-        let myRequest = new Request('api/jdy/data/' + aClassInfo.getInternalName());
+        let myRequest = new Request(this.createUriForClassInfo(aClassInfo));
         return fetch(myRequest)
             .then(response => {
                 if (response.ok) {
@@ -141,7 +141,7 @@ export class JsonHttpObjectReader {
 
         if (appQuery && appQuery.val('expr')) {
             expr = this.jsonWriter.writeObjectList([appQuery.val('expr')], Operation.INSERT);
-            uri = uri + '?' + 'filer=' + this.fixedEncodeURIComponent(JSON.stringify(expr));
+            uri = uri + '?' + 'filter=' + this.fixedEncodeURIComponent(JSON.stringify(expr));
         }
 
         return this.createAjaxGetJsonCall(uri).then(jsonData => {

@@ -18,7 +18,14 @@
 import {JsonHttpObjectReader} from "@/js/jdy/jdy-http";
 import {Prop, Vue, Watch} from 'vue-property-decorator';
 import Component from 'vue-class-component';
-import {JdyQueryCreator} from "@/js/jdy/jdy-base";
+import {
+    JdyAndExpression,
+    JdyClassInfoQuery,
+    JdyOperatorExpression,
+    JdyQueryCreator,
+    ObjectFilterExpression
+} from "@/js/jdy/jdy-base";
+import {OperatorExprHolder} from "@/js/jdy/jdy-view";
 
 @Component( {
     name: 'JdyHolder',
@@ -38,7 +45,7 @@ export default class JdyHolder extends Vue {
     readonly undefinedData = [];
 
     holderItems = this.undefinedData;
-    filterExpressions = [];
+    filterExpressions: OperatorExprHolder[] = [];
     showMessage = false;
     errorMessage = '';
     reader : JsonHttpObjectReader = new JsonHttpObjectReader('/', 'meta',  process.env.VUE_APP_READ_LOCAL);
@@ -105,9 +112,9 @@ export default class JdyHolder extends Vue {
         };
     };
 
-    convertToColumns (classInfo) {
+    convertToColumns (aClassInfo) {
         const allColumns: any[]  = [];
-        classInfo.forEachAttr(attrInfo => {
+        aClassInfo.forEachAttr(attrInfo => {
             if (attrInfo.isPrimitive()) {
                 let newCol = attrInfo.getType().handlePrimitiveKey(this.primitiveTypeToColumnHandler(attrInfo));
                 if (newCol) {
@@ -124,17 +131,18 @@ export default class JdyHolder extends Vue {
 
     reloadFilteredData() {
         console.log("refresh data");
-    }
+        if (this.classinfo) {
 
-    @Watch('classinfo') onClassinfoChanged(newClassInfo) {
+            let operatorExpr:  ObjectFilterExpression[] = [];
+            this.filterExpressions
+                .forEach(exprHolder => {
+                    if (exprHolder.operator && exprHolder.attribute) {
+                        operatorExpr.push(new JdyOperatorExpression(exprHolder.operator, exprHolder.attribute,  exprHolder.value));
+                    }
+                });
 
-        if (newClassInfo) {
-
-            let creator = new JdyQueryCreator(newClassInfo);
-            let query = creator.and()
-                                    .equal("BotanicName", "Iris")
-                                    .greater("HeigthInCm", 23)
-                                .end().query();
+            let andExpr = new JdyAndExpression(operatorExpr);
+            let query = new JdyClassInfoQuery(this.classinfo, andExpr);
 
             this.reader.loadValuesFromDb(query)
                 .then(data => {
@@ -151,6 +159,38 @@ export default class JdyHolder extends Vue {
 
             this.holderItems = this.undefinedData;
         }
+    }
+
+    mounted () {
+
+        this.loadAllDataForClasssInfo(this.classinfo);
+    }
+
+    @Watch('classinfo') onClassinfoChanged(newClassInfo) {
+
+        this.loadAllDataForClasssInfo(newClassInfo)
+    }
+
+    loadAllDataForClasssInfo(aClassInfo) {
+
+        if (aClassInfo) {
+
+            this.reader.loadDataForClassInfo(aClassInfo)
+                .then(data => {
+                    this.holderItems = data;
+                    return null;
+                })
+                .catch(error => {
+
+                    this.holderItems = this.undefinedData;
+                    this.errorMessage = error.message;
+                    this.showMessage = true;
+                });
+        } else {
+
+            this.holderItems = this.undefinedData;
+        }
+
     }
 
 };
