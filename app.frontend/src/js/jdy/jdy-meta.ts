@@ -302,6 +302,10 @@ function buildAttrForMetaRepo (metaRepo: JdyRepository, anAppClassInfo: any): Pr
     return dfrd;
 };
 
+// short names
+// AppQuery FQM
+// AppOperatorExpr OEX
+// AppOperatorGreater FPG
 export function createFilterRepository (): JdyRepository {
     'use strict';
     var filterRep = new JdyRepository('FilterRepository');

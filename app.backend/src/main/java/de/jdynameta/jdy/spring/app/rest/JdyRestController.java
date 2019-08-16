@@ -144,6 +144,7 @@ public class JdyRestController {
         JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
         ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
 
+//        new FilterCreator().createMetaFilter()
 
 /*
         Path<String> emailPath = user.get("email");

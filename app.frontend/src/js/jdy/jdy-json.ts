@@ -400,6 +400,15 @@ export class JsonCompactFileWriter {
                     throw new JdyPersistentException('Error parsing JSON. No JSONObject: ' + aJsonNode[i].toString());
                 }
             }
+        } else if (aJsonNode instanceof JdyObjectListImpl) {
+            let objList: JdyObjectListImpl = aJsonNode;
+            objList.getObjects().forEach(curNode => {
+                if (typeof curNode === 'object') {
+                    resultList.push(this.writeObjectToJson(curNode, aPersistenceType, this.createAssocClmnVisibility(aAssocInfo)));
+                } else {
+                    throw new JdyPersistentException('Error parsing JSON. No JSONObject: ' +curNode.toString());
+                }
+            })
         }
         return resultList;
     };
@@ -436,7 +445,7 @@ export class JsonCompactFileWriter {
 
                             if (curAttrInfo.isPrimitive()) {
 
-                                if (!curAttrInfo.isGenerated || that.writeGenreatedAtr) {
+                                if (!curAttrInfo.isGenerated() || that.writeGenreatedAtr) {
                                     let primAttrType = curAttrInfo as JdyPrimitiveAttributeInfo;
                                     jsonObject[that.nameForAttr(curAttrInfo)] = primAttrType.getType().handlePrimitiveKey(jsonWriterValueGetVisitor(attrValue));
                                 }

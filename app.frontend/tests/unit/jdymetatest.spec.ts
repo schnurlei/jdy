@@ -5,7 +5,7 @@ import {
     FilterCreator
 } from '@/js/jdy/jdy-meta';
 import { JsonCompactFileWriter, JsonFileReader, Operation } from '@/js/jdy/jdy-json';
-import { JdyQueryCreator, JdyTypedValueObject } from '@/js/jdy/jdy-base';
+import {JdyClassInfo, JdyQueryCreator, JdyTypedValueObject} from '@/js/jdy/jdy-base';
 import { testCreatePlantShopRepository } from '@/jdy-test';
 
 test(' jdymeta AppRepository creation', function () {
@@ -59,15 +59,71 @@ test(' jdymeta convertAppRepositoryToRepository', function () {
 
 });
 
+
 test(' jdymeta transform filter to app filter object ', function () {
 
-    'use strict';
-    let rep = createFilterRepository();
-    let appRep = rep.getClassInfo('AppQuery');
-    let plantType;
-    let query;
-    let appQuery;
-    let creator = new FilterCreator();
+    let appRep = createFilterRepository().getClassInfo('AppQuery');
+    let plantType: JdyClassInfo | null = testCreatePlantShopRepository().getClassInfo('Plant');
+
+    // @ts-ignore
+    expect(appRep.getRepoName()).toBe('FilterRepository'); // 'FilterRepository exists
+    // @ts-ignore
+    let query = new JdyQueryCreator(plantType)
+        .or()
+            .equal('BotanicName', 'Iris')
+            .and()
+                .greater('HeigthInCm', 30)
+                .less('HeigthInCm', 100)
+            .end()
+        .end().query();
+
+    let appQuery = new FilterCreator().convertMetaFilter2AppFilter(query);
+
+    let jsonWriter = new JsonCompactFileWriter(getDefaultFilterNameMapping());
+    let resultList = jsonWriter.writeObjectList([appQuery], Operation.INSERT, null);
+    let jsonString = JSON.stringify(resultList);
+    console.log(jsonString);
+});
+
+test(' convert 1 operator filter to json ', function () {
+
+    let plantType: JdyClassInfo | null = testCreatePlantShopRepository().getClassInfo('Plant');
+
+    // @ts-ignore
+    let query = new JdyQueryCreator(plantType)
+        .greater('HeigthInCm', 30)
+        .query();
+
+    let appQuery = new FilterCreator().convertMetaFilter2AppFilter(query);
+    let jsonWriter = new JsonCompactFileWriter(getDefaultFilterNameMapping());
+    let resultList = jsonWriter.writeObjectList([appQuery], Operation.INSERT, null);
+    let jsonString = JSON.stringify(resultList);
+    console.log('jsonString');
+    expect(jsonString).toBe('[{"@t":"FQM","rn":"PlantShop","cn":"Plant","ex":{"@t":"OEX","an":"HeigthInCm","op":{"@t":"FPG","ae":false},"lv":30}}]');
+});
+
+test(' convert and expr + 1 operator filter to json ', function () {
+
+    let plantType: JdyClassInfo | null = testCreatePlantShopRepository().getClassInfo('Plant');
+
+    // @ts-ignore
+    let query = new JdyQueryCreator(plantType)
+        .and()
+            .greater('HeigthInCm', 30)
+        .end()
+        .query();
+
+    let appQuery = new FilterCreator().convertMetaFilter2AppFilter(query);
+    let jsonWriter = new JsonCompactFileWriter(getDefaultFilterNameMapping());
+    let resultList = jsonWriter.writeObjectList([appQuery], Operation.INSERT, null);
+    let jsonString = JSON.stringify(resultList);
+    console.log(jsonString);
+    expect(jsonString).toBe('[{"@t":"FQM","rn":"PlantShop","cn":"Plant","ex":{"@t":"FEA","ase":[{"@t":"OEX","an":"HeigthInCm","op":{"@t":"FPG","ae":false},"lv":30}]}}]');
+});
+
+
+function getDefaultFilterNameMapping (): { [name: string]: string } {
+
     let att2AbbrMap: { [name: string]: string } = {};
 
     att2AbbrMap.repoName = 'rn';
@@ -82,32 +138,8 @@ test(' jdymeta transform filter to app filter object ', function () {
     att2AbbrMap.longVal = 'lv';
     att2AbbrMap.textVal = 'tv';
 
-    if (appRep != null) {
-        expect(appRep.getRepoName()).toBe('FilterRepository'); // 'FilterRepository exists
-    }
-
-    plantType = testCreatePlantShopRepository().getClassInfo('Plant');
-
-    query = new JdyQueryCreator(plantType)
-        .or()
-        .equal('BotanicName', 'Iris')
-        .and()
-        .greater('HeigthInCm', 30)
-        .less('HeigthInCm', 100)
-        .end()
-        .end().query();
-
-    appQuery = creator.convertMetaFilter2AppFilter(query);
-
-    let jsonWriter = new JsonCompactFileWriter(att2AbbrMap);
-    let resultList;
-    let jsonString;
-
-    resultList = jsonWriter.writeObjectList([appQuery], Operation.INSERT, null);
-    jsonString = JSON.stringify(resultList);
-    console.log(jsonString);
-
-});
+    return att2AbbrMap;
+}
 
 function testData () {
 
