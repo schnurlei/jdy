@@ -30,4 +30,7 @@ public interface TypedClassInfoObject
      * @return
      */
     public ClassInfo getClassInfo();
+
+
+
 }

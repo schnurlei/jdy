@@ -16,7 +16,38 @@
  */
 package de.jdynameta.base.value;
 
-public interface TypedValueObject extends ValueObject, TypedClassInfoObject
-{
+import de.jdynameta.base.metainfo.AssociationInfo;
+import de.jdynameta.base.metainfo.AttributeInfo;
+import de.jdynameta.base.objectlist.ObjectList;
 
+public interface TypedValueObject extends ValueObject, TypedClassInfoObject {
+
+    default Object getAttrValue(String attributeName) throws JdyPersistentException {
+
+        AttributeInfo attributeInfo = (getClassInfo() != null) ? getClassInfo().getAttributeInfoForExternalName(attributeName) : null;
+        if (attributeInfo != null) {
+            return this.getValue(attributeInfo);
+        } else {
+            throw new JdyPersistentException("Invalid Attribute: " + attributeName);
+        }
+
+    }
+
+    default Object getAttrValue(Enum attributeName) throws JdyPersistentException {
+        return this.getAttrValue(attributeName.name());
+    }
+
+    default ObjectList getAssocValues(String assocName) throws JdyPersistentException {
+
+        AssociationInfo assocInfo = (getClassInfo() != null) ? getClassInfo().getAssoc(assocName) : null;
+        if (assocInfo != null) {
+            return this.getValue(assocInfo);
+        } else {
+            throw new JdyPersistentException("Invalid Association " + assocName);
+        }
+    }
+
+    default ObjectList getAssocValues(Enum assocName) throws JdyPersistentException {
+        return this.getAssocValues(assocName.name());
+    }
 }

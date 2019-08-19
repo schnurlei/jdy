@@ -1,56 +1,33 @@
 package de.jdynameta.metamodel.filter;
 
+import de.jdynameta.base.metainfo.ClassInfo;
+import de.jdynameta.base.metainfo.ClassRepository;
+import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
+import de.jdynameta.base.metainfo.filter.*;
+import de.jdynameta.base.metainfo.filter.defaultimpl.*;
+import de.jdynameta.base.metainfo.primitive.*;
+import de.jdynameta.base.objectlist.ChangeableObjectList;
+import de.jdynameta.base.objectlist.ObjectList;
+import de.jdynameta.base.value.JdyPersistentException;
+import de.jdynameta.base.value.TypedValueObject;
+import de.jdynameta.metamodel.filter.FilterRepository.*;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import de.jdynameta.base.metainfo.ClassInfo;
-import de.jdynameta.base.metainfo.ClassRepository;
-import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
-import de.jdynameta.base.metainfo.filter.AndExpression;
-import de.jdynameta.base.metainfo.filter.AssociationExpression;
-import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
-import de.jdynameta.base.metainfo.filter.ExpressionPrimitiveOperator;
-import de.jdynameta.base.metainfo.filter.ExpressionVisitor;
-import de.jdynameta.base.metainfo.filter.ObjectFilterExpression;
-import de.jdynameta.base.metainfo.filter.ObjectReferenceEqualExpression;
-import de.jdynameta.base.metainfo.filter.ObjectReferenceSubqueryExpression;
-import de.jdynameta.base.metainfo.filter.OperatorEqual;
-import de.jdynameta.base.metainfo.filter.OperatorExpression;
-import de.jdynameta.base.metainfo.filter.OperatorGreater;
-import de.jdynameta.base.metainfo.filter.OperatorLess;
-import de.jdynameta.base.metainfo.filter.OperatorVisitor;
-import de.jdynameta.base.metainfo.filter.OrExpression;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultClassInfoQuery;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultExpressionAnd;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorEqual;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorExpression;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorGreater;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorLess;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOrExpression;
-import de.jdynameta.base.metainfo.primitive.BlobType;
-import de.jdynameta.base.metainfo.primitive.BooleanType;
-import de.jdynameta.base.metainfo.primitive.CurrencyType;
-import de.jdynameta.base.metainfo.primitive.FloatType;
-import de.jdynameta.base.metainfo.primitive.LongType;
-import de.jdynameta.base.metainfo.primitive.TextType;
-import de.jdynameta.base.metainfo.primitive.TimeStampType;
-import de.jdynameta.base.metainfo.primitive.VarCharType;
-import de.jdynameta.base.objectlist.ChangeableObjectList;
-import de.jdynameta.base.value.JdyPersistentException;
-
 public class FilterCreator implements ExpressionVisitor
 {
 	private long idCounter = 0;
 	private AppFilterExpr curExpr;
-	
+
 	public void resetIdCounter()
 	{
 		this.idCounter = 0;
 	}
-	
+
 	public AppQuery createAppFilter(ClassInfoQuery metaQuery) throws JdyPersistentException
 	{
 		AppQuery appQuery = new AppQuery();
@@ -58,138 +35,138 @@ public class FilterCreator implements ExpressionVisitor
 		appQuery.setRepoName(metaQuery.getResultInfo().getRepoName());
 		appQuery.setClassName(metaQuery.getResultInfo().getInternalName());
 		appQuery.setExpr(createAppExpr(metaQuery.getFilterExpression()));
-		
-		
+
+
 		return appQuery;
 	}
 
-	public AppFilterExpr createAppExpr( ObjectFilterExpression aMetaExpr) throws JdyPersistentException 
+	public AppFilterExpr createAppExpr( ObjectFilterExpression aMetaExpr) throws JdyPersistentException
 	{
 		aMetaExpr.visit(this);
 
 		AppFilterExpr result = curExpr;
-		
+
 		return result;
 	}
-	
+
 	private long nextId()
 	{
 		return this.idCounter++;
 	}
-	
+
 	@Override
-	public void visitAndExpression(AndExpression aAndExpr)	throws JdyPersistentException 
+	public void visitAndExpression(AndExpression aAndExpr)	throws JdyPersistentException
 	{
 		AppAndExpr andExpr = new AppAndExpr();
 		andExpr.setExprId(nextId());
 		ChangeableObjectList<AppFilterExpr> subExprs = new ChangeableObjectList<AppFilterExpr>();
-		
+
 		for( Iterator<ObjectFilterExpression> exprIter = aAndExpr.getExpressionIterator(); exprIter.hasNext(); ) {
 			ObjectFilterExpression subMetaexpr = exprIter.next();
 			AppFilterExpr subAppExpr = createAppExpr(subMetaexpr);
 			subAppExpr.setAppAndExpr((AppAndExpr) andExpr);
 			subExprs.addObject(subAppExpr);
 		}
-		
+
 		andExpr.setAndSubExprColl(subExprs );
-		
+
 		curExpr = andExpr;
 	}
 
 	@Override
-	public void visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException 
+	public void visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException
 	{
 		AppOrExpr orExpr = new AppOrExpr();
 		orExpr.setExprId(nextId());
 		ChangeableObjectList<AppFilterExpr> subExprs = new ChangeableObjectList<AppFilterExpr>();
-		
+
 		for( Iterator<ObjectFilterExpression> exprIter = aOrExpression.getExpressionIterator(); exprIter.hasNext(); ) {
 			ObjectFilterExpression subMetaexpr = exprIter.next();
 			AppFilterExpr subAppExpr = createAppExpr(subMetaexpr);
 			subAppExpr.setAppOrExpr(orExpr);
 			subExprs.addObject(subAppExpr);
 		}
-		
+
 		orExpr.setOrSubExprColl(subExprs );
-		
+
 		curExpr = orExpr;
 	}
 
 	@Override
-	public void visitOperatorExpression(OperatorExpression aOpExpr)	throws JdyPersistentException 
+	public void visitOperatorExpression(OperatorExpression aOpExpr)	throws JdyPersistentException
 	{
 		AppOperatorExpr appOpExpr = new AppOperatorExpr();
 		appOpExpr.setExprId(nextId());
 		appOpExpr.setAttrName(aOpExpr.getAttributeInfo().getInternalName());
 		appOpExpr.setOperator(createAppOperator(aOpExpr.getOperator()));
-		
+
 		setAppCompareValue(appOpExpr, aOpExpr);
-		
+
 		curExpr = appOpExpr;
 	}
 
 	@Override
-	public void visitReferenceEqualExpression(ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException 
+	public void visitReferenceEqualExpression(ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
 
 	@Override
-	public void visitAssociationExpression(AssociationExpression aOpExpr) throws JdyPersistentException 
+	public void visitAssociationExpression(AssociationExpression aOpExpr) throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
 
 	@Override
-	public void visitReferenceQueryExpr( ObjectReferenceSubqueryExpression aExpression)	throws JdyPersistentException 
+	public void visitReferenceQueryExpr( ObjectReferenceSubqueryExpression aExpression)	throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
-	
-	private void setAppCompareValue(AppOperatorExpr appOpExpr,	OperatorExpression aOpExpr) 
+
+	private void setAppCompareValue(AppOperatorExpr appOpExpr,	OperatorExpression aOpExpr)
 	{
 		PrimitiveAttributeInfo aMetaPrim = aOpExpr.getAttributeInfo();
-		
+
 		if(aMetaPrim.getType() instanceof BlobType) {
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
-		} else if(aMetaPrim.getType() instanceof BooleanType) 
+		} else if(aMetaPrim.getType() instanceof BooleanType)
 		{
 			appOpExpr.setBooleanVal((Boolean) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof CurrencyType) 
+		} else if(aMetaPrim.getType() instanceof CurrencyType)
 		{
 			appOpExpr.setDecimalVal((BigDecimal) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof FloatType) 
+		} else if(aMetaPrim.getType() instanceof FloatType)
 		{
 			appOpExpr.setFloatVal((Double) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof LongType) 
+		} else if(aMetaPrim.getType() instanceof LongType)
 		{
 			appOpExpr.setLongVal((Long) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof TextType) 
+		} else if(aMetaPrim.getType() instanceof TextType)
 		{
 			appOpExpr.setTextVal((String) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof TimeStampType) 
+		} else if(aMetaPrim.getType() instanceof TimeStampType)
 		{
 			appOpExpr.setTimestampVal((Date) aOpExpr.getCompareValue());
-		} else if(aMetaPrim.getType() instanceof VarCharType) 
+		} else if(aMetaPrim.getType() instanceof VarCharType)
 		{
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
 		} else {
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
-		}		
+		}
 	}
 
-	
-	
-	private AppPrimitiveOperator createAppOperator( ExpressionPrimitiveOperator aMetaOper) throws JdyPersistentException 
+
+
+	private AppPrimitiveOperator createAppOperator( ExpressionPrimitiveOperator aMetaOper) throws JdyPersistentException
 	{
 		OperatorVisitorImplementation aVisitor = new OperatorVisitorImplementation();
 		aVisitor.init();
 		aMetaOper.visitOperatorHandler(aVisitor );
-		
+
 		return aVisitor.getResultOp();
 	}
 
-		
+
 	/**
 	 * Convert a ClassInfoQuery object from a application query object
 	 * @param appQuery
@@ -197,145 +174,146 @@ public class FilterCreator implements ExpressionVisitor
 	 * @return
 	 * @throws JdyPersistentException
 	 */
-	public ClassInfoQuery createMetaFilter(AppQuery appQuery, ClassRepository repo) throws JdyPersistentException
+	public ClassInfoQuery createMetaFilter(TypedValueObject appQuery, ClassRepository repo) throws JdyPersistentException
 	{
-		ClassInfo typeInfo = repo.getClassForName(appQuery.getClassName());
+		String className = (String) appQuery.getAttrValue(AppQueryName.className);
+		ClassInfo typeInfo = repo.getClassForName(className);
 		assert(repo.getRepoName().equals(typeInfo.getRepoName()) );
-		
-		
+
+
 		DefaultClassInfoQuery metaQuery = new DefaultClassInfoQuery(typeInfo);
-		metaQuery.setFilterExpression(createMetaExpr(appQuery.getExpr(), typeInfo));
-		
-		
+		TypedValueObject expression = (TypedValueObject) appQuery.getAttrValue(AppQueryName.expr);
+		metaQuery.setFilterExpression(createMetaExpr(expression, typeInfo));
+
+
 		return metaQuery;
 	}
 
-	private ObjectFilterExpression createMetaExpr(AppFilterExpr expr, ClassInfo typeInfo) 
-	{
+	private ObjectFilterExpression createMetaExpr(TypedValueObject expr, ClassInfo typeInfo) throws JdyPersistentException {
 		ObjectFilterExpression result = null;
-		
-		if (expr instanceof AppOperatorExpr) 
+
+		if (expr.getClassInfo().getInternalName().equals(TypeName.AppOperatorExpr.name()))
 		{
-			AppOperatorExpr opratorExpr = (AppOperatorExpr) expr;
 			DefaultOperatorExpression metaExpr = new DefaultOperatorExpression();
-			PrimitiveAttributeInfo attr = (PrimitiveAttributeInfo) typeInfo.getAttributeInfoForExternalName(opratorExpr.getAttrName());
+			PrimitiveAttributeInfo attr = (PrimitiveAttributeInfo) typeInfo.getAttributeInfoForExternalName((String)expr.getAttrValue(AppOperatorExprName.attrName));
 			metaExpr.setAttributeInfo(attr);
-			metaExpr.setCompareValue(getMetaCompareValue(opratorExpr, attr));
-			metaExpr.setMyOperator(createMetaOperator(opratorExpr.getOperator()));
+			metaExpr.setCompareValue(getMetaCompareValue(expr, attr));
+			metaExpr.setMyOperator(createMetaOperator((TypedValueObject) expr.getAttrValue(AppOperatorExprName.operator)));
 			result = metaExpr;
-		} else if (expr instanceof AppAndExpr) 
+		} else if (expr.getClassInfo().getInternalName().equals(TypeName.AppAndExpr.name()))
 		{
 			ArrayList<ObjectFilterExpression> subExprs = new ArrayList<ObjectFilterExpression>();
-			for(Object appSubExpr : ((AppAndExpr) expr).getAndSubExprColl() )
+			ObjectList andSubExpressions = expr.getAssocValues(AppAndExprName.andSubExpr);
+			for(Object appSubExpr : andSubExpressions )
 			{
-				subExprs.add(createMetaExpr((AppFilterExpr) appSubExpr, typeInfo));
+				subExprs.add(createMetaExpr((TypedValueObject) appSubExpr, typeInfo));
 			}
 			result = new DefaultExpressionAnd(subExprs);
-		} else if (expr instanceof AppOrExpr) 
+		} else if (expr.getClassInfo().getInternalName().equals(TypeName.AppOrExpr.name()))
 		{
 			ArrayList<ObjectFilterExpression> subExprs = new ArrayList<ObjectFilterExpression>();
-			for(Object appSubExpr : ((AppOrExpr) expr).getOrSubExprColl() )
+			ObjectList orSubExpressions = expr.getAssocValues(AppOrExprName.orSubExpr);
+			for(Object appSubExpr : orSubExpressions)
 			{
-				subExprs.add(createMetaExpr((AppFilterExpr) appSubExpr, typeInfo));
+				subExprs.add(createMetaExpr((TypedValueObject) appSubExpr, typeInfo));
 			}
 			result = new DefaultOrExpression(subExprs);
 		} else {
 			throw new UnsupportedOperationException("Unknown expression type " + expr.getClass());
 		}
-		
+
 		return result;
 	}
 
-	private Object getMetaCompareValue(AppOperatorExpr appOpExpr,	PrimitiveAttributeInfo aMetaPrim) 
-	{
-		if(aMetaPrim.getType() instanceof BlobType) 
+	private Object getMetaCompareValue(TypedValueObject appOpExpr,	PrimitiveAttributeInfo aMetaPrim) throws JdyPersistentException {
+		if(aMetaPrim.getType() instanceof BlobType)
 		{
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
-		} else if(aMetaPrim.getType() instanceof BooleanType) 
+		} else if(aMetaPrim.getType() instanceof BooleanType)
 		{
-			return appOpExpr.getBooleanVal();
-		} else if(aMetaPrim.getType() instanceof CurrencyType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.booleanVal);
+		} else if(aMetaPrim.getType() instanceof CurrencyType)
 		{
-			return appOpExpr.getDecimalVal();
-		} else if(aMetaPrim.getType() instanceof FloatType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.decimalVal);
+		} else if(aMetaPrim.getType() instanceof FloatType)
 		{
-			return appOpExpr.getFloatVal();
-		} else if(aMetaPrim.getType() instanceof LongType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.floatVal);
+		} else if(aMetaPrim.getType() instanceof LongType)
 		{
-			return appOpExpr.getLongVal();
-		} else if(aMetaPrim.getType() instanceof TextType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.longVal);
+		} else if(aMetaPrim.getType() instanceof TextType)
 		{
-			return appOpExpr.getTextVal();
-		} else if(aMetaPrim.getType() instanceof TimeStampType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.textVal);
+		} else if(aMetaPrim.getType() instanceof TimeStampType)
 		{
-			return appOpExpr.getTimestampVal();
-		} else if(aMetaPrim.getType() instanceof VarCharType) 
+			return appOpExpr.getAttrValue(AppOperatorExprName.timestampVal);
+		} else if(aMetaPrim.getType() instanceof VarCharType)
 		{
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
 		} else {
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
-		}			
+		}
 	}
 
-	private ExpressionPrimitiveOperator createMetaOperator(	AppPrimitiveOperator anAppOperator) 
+	private ExpressionPrimitiveOperator createMetaOperator(	TypedValueObject anAppOperator)
 	{
 		ExpressionPrimitiveOperator result = null;
-		if( anAppOperator instanceof AppOperatorEqual) 
+		if( anAppOperator instanceof AppOperatorEqual)
 		{
-			result = (((AppOperatorEqual)anAppOperator).getIsNotEqual()) ? DefaultOperatorEqual.getNotEqualInstance() 
+			result = (((AppOperatorEqual)anAppOperator).getIsNotEqual()) ? DefaultOperatorEqual.getNotEqualInstance()
 					: DefaultOperatorEqual.getEqualInstance();
 		} else if( anAppOperator instanceof AppOperatorGreater) {
-			
-			result = (((AppOperatorGreater)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorGreater.getGreaterOrEqualInstance() 
+
+			result = (((AppOperatorGreater)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorGreater.getGreaterOrEqualInstance()
 					: DefaultOperatorGreater.getGreateInstance();
-		} else if( anAppOperator instanceof AppOperatorLess) 
+		} else if( anAppOperator instanceof AppOperatorLess)
 		{
-			result = (((AppOperatorLess)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorLess.getLessOrEqualInstance() 
+			result = (((AppOperatorLess)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorLess.getLessOrEqualInstance()
 					: DefaultOperatorLess.getLessInstance();
 		}
 		return result;
 	}
 
-	
-	private final static class OperatorVisitorImplementation implements OperatorVisitor 
+
+	private final static class OperatorVisitorImplementation implements OperatorVisitor
 	{
 		private AppPrimitiveOperator resultOp;
-	
+
 		private void init() {
 			resultOp = null;
 		}
-		
-		public AppPrimitiveOperator getResultOp() 
+
+		public AppPrimitiveOperator getResultOp()
 		{
 			return resultOp;
 		}
-		
+
 		@Override
-		public void visitOperatorLess(OperatorLess aOperator) 
+		public void visitOperatorLess(OperatorLess aOperator)
 		{
 			AppOperatorLess appOp = new AppOperatorLess();
 			appOp.setIsAlsoEqual(aOperator.isAlsoEqual());
 			resultOp = appOp;
 		}
-		
+
 		@Override
-		public void visitOperatorGreater(OperatorGreater aOperator) 
+		public void visitOperatorGreater(OperatorGreater aOperator)
 		{
 			AppOperatorGreater appOp = new AppOperatorGreater();
 			appOp.setIsAlsoEqual(aOperator.isAlsoEqual());
 			resultOp = appOp;
 		}
-		
+
 		@Override
-		public void visitOperatorEqual(OperatorEqual aOperator) 
+		public void visitOperatorEqual(OperatorEqual aOperator)
 		{
 			AppOperatorEqual appOp = new AppOperatorEqual();
 			appOp.setIsNotEqual(aOperator.isNotEqual());
 			resultOp = appOp;
 		}
 	}
-	
-	
+
+
 	public static HashMap<String, String> createAbbreviationMap() {
 		HashMap<String, String> att2AbbrMap = new HashMap<String, String>();
 		att2AbbrMap.put("repoName", "rn");
@@ -351,5 +329,5 @@ public class FilterCreator implements ExpressionVisitor
 		att2AbbrMap.put("textVal", "tv");
 		return att2AbbrMap;
 	}
-	
+
 }
