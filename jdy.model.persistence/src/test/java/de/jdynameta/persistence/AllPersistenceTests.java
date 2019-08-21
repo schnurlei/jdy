@@ -16,9 +16,6 @@
  */
 package de.jdynameta.persistence;
 
-import de.jdynameta.persistence.base.cache.ObjectCreatorTest;
-import de.jdynameta.persistence.base.cache.SingelClassInfoIdentityCacheTest;
-import de.jdynameta.persistence.base.creator.NameClassObjectCreatorTest;
 import de.jdynameta.persistence.impl.persistentobject.ValueModelObjectCreatorTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -33,9 +30,6 @@ public class AllPersistenceTests {
 		TestSuite suite =
 			new TestSuite("Test for de.comafra.model.creator");
 		//$JUnit-BEGIN$
-		suite.addTest(new TestSuite(NameClassObjectCreatorTest.class));
-		suite.addTest(new TestSuite(ObjectCreatorTest.class));
-		suite.addTest(new TestSuite(SingelClassInfoIdentityCacheTest.class));
 		suite.addTest(new TestSuite(ValueModelObjectCreatorTest.class));
 		//$JUnit-END$
 		return suite;

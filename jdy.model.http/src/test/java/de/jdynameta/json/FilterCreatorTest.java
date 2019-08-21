@@ -1,8 +1,9 @@
 package de.jdynameta.json;
 
-import de.jdynameta.base.creation.AbstractReflectionCreator;
-import de.jdynameta.base.creation.ObjectTransformator;
-import de.jdynameta.base.metainfo.*;
+import de.jdynameta.base.metainfo.AttributeInfo;
+import de.jdynameta.base.metainfo.ClassInfo;
+import de.jdynameta.base.metainfo.ClassRepository;
+import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
 import de.jdynameta.base.metainfo.filter.AndExpression;
 import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
 import de.jdynameta.base.metainfo.filter.ObjectFilterExpression;
@@ -13,12 +14,10 @@ import de.jdynameta.base.metainfo.primitive.LongType;
 import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.test.PlantShopRepository;
-import de.jdynameta.base.value.*;
-import de.jdynameta.base.value.defaultimpl.ReflectionChangeableValueObject;
-import de.jdynameta.base.value.defaultimpl.TypedWrappedValueObject;
+import de.jdynameta.base.value.JdyPersistentException;
+import de.jdynameta.base.value.ObjectCreationException;
+import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.json.JsonCompactFileReader.GeneratedValueCreator;
-import de.jdynameta.json.client.JsonHttpObjectReader;
-import de.jdynameta.metamodel.filter.AppFilterExpr;
 import de.jdynameta.metamodel.filter.AppQuery;
 import de.jdynameta.metamodel.filter.FilterCreator;
 import de.jdynameta.metamodel.filter.FilterRepository;
@@ -81,12 +80,8 @@ public class FilterCreatorTest
 		final JsonCompactFileReader reader = new JsonCompactFileReader(att2AbbrMap, FilterRepository.getSingleton().getRepoName(), valueGenerator );
 		final ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(writerOut.toString()), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
 
-		final FilterTransformator  transformator = new FilterTransformator(FilterRepository.NAME_CREATOR);
-		final ObjectList<ReflectionChangeableValueObject> convertedList = JsonHttpObjectReader.convertValObjList(result, transformator);
 
-		final AppFilterExpr expr =  (AppFilterExpr) convertedList.get(0);
 		final AppQuery newAppQuery = new AppQuery();
-		newAppQuery.setExpr(expr);
 		newAppQuery.setRepoName(plantShop.getRepoName());
 		newAppQuery.setClassName(plantType.getInternalName());
 
@@ -204,38 +199,5 @@ public class FilterCreatorTest
 		return att2AbbrMap;
 	}
 
-	@SuppressWarnings("serial")
-	private static class FilterTransformator extends AbstractReflectionCreator<ReflectionChangeableValueObject>
-		implements ObjectTransformator<ValueObject, ReflectionChangeableValueObject> {
-
-
-		public FilterTransformator(final ClassNameCreator aNameCreator)
-		{
-			super(aNameCreator);
-		}
-
-		@Override
-		public TypedValueObject getValueObjectFor(final ClassInfo aClassinfo,
-												  final ValueObject aObjectToTransform)
-		{
-			return new TypedWrappedValueObject(aObjectToTransform, aClassinfo);
-		}
-
-		@Override
-		protected ReflectionChangeableValueObject createProxyObjectFor(
-				final TypedValueObject aObjToHandle)
-		{
-			return null;
-		}
-
-
-		@Override
-		protected void setProxyListForAssoc(final AssociationInfo aCurAssocInfo,
-											final ReflectionChangeableValueObject aObjoSetVals,
-											final TypedValueObject aObjToGetVals) throws ObjectCreationException
-		{
-
-		}
-	}
 
 }
