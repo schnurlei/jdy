@@ -140,7 +140,7 @@ export class JsonHttpObjectReader {
         let expr;
 
         if (appQuery && appQuery.val('expr')) {
-            expr = this.jsonWriter.writeObjectList([appQuery.val('expr')], Operation.INSERT);
+            expr = this.jsonWriter.writeObjectList([appQuery], Operation.INSERT);
             uri = uri + '?' + 'filter=' + this.fixedEncodeURIComponent(JSON.stringify(expr));
         }
 

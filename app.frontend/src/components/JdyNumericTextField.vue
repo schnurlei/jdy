@@ -36,7 +36,7 @@
         @Prop() minValue;
         @Prop() maxValue;
         @Prop() scale;
-        @Prop() isNotNull;
+        @Prop({default: false}) isNotNull;
         // property to get/set the value from the itemToEdit, when null use this.primAttr.getInternalName()
         @Prop({default: null}) valueProperty: string | null | undefined;
         numericValue = '';
@@ -50,10 +50,11 @@
         }
 
         set fieldValue (val) {
+            const numVal = Number(val);
             if (this.valueProperty) {
-                this.itemToEdit[this.valueProperty] = val;
+                this.itemToEdit[this.valueProperty] = numVal;
             } else if (this.itemToEdit  && this.primAttr) {
-                this.itemToEdit[this.primAttr.getInternalName()] = val;
+                this.itemToEdit[this.primAttr.getInternalName()] = numVal;
             }
         }
 

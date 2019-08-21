@@ -22,13 +22,13 @@ import de.jdynameta.base.value.JdyPersistentException;
  * @author rsc
  *
  */
-public interface ExpressionVisitor 
+public interface ExpressionVisitor<ExpressionType>
 {
-	public void visitAndExpression(AndExpression aAndExpr) throws JdyPersistentException;
-	public void visitOperatorExpression( OperatorExpression aOpExpr) throws JdyPersistentException;
-	public void visitReferenceEqualExpression( ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException;
-	public void visitAssociationExpression( AssociationExpression aOpExpr) throws JdyPersistentException;
-	public void visitReferenceQueryExpr(ObjectReferenceSubqueryExpression aExpression) throws JdyPersistentException;
-	public void visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException;
-	
+	public ExpressionType visitAndExpression(AndExpression aAndExpr) throws JdyPersistentException;
+	public ExpressionType visitOperatorExpression( OperatorExpression aOpExpr) throws JdyPersistentException;
+	public ExpressionType visitReferenceEqualExpression( ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException;
+	public ExpressionType visitAssociationExpression( AssociationExpression aOpExpr) throws JdyPersistentException;
+	public ExpressionType visitReferenceQueryExpr(ObjectReferenceSubqueryExpression aExpression) throws JdyPersistentException;
+	public ExpressionType visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException;
+
 }

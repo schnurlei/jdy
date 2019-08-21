@@ -16,14 +16,14 @@
  */
 package de.jdynameta.base.metainfo.filter.defaultimpl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import de.jdynameta.base.metainfo.filter.AndExpression;
 import de.jdynameta.base.metainfo.filter.ExpressionVisitor;
 import de.jdynameta.base.metainfo.filter.ObjectFilterExpression;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.ValueObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Filter Expression which defines the Comparision from a Attribute with a Value
@@ -55,9 +55,9 @@ public class DefaultExpressionAnd implements AndExpression
     }
 
     @Override
-    public void visit(ExpressionVisitor aVisitor) throws JdyPersistentException
-    {
-        aVisitor.visitAndExpression(this);
+    public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aVisitor) throws JdyPersistentException {
+
+        return aVisitor.visitAndExpression(this);
     }
 
     @Override

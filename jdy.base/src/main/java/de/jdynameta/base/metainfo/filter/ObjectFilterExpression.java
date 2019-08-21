@@ -16,21 +16,21 @@
  */
 package de.jdynameta.base.metainfo.filter;
 
-import java.io.Serializable;
-
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.ValueObject;
+
+import java.io.Serializable;
 
 
 
 
 /**
- * 
+ *
  * @author	Rainer Schneider
  */
 abstract public interface ObjectFilterExpression  extends Serializable
 {
 	public boolean matchesObject(ValueObject aModel ) throws JdyPersistentException;
 
-	public void visit(ExpressionVisitor aModel ) throws JdyPersistentException;
+	public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aModel ) throws JdyPersistentException;
 }

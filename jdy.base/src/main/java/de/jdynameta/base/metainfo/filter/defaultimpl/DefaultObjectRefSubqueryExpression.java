@@ -50,11 +50,12 @@ public class DefaultObjectRefSubqueryExpression implements ObjectReferenceSubque
         filterExpr = aFilterExpr;
     }
 
-    @Override
-    public void visit(ExpressionVisitor aVisitor) throws JdyPersistentException
-    {
-        aVisitor.visitReferenceQueryExpr(this);
+   @Override
+    public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aVisitor) throws JdyPersistentException {
+
+        return aVisitor.visitReferenceQueryExpr(this);
     }
+
 
     @Override
     public boolean matchesObject(ValueObject aModel) throws JdyPersistentException

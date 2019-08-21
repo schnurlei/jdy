@@ -61,9 +61,8 @@ public class DefaultOperatorGreater implements OperatorGreater
     }
 
     @Override
-    public void visitOperatorHandler(OperatorVisitor aVisitor)
-    {
-        aVisitor.visitOperatorGreater(this);
+    public <OpertorType> OpertorType visitOperatorHandler(OperatorVisitor<OpertorType> aVisitor) {
+        return aVisitor.visitOperatorGreater(this);
     }
 
     @Override

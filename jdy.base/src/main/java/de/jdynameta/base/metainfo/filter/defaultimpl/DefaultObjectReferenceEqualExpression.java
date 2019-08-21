@@ -90,13 +90,10 @@ public class DefaultObjectReferenceEqualExpression
         return isNotEqual ? !compareValue.equals(modelValue) : compareValue.equals(modelValue);
     }
 
-    /* (non-Javadoc)
-     * @see de.comafra.model.metainfo.filter.ObjectFilterExpression#visit(de.comafra.model.metainfo.filter.ExpressionVisitor)
-     */
     @Override
-    public void visit(ExpressionVisitor aModel) throws JdyPersistentException
-    {
-        aModel.visitReferenceEqualExpression(this);
+    public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aVisitor) throws JdyPersistentException {
+
+        return aVisitor.visitReferenceEqualExpression(this);
     }
 
     public static DefaultObjectReferenceEqualExpression createEqualExpr(String exAttrName, ValueObject aCompareValue, ClassInfo aClassinfo)

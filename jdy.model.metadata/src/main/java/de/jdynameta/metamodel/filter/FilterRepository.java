@@ -61,7 +61,7 @@ public class FilterRepository extends JdyRepositoryModel
 
 	public static enum AppOperatorExprName
 	{
-		attrName, operator, booleanVal, decimalVal, floatVal, longVal, textVal, timestampVal
+		attrName, operator, booleanVal, decimalVal, floatVal, longVal, textVal, timestampVal, isNotEqual, isAlsoEqual
 	};
 
 
@@ -102,13 +102,13 @@ public class FilterRepository extends JdyRepositoryModel
 		this.primitveOperatorModel.addLongAttr("OperatorId" ,0, 999999999).setIsKey(true).setNotNull(true).setGenerated(true);
 
 		this.operatorEqualModel = addClassInfo(TypeName.AppOperatorEqual.name(),primitveOperatorModel).setShortName("FPE");
-		this.operatorEqualModel.addBooleanAttr("isNotEqual").setNotNull(true);
+		this.operatorEqualModel.addBooleanAttr(AppOperatorExprName.isNotEqual.name()).setNotNull(true);
 
 		this.operatorGreaterModel = addClassInfo(TypeName.AppOperatorGreater.name(),primitveOperatorModel).setShortName("FPG");
-		this.operatorGreaterModel.addBooleanAttr("isAlsoEqual").setNotNull(true);
+		this.operatorGreaterModel.addBooleanAttr(AppOperatorExprName.isAlsoEqual.name()).setNotNull(true);
 
 		this.operatorLessModel = addClassInfo(TypeName.AppOperatorLess.name(),primitveOperatorModel).setShortName("FPL");
-		this.operatorLessModel.addBooleanAttr("isAlsoEqual").setNotNull(true);
+		this.operatorLessModel.addBooleanAttr(AppOperatorExprName.isAlsoEqual.name()).setNotNull(true);
 
 		this.operatorExprModel = addClassInfo(TypeName.AppOperatorExpr.name(),filterExprModel).setShortName("OEX");
 		this.operatorExprModel.addTextAttr(AppOperatorExprName.attrName.name() , 100).setNotNull(true);

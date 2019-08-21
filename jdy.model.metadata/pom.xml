@@ -9,7 +9,7 @@
     <artifactId>jdy.model.metadata</artifactId>
     <name>JDY Model: Metadata</name>
     <packaging>jar</packaging>
-    
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -39,5 +39,5 @@
         </dependency>
 
 
-    </dependencies>    
+    </dependencies>
 </project>

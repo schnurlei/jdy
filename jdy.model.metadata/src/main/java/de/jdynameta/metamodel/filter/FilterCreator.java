@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class FilterCreator implements ExpressionVisitor
+public class FilterCreator implements ExpressionVisitor<Object>
 {
 	private long idCounter = 0;
 	private AppFilterExpr curExpr;
@@ -55,7 +55,7 @@ public class FilterCreator implements ExpressionVisitor
 	}
 
 	@Override
-	public void visitAndExpression(AndExpression aAndExpr)	throws JdyPersistentException
+	public Object visitAndExpression(AndExpression aAndExpr)	throws JdyPersistentException
 	{
 		AppAndExpr andExpr = new AppAndExpr();
 		andExpr.setExprId(nextId());
@@ -71,10 +71,12 @@ public class FilterCreator implements ExpressionVisitor
 		andExpr.setAndSubExprColl(subExprs );
 
 		curExpr = andExpr;
+		return null;
+
 	}
 
 	@Override
-	public void visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException
+	public Object visitOrExpression(OrExpression aOrExpression) throws JdyPersistentException
 	{
 		AppOrExpr orExpr = new AppOrExpr();
 		orExpr.setExprId(nextId());
@@ -90,10 +92,12 @@ public class FilterCreator implements ExpressionVisitor
 		orExpr.setOrSubExprColl(subExprs );
 
 		curExpr = orExpr;
+		return null;
+
 	}
 
 	@Override
-	public void visitOperatorExpression(OperatorExpression aOpExpr)	throws JdyPersistentException
+	public Object visitOperatorExpression(OperatorExpression aOpExpr)	throws JdyPersistentException
 	{
 		AppOperatorExpr appOpExpr = new AppOperatorExpr();
 		appOpExpr.setExprId(nextId());
@@ -103,27 +107,29 @@ public class FilterCreator implements ExpressionVisitor
 		setAppCompareValue(appOpExpr, aOpExpr);
 
 		curExpr = appOpExpr;
+		return null;
+
 	}
 
 	@Override
-	public void visitReferenceEqualExpression(ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException
+	public Object visitReferenceEqualExpression(ObjectReferenceEqualExpression aOpExpr) throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
 
 	@Override
-	public void visitAssociationExpression(AssociationExpression aOpExpr) throws JdyPersistentException
+	public Object visitAssociationExpression(AssociationExpression aOpExpr) throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
 
 	@Override
-	public void visitReferenceQueryExpr( ObjectReferenceSubqueryExpression aExpression)	throws JdyPersistentException
+	public Object visitReferenceQueryExpr( ObjectReferenceSubqueryExpression aExpression)	throws JdyPersistentException
 	{
 		throw new UnsupportedOperationException("Not impemented yet");
 	}
 
-	private void setAppCompareValue(AppOperatorExpr appOpExpr,	OperatorExpression aOpExpr)
+	private Object setAppCompareValue(AppOperatorExpr appOpExpr,	OperatorExpression aOpExpr)
 	{
 		PrimitiveAttributeInfo aMetaPrim = aOpExpr.getAttributeInfo();
 
@@ -153,6 +159,7 @@ public class FilterCreator implements ExpressionVisitor
 		} else {
 			throw new RuntimeException("Invalid type " + aMetaPrim.getType());
 		}
+		return null;
 	}
 
 
@@ -255,27 +262,26 @@ public class FilterCreator implements ExpressionVisitor
 		}
 	}
 
-	private ExpressionPrimitiveOperator createMetaOperator(	TypedValueObject anAppOperator)
-	{
+	private ExpressionPrimitiveOperator createMetaOperator(	TypedValueObject anAppOperator) throws JdyPersistentException {
 		ExpressionPrimitiveOperator result = null;
-		if( anAppOperator instanceof AppOperatorEqual)
+		if( anAppOperator.getClassInfo().getInternalName().equals(TypeName.AppOperatorEqual.name()) )
 		{
-			result = (((AppOperatorEqual)anAppOperator).getIsNotEqual()) ? DefaultOperatorEqual.getNotEqualInstance()
+			result = ((Boolean)anAppOperator.getAttrValue(AppOperatorExprName.isNotEqual)) ? DefaultOperatorEqual.getNotEqualInstance()
 					: DefaultOperatorEqual.getEqualInstance();
-		} else if( anAppOperator instanceof AppOperatorGreater) {
+		} else if( anAppOperator.getClassInfo().getInternalName().equals(TypeName.AppOperatorGreater.name())) {
 
-			result = (((AppOperatorGreater)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorGreater.getGreaterOrEqualInstance()
+			result = ((Boolean)anAppOperator.getAttrValue(AppOperatorExprName.isAlsoEqual)) ? DefaultOperatorGreater.getGreaterOrEqualInstance()
 					: DefaultOperatorGreater.getGreateInstance();
-		} else if( anAppOperator instanceof AppOperatorLess)
+		} else if( anAppOperator.getClassInfo().getInternalName().equals(TypeName.AppOperatorLess.name()))
 		{
-			result = (((AppOperatorLess)anAppOperator).getIsAlsoEqual()) ? DefaultOperatorLess.getLessOrEqualInstance()
+			result = ((Boolean)anAppOperator.getAttrValue(AppOperatorExprName.isAlsoEqual)) ? DefaultOperatorLess.getLessOrEqualInstance()
 					: DefaultOperatorLess.getLessInstance();
 		}
 		return result;
 	}
 
 
-	private final static class OperatorVisitorImplementation implements OperatorVisitor
+	private final static class OperatorVisitorImplementation implements OperatorVisitor<Object>
 	{
 		private AppPrimitiveOperator resultOp;
 
@@ -289,27 +295,30 @@ public class FilterCreator implements ExpressionVisitor
 		}
 
 		@Override
-		public void visitOperatorLess(OperatorLess aOperator)
+		public Object visitOperatorLess(OperatorLess aOperator)
 		{
 			AppOperatorLess appOp = new AppOperatorLess();
 			appOp.setIsAlsoEqual(aOperator.isAlsoEqual());
 			resultOp = appOp;
+			return null;
 		}
 
 		@Override
-		public void visitOperatorGreater(OperatorGreater aOperator)
+		public Object visitOperatorGreater(OperatorGreater aOperator)
 		{
 			AppOperatorGreater appOp = new AppOperatorGreater();
 			appOp.setIsAlsoEqual(aOperator.isAlsoEqual());
 			resultOp = appOp;
+			return null;
 		}
 
 		@Override
-		public void visitOperatorEqual(OperatorEqual aOperator)
+		public Object visitOperatorEqual(OperatorEqual aOperator)
 		{
 			AppOperatorEqual appOp = new AppOperatorEqual();
 			appOp.setIsNotEqual(aOperator.isNotEqual());
 			resultOp = appOp;
+			return null;
 		}
 	}
 

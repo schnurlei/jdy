@@ -3,7 +3,10 @@ package de.jdynameta.json;
 import de.jdynameta.base.creation.AbstractReflectionCreator;
 import de.jdynameta.base.creation.ObjectTransformator;
 import de.jdynameta.base.metainfo.*;
+import de.jdynameta.base.metainfo.filter.AndExpression;
 import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
+import de.jdynameta.base.metainfo.filter.ObjectFilterExpression;
+import de.jdynameta.base.metainfo.filter.OperatorExpression;
 import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultClassInfoQuery;
 import de.jdynameta.base.metainfo.filter.defaultimpl.QueryCreator;
 import de.jdynameta.base.metainfo.primitive.LongType;
@@ -21,7 +24,7 @@ import de.jdynameta.metamodel.filter.FilterCreator;
 import de.jdynameta.metamodel.filter.FilterRepository;
 import de.jdynameta.persistence.manager.PersistentOperation;
 import de.jdynameta.persistence.state.ApplicationObj;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 
 import javax.xml.transform.TransformerConfigurationException;
@@ -150,7 +153,56 @@ public class FilterCreatorTest
 
 	}
 
+	@Test
+	public void testReadAppFilterFromJson_SimpleOperator() throws JdyPersistentException {
 
+		String jsonFilterText = "[{\"@t\":\"FQM\",\"rn\":\"PlantShop\",\"cn\":\"Plant\",\"ex\":{\"@t\":\"OEX\",\"an\":\"HeigthInCm\",\"op\":{\"@t\":\"FPG\",\"ae\":false},\"lv\":30}}]";
+		JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
+		ObjectList<ApplicationObj> appQuery = reader.readObjectList(new StringReader(jsonFilterText), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppQuery));
+
+		ClassRepository plantShop = PlantShopRepository.createPlantShopRepository();
+		FilterCreator creator = new FilterCreator();
+		ClassInfoQuery newQuery = creator.createMetaFilter(appQuery.get(0), plantShop);
+		Assert.assertEquals(30L, ((OperatorExpression)newQuery.getFilterExpression()).getCompareValue());
+		Assert.assertEquals("HeigthInCm", ((OperatorExpression)newQuery.getFilterExpression()).getAttributeInfo().getInternalName());
+		Assert.assertEquals(">", ((OperatorExpression)newQuery.getFilterExpression()).getOperator().toString());
+	}
+
+	@Test
+	public void testReadAppFilterFromJson_SimpleAndExpr() throws JdyPersistentException {
+
+
+		String jsonFilterText = "[{\"@t\":\"FQM\",\"rn\":\"PlantShop\",\"cn\":\"Plant\",\"ex\":{\"@t\":\"FEA\",\"ase\":[{\"@t\":\"OEX\",\"an\":\"HeigthInCm\",\"op\":{\"@t\":\"FPG\",\"ae\":false},\"lv\":30}]}}]";
+		JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
+		ObjectList<ApplicationObj> appQuery = reader.readObjectList(new StringReader(jsonFilterText), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppQuery));
+
+		ClassRepository plantShop = PlantShopRepository.createPlantShopRepository();
+		FilterCreator creator = new FilterCreator();
+		ClassInfoQuery newQuery = creator.createMetaFilter(appQuery.get(0), plantShop);
+
+		ObjectFilterExpression operatorInAnd = ((AndExpression)newQuery.getFilterExpression()).getExpressionIterator().next();
+		Assert.assertEquals(30L, ((OperatorExpression)operatorInAnd).getCompareValue());
+		Assert.assertEquals("HeigthInCm", ((OperatorExpression)operatorInAnd).getAttributeInfo().getInternalName());
+		Assert.assertEquals(">", ((OperatorExpression)operatorInAnd).getOperator().toString());
+	}
+
+
+	private HashMap<String, String> getMapping()
+	{
+		final HashMap<String, String> att2AbbrMap = new HashMap<>();
+		att2AbbrMap.put("repoName", "rn");
+		att2AbbrMap.put("className", "cn");
+		att2AbbrMap.put("expr", "ex");
+		att2AbbrMap.put("orSubExpr", "ose");
+		att2AbbrMap.put("andSubExpr", "ase");
+		att2AbbrMap.put("attrName", "an");
+		att2AbbrMap.put("operator", "op");
+		att2AbbrMap.put("isNotEqual", "ne");
+		att2AbbrMap.put("isAlsoEqual", "ae");
+		att2AbbrMap.put("longVal", "lv");
+		att2AbbrMap.put("textVal", "tv");
+		return att2AbbrMap;
+	}
 
 	@SuppressWarnings("serial")
 	private static class FilterTransformator extends AbstractReflectionCreator<ReflectionChangeableValueObject>

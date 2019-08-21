@@ -20,12 +20,12 @@ import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
 import de.jdynameta.base.value.JdyPersistentException;
 
 /**
- * 
+ *
  * @author	Rainer Schneider
  */
-public interface ExpressionPrimitiveOperator 
+public interface ExpressionPrimitiveOperator
 {
-	public void visitOperatorHandler(OperatorVisitor aVisitor);
+	public <OpertorType> OpertorType visitOperatorHandler(OperatorVisitor<OpertorType>  aVisitor);
 
 	public boolean compareValues(Object value1, Object value2, PrimitiveAttributeInfo attributeInfo) throws JdyPersistentException;
 }

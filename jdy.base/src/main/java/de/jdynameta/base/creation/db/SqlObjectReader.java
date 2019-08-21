@@ -16,11 +16,6 @@
  */
 package de.jdynameta.base.creation.db;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import de.jdynameta.base.creation.ObjectCreator;
 import de.jdynameta.base.creation.ObjectReader;
 import de.jdynameta.base.creation.db.JDyClassInfoToTableMapping.AspectMapping;
@@ -29,24 +24,17 @@ import de.jdynameta.base.metainfo.AttributeHandler;
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ObjectReferenceAttributeInfo;
 import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
-import de.jdynameta.base.metainfo.filter.AndExpression;
-import de.jdynameta.base.metainfo.filter.AssociationExpression;
-import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
-import de.jdynameta.base.metainfo.filter.ExpressionVisitor;
-import de.jdynameta.base.metainfo.filter.ObjectFilterExpression;
-import de.jdynameta.base.metainfo.filter.ObjectReferenceEqualExpression;
-import de.jdynameta.base.metainfo.filter.ObjectReferenceSubqueryExpression;
-import de.jdynameta.base.metainfo.filter.OperatorEqual;
-import de.jdynameta.base.metainfo.filter.OperatorExpression;
-import de.jdynameta.base.metainfo.filter.OperatorGreater;
-import de.jdynameta.base.metainfo.filter.OperatorLess;
-import de.jdynameta.base.metainfo.filter.OperatorVisitor;
-import de.jdynameta.base.metainfo.filter.OrExpression;
+import de.jdynameta.base.metainfo.filter.*;
 import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorEqual;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.objectlist.ProxyResolveException;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.ValueObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("serial")
 public abstract class SqlObjectReader implements ObjectReader
@@ -160,7 +148,7 @@ public abstract class SqlObjectReader implements ObjectReader
      * @author rsc
      *
      */
-    public static class JdbcExpressionVisitor implements ExpressionVisitor
+    public static class JdbcExpressionVisitor implements ExpressionVisitor<Object>
     {
 
         private final StringBuffer buffer;
@@ -177,10 +165,9 @@ public abstract class SqlObjectReader implements ObjectReader
 
         /**
          * @see
-         * de.comafra.model.reader.ExpressionVisitor#visitAndExpression(ExpressionAnd)
          */
         @Override
-        public void visitAndExpression(AndExpression aAndExpr) throws JdyPersistentException
+        public Object visitAndExpression(AndExpression aAndExpr) throws JdyPersistentException
         {
             boolean isFirstExpr = true;
 
@@ -200,15 +187,15 @@ public abstract class SqlObjectReader implements ObjectReader
                 buffer.append(" ) ");
             }
             buffer.append(" ) ");
+            return null;
 
         }
 
         /**
          * @see
-         * de.comafra.model.reader.ExpressionVisitor#visitAndExpression(ExpressionAnd)
          */
         @Override
-        public void visitOrExpression(OrExpression aOrExpr) throws JdyPersistentException
+        public Object visitOrExpression(OrExpression aOrExpr) throws JdyPersistentException
         {
             boolean isFirstExpr = true;
 
@@ -228,14 +215,14 @@ public abstract class SqlObjectReader implements ObjectReader
                 buffer.append(" ) ");
             }
             buffer.append(" ) ");
-
+            return null;
         }
 
         /* (non-Javadoc)
          * @see de.comafra.model.metainfo.filter.ExpressionVisitor#visitReferenceEqualExpression(de.comafra.model.metainfo.filter.ObjectReferenceEqualExpression)
          */
         @Override
-        public void visitReferenceEqualExpression(final ObjectReferenceEqualExpression aReferenceExpr)
+        public Object visitReferenceEqualExpression(final ObjectReferenceEqualExpression aReferenceExpr)
                 throws JdyPersistentException
         {
             final AspectPath callStack = new AspectPath();
@@ -299,14 +286,14 @@ public abstract class SqlObjectReader implements ObjectReader
 
             exprHandler.handleObjectReference(aReferenceExpr.getAttributeInfo(), aReferenceExpr.getCompareValue());
             buffer.append(" ) ");
+            return null;
         }
 
         /**
          * @see
-         * de.comafra.model.reader.ExpressionVisitor#visitOperatorExpression(OperatorExpression)
          */
         @Override
-        public void visitOperatorExpression(OperatorExpression aOpExpr)
+        public Object visitOperatorExpression(OperatorExpression aOpExpr)
         {
             List<AspectMapping> columnMap = mapping.getColumnMappingsFor(new AspectPath(aOpExpr.getAttributeInfo()));
 
@@ -334,14 +321,15 @@ public abstract class SqlObjectReader implements ObjectReader
                     buffer.append(" IS NULL ");
                 }
             }
+            return null;
         }
 
-        public void visitAssociationExpression(AssociationExpression opExpr) throws JdyPersistentException
+        public Object visitAssociationExpression(AssociationExpression opExpr) throws JdyPersistentException
         {
             throw new UnsupportedOperationException("Associations are not supported at the moment");
         }
 
-        public void visitReferenceQueryExpr(ObjectReferenceSubqueryExpression expression) throws JdyPersistentException
+        public Object visitReferenceQueryExpr(ObjectReferenceSubqueryExpression expression) throws JdyPersistentException
         {
             throw new UnsupportedOperationException("ObjectReferenceSubqueryExpression is not supported at the moment");
         }
@@ -352,7 +340,7 @@ public abstract class SqlObjectReader implements ObjectReader
      * @author rainer
      *
      */
-    protected static class JdbcOperatorVisitor implements OperatorVisitor
+    protected static class JdbcOperatorVisitor implements OperatorVisitor<Object>
     {
 
         private StringBuffer buffer;
@@ -363,9 +351,8 @@ public abstract class SqlObjectReader implements ObjectReader
         }
 
         /**
-         * @see de.comafra.model.reader.OperatorVisitor#visitOperatorEqual()
          */
-        public void visitOperatorEqual(OperatorEqual aOperator)
+        public Object visitOperatorEqual(OperatorEqual aOperator)
         {
             if (aOperator.isNotEqual())
             {
@@ -374,9 +361,10 @@ public abstract class SqlObjectReader implements ObjectReader
             {
                 buffer.append(" = ");
             }
+            return null;
         }
 
-        public void visitOperatorGreater(OperatorGreater aOperator)
+        public Object visitOperatorGreater(OperatorGreater aOperator)
         {
             if (aOperator.isAlsoEqual())
             {
@@ -385,9 +373,10 @@ public abstract class SqlObjectReader implements ObjectReader
             {
                 buffer.append(" > ");
             }
+            return null;
         }
 
-        public void visitOperatorLess(OperatorLess aOperator)
+        public Object visitOperatorLess(OperatorLess aOperator)
         {
             if (aOperator.isAlsoEqual())
             {
@@ -396,6 +385,8 @@ public abstract class SqlObjectReader implements ObjectReader
             {
                 buffer.append(" < ");
             }
+
+            return null;
         }
     }
 

@@ -1,19 +1,14 @@
 package de.jdynameta.metamodel.filter;
 
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
 import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultClassInfoQuery;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorEqual;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOperatorExpression;
-import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultOrExpression;
-import de.jdynameta.base.metainfo.filter.defaultimpl.QueryCreator;
+import de.jdynameta.base.metainfo.filter.defaultimpl.*;
 import de.jdynameta.base.test.PlantShopRepository;
 import de.jdynameta.base.value.JdyPersistentException;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class FilterCreatorTest
 {

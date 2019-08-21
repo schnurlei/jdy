@@ -2,16 +2,19 @@ package de.jdynameta.jdy.spring.app.rest;
 
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
+import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
 import de.jdynameta.base.objectlist.DefaultObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
+import de.jdynameta.jdy.model.jpa.JpaFilterConverter;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
 import de.jdynameta.json.JsonCompactFileReader;
 import de.jdynameta.json.JsonFileWriter;
 import de.jdynameta.metamodel.application.AppRepository;
 import de.jdynameta.metamodel.application.ApplicationRepository;
 import de.jdynameta.metamodel.application.MetaRepositoryCreator;
+import de.jdynameta.metamodel.filter.FilterCreator;
 import de.jdynameta.metamodel.filter.FilterRepository;
 import de.jdynameta.persistence.manager.PersistentOperation;
 import de.jdynameta.persistence.state.ApplicationObj;
@@ -142,21 +145,17 @@ public class JdyRestController {
         final Root<?> entityRoot = query.from(entityType.getJavaType());
 
         JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
-        ObjectList<ApplicationObj> result = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppFilterExpr));
+        ObjectList<ApplicationObj> appQuery = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppQuery));
 
-//        new FilterCreator().createMetaFilter()
+        final ClassRepository metaRepo = new JpaMetamodelReader().createMetaRepository(this.entityManager.getMetamodel(), "TestApp");
 
-/*
-        Path<String> emailPath = user.get("email");
-        List<Predicate> predicates = new ArrayList<>();
-        for (String email : emails) {
-            predicates.add(cb.like(emailPath, email));
-        }
-        query.select(user)
-                .where(cb.or(predicates.toArray(new Predicate[predicates.size()])));
-*/
+        FilterCreator creator = new FilterCreator();
+        ClassInfoQuery newQuery = creator.createMetaFilter(appQuery.get(0), metaRepo);
 
-        return this.entityManager.createQuery(query).getResultList();
+        JpaFilterConverter filterConverter = new JpaFilterConverter(this.entityManager);
+        CriteriaQuery<Object> criteriaQuery = filterConverter.convert(newQuery);
+
+        return this.entityManager.createQuery(criteriaQuery).getResultList();
     }
 
     private HashMap<String, String> getMapping()

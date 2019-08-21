@@ -51,10 +51,11 @@ public class DefaultAssociationExpression implements AssociationExpression
     }
 
     @Override
-    public void visit(ExpressionVisitor aVisitor) throws JdyPersistentException
-    {
-        aVisitor.visitAssociationExpression(this);
+    public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aVisitor) throws JdyPersistentException {
+
+        return aVisitor.visitAssociationExpression(this);
     }
+
 
     @Override
     public boolean matchesObject(ValueObject aModel) throws JdyPersistentException

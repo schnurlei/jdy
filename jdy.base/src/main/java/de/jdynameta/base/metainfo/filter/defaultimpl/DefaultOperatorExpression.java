@@ -77,9 +77,9 @@ public class DefaultOperatorExpression implements OperatorExpression
     }
 
     @Override
-    public void visit(ExpressionVisitor aVisitor) throws JdyPersistentException
-    {
-        aVisitor.visitOperatorExpression(this);
+    public <ExpressionType> ExpressionType visit(ExpressionVisitor<ExpressionType> aVisitor) throws JdyPersistentException {
+
+        return aVisitor.visitOperatorExpression(this);
     }
 
     /**

@@ -21,11 +21,11 @@ package de.jdynameta.base.metainfo.filter;
  * @author rsc
  *
  */
-public interface OperatorVisitor 
+public interface OperatorVisitor<OpertorType>
 {
-	public void visitOperatorEqual(OperatorEqual aOperator);
+	public OpertorType visitOperatorEqual(OperatorEqual aOperator);
 
-	public void visitOperatorGreater(OperatorGreater aOperator);
+	public OpertorType visitOperatorGreater(OperatorGreater aOperator);
 
-	public void visitOperatorLess(OperatorLess aOperator);
+	public OpertorType visitOperatorLess(OperatorLess aOperator);
 }

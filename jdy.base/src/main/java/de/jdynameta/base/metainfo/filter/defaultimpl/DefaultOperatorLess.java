@@ -61,10 +61,10 @@ public class DefaultOperatorLess implements OperatorLess
     }
 
     @Override
-    public void visitOperatorHandler(OperatorVisitor aVisitor)
-    {
-        aVisitor.visitOperatorLess(this);
+    public <OpertorType> OpertorType visitOperatorHandler(OperatorVisitor<OpertorType> aVisitor) {
+        return aVisitor.visitOperatorLess(this);
     }
+
 
     @Override
     public boolean compareValues(Object value1, Object value2, PrimitiveAttributeInfo attributeInfo) throws JdyPersistentException

@@ -60,10 +60,10 @@ public class DefaultOperatorEqual implements OperatorEqual
         return isNotEqual;
     }
 
+
     @Override
-    public void visitOperatorHandler(OperatorVisitor aVisitor)
-    {
-        aVisitor.visitOperatorEqual(this);
+    public <OpertorType> OpertorType visitOperatorHandler(OperatorVisitor<OpertorType> aVisitor) {
+        return aVisitor.visitOperatorEqual(this);
     }
 
     @Override
