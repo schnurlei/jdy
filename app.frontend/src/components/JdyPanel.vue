@@ -1,7 +1,7 @@
 <template>
     <v-form ref="form" lazy-validation>
         <div v-for="(formfield,index) in formFields" :key="index">
-            <jdy-primitive :selectedItem="editedItem" :primitiveAttribute="formfield.attr"></jdy-primitive>
+            <jdy-primitive :selectedItem="editedItem" :primitiveAttribute="formfield"></jdy-primitive>
         </div>
         <template v-if="formAssocs.length > 0">
             <v-tabs background-color="#b3d4fc">
@@ -16,47 +16,51 @@
     </v-form>
 </template>
 
-<script>
+<script  lang='ts'>
 
-function convertToFields (classInfo) {
-    const allFields = [];
-    classInfo.forEachAttr(attrInfo => {
-        if (attrInfo.isPrimitive()) {
-            allFields.push({attr: attrInfo});
-        }
-    });
-    return allFields;
-};
+    import {Prop, Vue} from 'vue-property-decorator';
+    import Component from 'vue-class-component';
+    import {JdyAssociationModel, JdyAttributeInfo, JdyClassInfo} from "@/js/jdy/jdy-base";
 
-export default {
-
-    props: ['editedItem', 'classinfo'],
-    data () {
-        return {
-        };
-    },
-    computed: {
-        formFields() {
-
-            let fieldsFromClassInfo= [];
-            if (this.classinfo) {
-                fieldsFromClassInfo = convertToFields(this.classinfo);
+    function convertToFields (classInfo) {
+        const allFields: JdyAttributeInfo[] = [];
+        classInfo.forEachAttr(attrInfo => {
+            if (attrInfo.isPrimitive()) {
+                allFields.push(attrInfo);
             }
+        });
+        return allFields;
+    }
 
-            return fieldsFromClassInfo;
-        },
-        formAssocs() {
-
-            let assocsFromClassnfo = [];
-            if (this.classinfo) {
-                this.classinfo.forEachAssoc(assocInfo => {
-                    assocsFromClassnfo.push(assocInfo);
-                });
-            }
-            return assocsFromClassnfo;
+    @Component( {
+        name: 'JdyPanel',
+        components: {
         }
-    },
-    methods: {
+    })
+    export default class JdyPanel extends Vue {
+
+    @Prop({default: null}) classinfo: JdyClassInfo | null | undefined;
+    @Prop() editedItem;
+
+     get formFields() {
+
+        let fieldsFromClassInfo: JdyAttributeInfo[]= [];
+        if (this.classinfo) {
+            fieldsFromClassInfo = convertToFields(this.classinfo);
+        }
+
+        return fieldsFromClassInfo;
+    }
+
+     get formAssocs() {
+
+        let assocsFromClassnfo: JdyAssociationModel[] = [];
+        if (this.classinfo) {
+            this.classinfo.forEachAssoc(assocInfo => {
+                assocsFromClassnfo.push(assocInfo);
+            });
+        }
+        return assocsFromClassnfo;
     }
 };
 </script>

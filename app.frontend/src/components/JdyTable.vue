@@ -45,8 +45,16 @@
     </v-data-table>
 </template>
 
-<script>
-import {JdyTypedValueObject} from "@/js/jdy/jdy-base";
+<script  lang='ts'>
+
+import {Prop, Vue} from 'vue-property-decorator';
+import Component from 'vue-class-component';
+import {
+    JdyClassInfo,
+    JdyPrimitiveAttributeInfo,
+    JdyTypedValueObject
+} from "@/js/jdy/jdy-base";
+import {JsonHttpObjectWriter} from "@/js/jdy/jdy-http";
 
 var editHeader = [
     {
@@ -57,89 +65,108 @@ var editHeader = [
     }
 ];
 
-export default {
-    props: ['items', 'columns', 'classinfo'],
-    data () {
-        return {
-            isEditDialogVisible: false,
-            editedItem: {}
-        };
-    },
-    computed: {
+@Component( {
+    name: 'JdyTable',
+    components: {
+    }
+})
+export default class JdyTable extends Vue {
+
+    @Prop({default: null}) items: any | null | undefined;
+    @Prop({default: null}) columns: any | null | undefined;
+    @Prop({default: null}) classinfo: JdyClassInfo | null | undefined;
+    editedIndex: null|  number = null;
+
+    isEditDialogVisible = false;
+    editedItem = {};
+    writer = new JsonHttpObjectWriter("");
+
         // a computed getter
-        headers () {
+    get headers () {
             return editHeader.concat(this.columns);
-        },
-        formTitle () {
+     }
+
+     get formTitle () {
             return this.editedIndex === -1 ? 'New ' + this.typeName : 'Edit ' + this.typeName;
-        },
-        booleanAttrs() {
-            let allBooleanAttrs = [];
+      }
+
+      get booleanAttrs() {
+            let allBooleanAttrs: any[] = [];
             if (this.classinfo) {
                 this.classinfo.forEachAttr(attrInfo => {
                     if (attrInfo.isPrimitive()) {
-
-                        if (attrInfo.getType().getType() === 'BOOLEAN') {
+                        const primType = attrInfo as JdyPrimitiveAttributeInfo;
+                        if (primType.getType().getType() === 'BOOLEAN') {
                             allBooleanAttrs.push({item: 'item.' + attrInfo.getInternalName(), attr: attrInfo.getInternalName()});
                         }
                     }
                 });
             }
             return allBooleanAttrs;
-        },
-        dateAttrs() {
+    }
 
-            let allDateAttrs = [];
-            if (this.classinfo) {
-                this.classinfo.forEachAttr(attrInfo => {
-                    if (attrInfo.isPrimitive()) {
+    get dateAttrs() {
 
-                        if (attrInfo.getType().getType() === 'TIMESTAMP') {
-                            allDateAttrs.push({item: 'item.' + attrInfo.getInternalName(), attr: attrInfo.getInternalName()});
-                        }
+        let allDateAttrs: any[] = [];
+        if (this.classinfo) {
+            this.classinfo.forEachAttr(attrInfo => {
+                if (attrInfo.isPrimitive()) {
+                    const primType = attrInfo as JdyPrimitiveAttributeInfo;
+                    if (primType.getType().getType() === 'TIMESTAMP') {
+                        allDateAttrs.push({item: 'item.' + attrInfo.getInternalName(), attr: attrInfo.getInternalName()});
                     }
-                });
-            }
-            return allDateAttrs;
-        },
-        typeName() {
-            return (this.classinfo) ? this.classinfo.getInternalName(): "";
+                }
+            });
         }
+        return allDateAttrs;
+    }
 
+    get typeName() {
+        return (this.classinfo) ? this.classinfo.getInternalName(): "";
+    }
 
-    },
-    methods: {
-        editInDialog: function (listItem, event) {
+    editInDialog (listItem) {
 
-            if(listItem) {
-                this.editedIndex = this.items.indexOf(listItem)
-                this.editedItem = listItem.copy();
-            } else {
-                this.editedIndex = -1;
+        if(listItem) {
+            this.editedIndex = this.items.indexOf(listItem);
+            this.editedItem = listItem.copy();
+        } else {
+            this.editedIndex = -1;
+            if (this.classinfo) {
                 this.editedItem = new JdyTypedValueObject(this.classinfo, null, false);
             }
-            this.isEditDialogVisible = true;
-        },
-        deleteItem: function (listItem, event) {
-            if (confirm('Are you sure you want to delete this item?') ) {
-                this.items.splice(this.items.findIndex(x => x.name === listItem.name), 1);
-            }
-        },
-        close () {
-            this.isEditDialogVisible = false;
-            setTimeout(() => {
-                this.editedItem = {};
-                this.editedIndex = -1;
-            }, 300);
-        },
-        save () {
-            if (this.editedIndex > -1) {
-                 Object.assign(this.items[this.editedIndex], this.editedItem);
-            } else {
-                    this.items.push(this.editedItem);
-            }
-            this.close();
+        }
+        this.isEditDialogVisible = true;
+    }
+
+    deleteItem (listItem) {
+        if (confirm('Are you sure you want to delete this item?') ) {
+            this.items.splice(this.items.findIndex(x => x.name === listItem.name), 1);
         }
     }
+
+    close () {
+        this.isEditDialogVisible = false;
+        setTimeout(() => {
+            this.editedItem = {};
+            this.editedIndex = -1;
+        }, 300);
+    }
+
+    save () {
+        if (this.editedIndex && this.editedIndex > -1) {
+            const listItem = this.items[this.editedIndex];
+            this.writer.insertObjectInDb(this.editedItem
+                , (result => {
+                    Object.assign(listItem, result)
+                })
+                , (error => console.log(error)));
+            ;
+        } else {
+                this.items.push(this.editedItem);
+        }
+        this.close();
+    }
+
 };
 </script>

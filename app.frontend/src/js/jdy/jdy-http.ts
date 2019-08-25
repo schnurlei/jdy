@@ -254,13 +254,13 @@ export function createParametersFor (aValueObj, aClassInfo, aPrefix): { name: st
     return nameValuePairs;
 };
 
-class JsonHttpObjectWriter {
+export class JsonHttpObjectWriter {
 
     private basepath;
     private reader = new JsonFileReader();
     private writer = new JsonFileWriter();
 
-    public constructor (aBasePath, aMetaModelRepoName) {
+    public constructor (aBasePath) {
 
         this.basepath = aBasePath;
     }
@@ -268,7 +268,7 @@ class JsonHttpObjectWriter {
     public deleteObjectInDb (aObjToDelete, aClassInfo, successFunct, failFunc) {
         'use strict';
 
-        let uri = this.createUriForClassInfo(aClassInfo, META_REPO_NAME, this.basepath);
+        let uri = this.createUriForClassInfo(aClassInfo);
         let params = createParametersFor(aObjToDelete, aClassInfo, '');
 
         // uri = uri + '?' + $.param(params);
@@ -279,25 +279,43 @@ class JsonHttpObjectWriter {
         'use strict';
 
         let singleElementList: any[] = [];
-        let result;
         let content;
-        let that = this;
 
         singleElementList.push(aObjToInsert);
-
         content = this.writer.writeObjectList(singleElementList, 'INSERT', null);
 
-        function handleResult (rtoData) {
+        this.createAjaxPostCall(this.createUriForClassInfo(aObjToInsert.$typeInfo), content)
+            .then(response=>{
+                let result = this.reader.readObjectList(response, aObjToInsert.$typeInfo);
+                successFunct(result[0]);
+            }).catch(data =>{
+                if (failFunc) {
+                    failFunc(data);
+                }
+            });
+    };
 
-            result = that.reader.readObjectList(rtoData, aObjToInsert.$typeInfo);
-            successFunct(result[0]);
+    private createAjaxPostCall (aUrl, content) {
 
-        }
-
-        this.sendJsonPostRequest(this.createUriForClassInfo(aObjToInsert.$typeInfo, META_REPO_NAME, this.basepath),
-            JSON.stringify(content),
-            handleResult,
-            failFunc);
+        return fetch(aUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: content
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                // @ts-ignore
+                if (response.error) {
+                    // @ts-ignore
+                    throw new Error('Error reading data from server: ' + response.error);
+                } else {
+                    throw new Error('Error reading data from server:');
+                }
+            }
+        });
     };
 
     public updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
@@ -319,7 +337,7 @@ class JsonHttpObjectWriter {
 
         }
 
-        this.sendJsonPutRequest(this.createUriForClassInfo(aObjToUpdate.$typeInfo, META_REPO_NAME, this.basepath),
+        this.sendJsonPutRequest(this.createUriForClassInfo(aObjToUpdate.$typeInfo),
             JSON.stringify(content),
             handleResult,
             failFunc);
@@ -329,19 +347,6 @@ class JsonHttpObjectWriter {
         return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, '%2A');
     };
 
-    private sendJsonPostRequest (uri, content, successFunct, failFunc) {
-
-        var deferredCall = this.createAjaxPostCall(uri, content);
-
-        deferredCall.then(function (rtoData) {
-            successFunct(rtoData);
-        });
-        deferredCall.catch(function (data) {
-            if (failFunc) {
-                failFunc(data);
-            }
-        });
-    };
 
     private sendJsonPutRequest (uri, content, successFunct, failFunc) {
 
@@ -376,16 +381,7 @@ class JsonHttpObjectWriter {
         });
     };
 
-    private createAjaxPostCall (aUrl, content) {
 
-        return fetch(aUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: content
-        });
-    };
 
     private createAjaxPutCall (aUrl, content) {
 
@@ -398,21 +394,11 @@ class JsonHttpObjectWriter {
         });
     };
 
-    private createUriForClassInfo (aClassInfo, aMetaModelReponame, aBasePath) {
+    private createUriForClassInfo (aClassInfo: JdyClassInfo) {
 
-        let reponame = aClassInfo.repoName;
-        let repoPart = '@jdy';// pseudo repo for meta information
-        let infoPath = (aBasePath === null) ? '' : aBasePath;
-
-        if (reponame !== aMetaModelReponame) {
-            repoPart = reponame;
-        }
-        // check whether path ends with /
-        infoPath = (infoPath.charAt(infoPath.length - 1) === '/') ? infoPath : infoPath + '/';
-        infoPath += repoPart + '/' + aClassInfo.getInternalName();
-
-        return infoPath;
+        return 'api/jdy/data/' + aClassInfo.getInternalName();
     };
+
 
 };
 
@@ -424,7 +410,7 @@ class JsonHttpPersistentService {
     public constructor (aBasePath, aMetaRepoName, readLocalFlag) {
 
         this.reader = new JsonHttpObjectReader(aBasePath, null, readLocalFlag);
-        this.writer = new JsonHttpObjectWriter(aBasePath, null);
+        this.writer = new JsonHttpObjectWriter(aBasePath);
 
     }
 
