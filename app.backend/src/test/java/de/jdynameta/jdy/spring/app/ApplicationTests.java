@@ -14,7 +14,7 @@ import de.jdynameta.jdy.spring.app.data.PlantOrderRepository;
 import de.jdynameta.jdy.spring.app.data.PlantRepository;
 import de.jdynameta.jdy.spring.app.rest.GeneralRestException;
 import de.jdynameta.jdy.spring.app.data.TeilnehmerRepository;
-import de.jdynameta.jdy.spring.app.rest.TypedReflectionValueObjectWrapper;
+import de.jdynameta.jdy.model.jpa.TypedReflectionValueObjectWrapper;
 import de.jdynameta.jdy.spring.app.data.VeranstaltungRepository;
 import de.jdynameta.json.JsonFileWriter;
 import de.jdynameta.metamodel.application.AppRepository;

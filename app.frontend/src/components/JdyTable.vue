@@ -161,9 +161,13 @@ export default class JdyTable extends Vue {
                     Object.assign(listItem, result)
                 })
                 , (error => console.log(error)));
-            ;
+
         } else {
-                this.items.push(this.editedItem);
+            this.writer.insertObjectInDb(this.editedItem
+                , (result => {
+                    this.items.push(result);
+                })
+                , (error => console.log(error)));
         }
         this.close();
     }

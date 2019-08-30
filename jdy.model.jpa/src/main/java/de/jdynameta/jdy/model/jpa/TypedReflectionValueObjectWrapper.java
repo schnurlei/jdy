@@ -14,18 +14,21 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package de.jdynameta.jdy.spring.app.rest;
+package de.jdynameta.jdy.model.jpa;
 
 import de.jdynameta.base.metainfo.*;
 import de.jdynameta.base.metainfo.impl.AbstractAttributeInfo;
 import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
+import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.base.value.ValueObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  *
@@ -186,7 +189,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
      * @see de.jdynameta.base.value.ValueModel#setValue(AbstractAttributeInfo,
      * Object)
      */
-    public void setValue(AttributeInfo aInfo, Object value)
+    public void setValue(AttributeInfo aInfo, Object value) throws JdyPersistentException
     {
         try
         {
@@ -201,19 +204,25 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
                 ClassInfo typeInfo = ((ObjectReferenceAttributeInfo) aInfo).getReferencedClass();
                 typeToSet = Class.forName(typeInfo.getRepoName() + "." + typeInfo.getInternalName());
             }
-            Method setter = targetObjectClass.getMethod("set" + stringWithFirstLetterUppercase(aInfo.getInternalName()), (Class[]) new Class[]
-            {
-                typeToSet
-            });
-            setter.invoke(wrappedObject, new Object[]
-            {
-                value
-            });
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | ClassNotFoundException exp)
+            Optional<Method> setter = findMethod(targetObjectClass, aInfo);
+            if(setter.isPresent()) {
+                setter.get().invoke(wrappedObject, new Object[] {value});
+            } else {
+                throw new JdyPersistentException("Setter not found for " + aInfo.getInternalName());
+            }
+        } catch ( IllegalAccessException | InvocationTargetException | ClassNotFoundException exp)
         {
-            exp.printStackTrace();
+            throw new JdyPersistentException(exp);
         }
     }
+
+    private Optional<Method> findMethod(Class<? extends Object> javaClass, AttributeInfo aInfo) {
+
+        final String methodName = "set" + stringWithFirstLetterUppercase(aInfo.getInternalName());
+        return Arrays.stream(javaClass.getMethods())
+                .filter(method -> method.getName().equals(methodName)).findFirst();
+    }
+
 
     public String stringWithFirstLetterUppercase(String textToAppend)
     {

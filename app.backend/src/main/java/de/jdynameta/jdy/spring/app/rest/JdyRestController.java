@@ -9,7 +9,10 @@ import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
 import de.jdynameta.jdy.model.jpa.JpaFilterConverter;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
+import de.jdynameta.jdy.model.jpa.JpaWriter;
+import de.jdynameta.jdy.model.jpa.TypedReflectionValueObjectWrapper;
 import de.jdynameta.json.JsonCompactFileReader;
+import de.jdynameta.json.JsonFileReader;
 import de.jdynameta.json.JsonFileWriter;
 import de.jdynameta.metamodel.application.AppRepository;
 import de.jdynameta.metamodel.application.ApplicationRepository;
@@ -21,6 +24,8 @@ import de.jdynameta.persistence.state.ApplicationObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
@@ -35,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping("api")
@@ -96,6 +103,33 @@ public class JdyRestController {
             }
         } else {
             return "";
+        }
+    }
+
+    @PostMapping(path = "jdy/data/{className}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public @ResponseBody
+    ResponseEntity<String> insertEntityInDb(final @PathVariable("className") String className
+            , @RequestBody String jsonEntity) {
+
+        final ClassInfo entityClassInfo = this.getMetaInfoClassForClassName(className);
+        final Optional<EntityType<?>> jpaEntityForName = this.getJpaEntityTypeForClassName(className);
+
+        if( entityClassInfo != null && jpaEntityForName.isPresent() ) {
+
+            try(StringReader  reader = new StringReader(jsonEntity)) {
+
+                JsonFileReader jsonReader = new JsonFileReader();
+                ObjectList<ApplicationObj> objectList = jsonReader.readObjectList(reader,entityClassInfo);
+                JpaWriter writer = new JpaWriter();
+                writer.insertInDb(objectList.get(0), jpaEntityForName.get(), this.entityManager);
+
+            } catch (JdyPersistentException ex) {
+                throw new GeneralRestException(ex);
+            }
+
+            return new ResponseEntity<String>("POST Response", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<String>("POST Response", HttpStatus.OK);
         }
     }
 

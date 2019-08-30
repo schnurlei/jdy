@@ -284,7 +284,7 @@ export class JsonHttpObjectWriter {
         singleElementList.push(aObjToInsert);
         content = this.writer.writeObjectList(singleElementList, 'INSERT', null);
 
-        this.createAjaxPostCall(this.createUriForClassInfo(aObjToInsert.$typeInfo), content)
+        this.createAjaxPostCall(this.createUriForClassInfo(aObjToInsert.$typeInfo), JSON.stringify(content))
             .then(response=>{
                 let result = this.reader.readObjectList(response, aObjToInsert.$typeInfo);
                 successFunct(result[0]);

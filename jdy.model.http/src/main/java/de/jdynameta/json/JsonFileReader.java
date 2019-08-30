@@ -42,7 +42,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 /**
- * Read the content of an XmlFile into a list of ValueModels
+ * Read the content of an JsonFile into a list of ValueModels
  *
  * @author Rainer
  */
@@ -311,11 +311,21 @@ public class JsonFileReader
         {
             return attrValue.asLong();
         }
-       
+
         @Override
         public String handleValue(TextType aType) throws JdyPersistentException
         {
-            return attrValue.asText();
+            if (aType.getDomainValues() != null && !aType.getDomainValues().isEmpty()) {
+                if (attrValue.isNull()) {
+                    return null;
+                } else if (attrValue.isObject()) {
+                    return ((ObjectNode)attrValue).get("dbValue").asText();
+                } else {
+                    throw new JdyPersistentException("Invalid Domain Value ");
+                }
+            } else {
+                return attrValue.asText();
+            }
         }
 
         @Override
