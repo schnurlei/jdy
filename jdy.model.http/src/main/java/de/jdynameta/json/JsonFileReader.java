@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import de.jdynameta.base.metainfo.*;
 import de.jdynameta.base.metainfo.primitive.*;
 import de.jdynameta.base.objectlist.AssocObjectList;
@@ -37,7 +36,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.text.ParseException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -292,11 +294,12 @@ public class JsonFileReader
         @Override
         public Date handleValue(TimeStampType aType) throws JdyPersistentException
         {
-            System.out.println(attrValue);
             try {
-                return StdDateFormat.getDateTimeInstance().parse(attrValue.asText());
-            } catch (ParseException e) {
-                throw new JdyPersistentException(e);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+                ZonedDateTime zdt = ZonedDateTime.parse(attrValue.asText(), formatter.withZone(ZoneId.systemDefault()));
+                return Date.from(zdt.toInstant());
+            } catch (DateTimeParseException ex) {
+                throw new JdyPersistentException(ex);
             }
         }
 

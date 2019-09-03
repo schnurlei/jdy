@@ -30,18 +30,17 @@ public interface PrimitiveType {
 	 * @return Returns a Class
 	 */
 	public Class<? extends Object> getJavaType();
-	
+
 	public int compareObjects(Object value1, Object value2);
 
 	/**
      * @param aHandler
      * @param aValue
      * @throws de.jdynameta.base.value.JdyPersistentException
-	 * @see de.comafra.model.metainfo.AbstractAttributeInfo#handlePrimitiveKeys(PrimitiveAttributeHandler)
 	 */
 	public void handlePrimitiveKey( PrimitiveTypeVisitor aHandler, Object aValue)
 		throws JdyPersistentException;
-		
+
 	public Object handlePrimitiveKey(PrimitiveTypeGetVisitor aHandler)
 		throws JdyPersistentException;
 }

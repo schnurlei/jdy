@@ -16,10 +16,10 @@
  */
 package de.jdynameta.base.metainfo.primitive;
 
-import java.util.List;
-
 import de.jdynameta.base.metainfo.PrimitiveType;
 import de.jdynameta.base.view.DbDomainValue;
+
+import java.util.List;
 
 /**
  * @author Rainer Schneider
@@ -55,4 +55,8 @@ public interface TextType extends PrimitiveType
 
     public List<DbDomainValue<String>> getDomainValues();
 
+    default boolean hasDomainValues() {
+
+        return this.getDomainValues() != null && !getDomainValues().isEmpty();
+    }
 }

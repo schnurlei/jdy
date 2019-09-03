@@ -17,7 +17,8 @@
 package de.jdynameta.jdy.model.jpa;
 
 import de.jdynameta.base.metainfo.*;
-import de.jdynameta.base.metainfo.impl.AbstractAttributeInfo;
+import de.jdynameta.base.metainfo.primitive.LongType;
+import de.jdynameta.base.metainfo.primitive.TextType;
 import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
@@ -63,7 +64,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     }
 
     /**
-     * @see de.jdynameta.base.value.ValueModel#getValue(AbstractAttributeInfo)
+     * @see de.jdynameta.base.value.ValueModel#getValue(AttributeInfo)
      */
     @Override
     public Object getValue(AttributeInfo aInfo)
@@ -103,7 +104,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     /**
      * @param aInfo
      * @return
-     * @see de.jdynameta.base.value.ValueModel#getValue(AbstractAttributeInfo)
+     * @see de.jdynameta.base.value.ValueModel#getValue(AttributeInfo)
      */
     public Collection<Object> getWrappedCollFor(AssociationInfo aInfo)
     {
@@ -125,7 +126,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     /**
      * @param aInfo
      * @param newColl
-     * @see de.jdynameta.base.value.ValueModel#getValue(AbstractAttributeInfo)
+     * @see de.jdynameta.base.value.ValueModel#getValue(AttributeInfo)
      */
     public void setWrappedCollFor(AssociationInfo aInfo, Collection<Object> newColl)
     {
@@ -156,7 +157,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     }
 
     /**
-     * @see de.jdynameta.base.value.ValueModel#getValue(AbstractAttributeInfo)
+     * @see de.jdynameta.base.value.ValueModel#getValue(AttributeInfo)
      */
     @Override
     public ObjectList<? extends ValueObject> getValue(AssociationInfo aInfo)
@@ -186,7 +187,6 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     /**
      * @param aInfo
      * @param value
-     * @see de.jdynameta.base.value.ValueModel#setValue(AbstractAttributeInfo,
      * Object)
      */
     public void setValue(AttributeInfo aInfo, Object value) throws JdyPersistentException
@@ -194,25 +194,24 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
         try
         {
             Class<? extends Object> targetObjectClass = wrappedObject.getClass();
-            Class<? extends Object> typeToSet = null;
-            if (aInfo instanceof PrimitiveAttributeInfo)
-            {
-                typeToSet = ((PrimitiveAttributeInfo) aInfo).getJavaTyp();
-            } else if (aInfo instanceof ObjectReferenceAttributeInfo)
-            {
-
-                ClassInfo typeInfo = ((ObjectReferenceAttributeInfo) aInfo).getReferencedClass();
-                typeToSet = Class.forName(typeInfo.getRepoName() + "." + typeInfo.getInternalName());
-            }
             Optional<Method> setter = findMethod(targetObjectClass, aInfo);
             if(setter.isPresent()) {
-                setter.get().invoke(wrappedObject, new Object[] {value});
+
+                final Object convertedValue;
+                if (value == null) {
+                    convertedValue = value;
+                }  else if (aInfo instanceof PrimitiveAttributeInfo) {
+                    convertedValue = this.convertValue((PrimitiveAttributeInfo)aInfo, value, setter.get());
+                } else {
+                    convertedValue = value;
+                }
+                setter.get().invoke(this.wrappedObject,convertedValue);
             } else {
                 throw new JdyPersistentException("Setter not found for " + aInfo.getInternalName());
             }
-        } catch ( IllegalAccessException | InvocationTargetException | ClassNotFoundException exp)
+        } catch ( IllegalAccessException | InvocationTargetException excp)
         {
-            throw new JdyPersistentException(exp);
+            throw new JdyPersistentException(excp);
         }
     }
 
@@ -221,6 +220,59 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
         final String methodName = "set" + stringWithFirstLetterUppercase(aInfo.getInternalName());
         return Arrays.stream(javaClass.getMethods())
                 .filter(method -> method.getName().equals(methodName)).findFirst();
+    }
+
+    private Object convertValue (final PrimitiveAttributeInfo aInfo, final Object givenValue, Method setter) throws JdyPersistentException {
+
+        if(aInfo.getType() instanceof TextType) {
+
+            return ( ((TextType) aInfo.getType()).hasDomainValues() && givenValue != null)
+                    ? this.getEnumValue(aInfo, givenValue, setter )
+                    : givenValue;
+        } else if(aInfo.getType() instanceof LongType){
+            return this.convertLongValue(aInfo, givenValue, setter);
+        } else {
+            return givenValue;
+        }
+
+    }
+
+    private Object convertLongValue(PrimitiveAttributeInfo aInfo, Object value, Method setter) throws JdyPersistentException {
+
+        if (setter.getParameterTypes().length != 1) {
+            throw new JdyPersistentException("Wrong count of parameters in setter " + setter.getName());
+        }
+
+        if (!(value instanceof  Number)) {
+            throw new JdyPersistentException("Long type is no Number value " + setter.getName());
+        }
+
+        if (setter.getParameterTypes()[0] == Long.class) {
+            return ((Number) value).longValue();
+        } else if (setter.getParameterTypes()[0] == Integer.class) {
+            return ((Number) value).intValue();
+        } else if (setter.getParameterTypes()[0] == Short.class) {
+            return ((Number) value).shortValue();
+        } else {
+            throw new JdyPersistentException("Type not supported " + setter.getName());
+        }
+    }
+
+    private Object getEnumValue(PrimitiveAttributeInfo aInfo, Object value, Method setter) throws JdyPersistentException {
+
+        if (setter.getParameterTypes().length != 1) {
+            throw new JdyPersistentException("Wrong count of parameters in setter " + setter.getName());
+        }
+
+        if (!(value instanceof  String)) {
+            throw new JdyPersistentException("Enum type is no String value " + setter.getName());
+        }
+
+        if (setter.getParameterTypes()[0].isEnum()) {
+            return Enum.valueOf(((Class<Enum>)setter.getParameterTypes()[0]),(String) value);
+        } else {
+            throw new JdyPersistentException("Setter should have an enum type parameter " + setter.getName());
+        }
     }
 
 
@@ -263,4 +315,6 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
     {
         return this.getWrappedObject().hashCode();
     }
+
+
 }

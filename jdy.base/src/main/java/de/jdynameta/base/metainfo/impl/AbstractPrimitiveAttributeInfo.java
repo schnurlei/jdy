@@ -16,13 +16,13 @@
  */
 package de.jdynameta.base.metainfo.impl;
 
-import java.io.Serializable;
-
 import de.jdynameta.base.metainfo.AttributeHandler;
 import de.jdynameta.base.metainfo.PrimitiveAttributeHandler;
 import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
 import de.jdynameta.base.metainfo.PrimitiveType;
 import de.jdynameta.base.value.JdyPersistentException;
+
+import java.io.Serializable;
 
 @SuppressWarnings("serial")
 public abstract class AbstractPrimitiveAttributeInfo extends AbstractAttributeInfo
@@ -61,7 +61,6 @@ public abstract class AbstractPrimitiveAttributeInfo extends AbstractAttributeIn
      * @param objToHandle
      * @throws de.jdynameta.base.value.JdyPersistentException
      * @see
-     * de.comafra.model.metainfo.AbstractAttributeInfo#handlePrimitiveValues(PrimitiveAttributeHandler)
      */
     public void handlePrimitiveValues(PrimitiveAttributeHandler aHandler, Object objToHandle) throws JdyPersistentException
     {
