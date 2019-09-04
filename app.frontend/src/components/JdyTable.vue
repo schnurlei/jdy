@@ -149,7 +149,14 @@ export default class JdyTable extends Vue {
 
     deleteItem (listItem) {
         if (confirm('Are you sure you want to delete this item?') ) {
-            this.items.splice(this.items.findIndex(x => x.name === listItem.name), 1);
+            this.writer.deleteObjectInDb(listItem
+                , (result => {
+                    this.items.splice(this.items.findIndex(x => x.name === listItem.name), 1);
+                })
+                , (error => {
+                    this.errorMessage = error.message;
+                    this.showMessage = true;
+                }));
         }
     }
 

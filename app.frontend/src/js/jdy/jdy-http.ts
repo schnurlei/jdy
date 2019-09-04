@@ -224,13 +224,13 @@ export function parameterGetVisitor (aAttrValue) {
     };
 };
 
-export function createParametersFor (aValueObj, aClassInfo, aPrefix): { name: string; value: string }[] {
+export function createParametersFor (aValueObj, aPrefix): { name: string; value: string }[] {
 
     let nameValuePairs: { name: string; value: string }[] = [];
     let refObjParams;
     let curValue;
 
-    aClassInfo.forEachAttr(curAttrInfo => {
+    aValueObj.$typeInfo.forEachAttr(curAttrInfo => {
 
         if (curAttrInfo.isKey()) {
             if (curAttrInfo.isPrimitive()) {
@@ -241,7 +241,6 @@ export function createParametersFor (aValueObj, aClassInfo, aPrefix): { name: st
 
                 if (typeof aValueObj.val(curAttrInfo) === 'object') {
                     refObjParams = createParametersFor(aValueObj.val(curAttrInfo),
-                        curAttrInfo.getReferencedClass(),
                         aPrefix + curAttrInfo.getInternalName() + '.');
                     nameValuePairs = nameValuePairs.concat(refObjParams);
                 } else {
@@ -265,18 +264,48 @@ export class JsonHttpObjectWriter {
         this.basepath = aBasePath;
     }
 
-    public deleteObjectInDb (aObjToDelete, aClassInfo, successFunct, failFunc) {
-        'use strict';
+    public deleteObjectInDb (aObjToDelete, successFunct, failFunc) {
 
-        let uri = this.createUriForClassInfo(aClassInfo);
-        let params = createParametersFor(aObjToDelete, aClassInfo, '');
+        let uri = this.createUriForClassInfo(aObjToDelete.$typeInfo);
+        let params = createParametersFor(aObjToDelete, '');
 
-        // uri = uri + '?' + $.param(params);
-        this.sendJsonDeleteRequest(uri, successFunct, failFunc);
+        uri = uri + '?' + params;
+        this.createAjaxDeleteCall(uri)
+            .then(response => {
+                successFunct();
+            }).catch(data =>{
+                if (failFunc) {
+                    failFunc(data);
+                }
+        });
     };
 
+    private createAjaxDeleteCall (aUrl) {
+
+        return fetch(aUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                return response.text();
+            } else {
+                if (response.json) {
+                    return response.json().then(responseJson => {throw new Error('Error reading data from server: ' + responseJson.message)});
+                    // @ts-ignore
+                } else if (response.error) {
+                    // @ts-ignore
+                    throw new Error('Error reading data from server: ' + response.error);
+                } else {
+                    throw new Error('Error reading data from server:');
+                }
+            }
+        });
+    };
+
+
     public insertObjectInDb (aObjToInsert, successFunct, failFunc) {
-        'use strict';
 
         let singleElementList: any[] = [];
         let content;
@@ -321,7 +350,6 @@ export class JsonHttpObjectWriter {
     };
 
     public updateObjectInDb (aObjToUpdate, successFunct, failFunc) {
-        'use strict';
 
         let singleElementList: any[] = [];
         let result;
@@ -371,16 +399,6 @@ export class JsonHttpObjectWriter {
         deferredCall.then(function (rtoData) {
             successFunct(rtoData);
         }).catch(failFunc());
-    };
-
-    private createAjaxDeleteCall (aUrl) {
-
-        return fetch(aUrl, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
     };
 
 
