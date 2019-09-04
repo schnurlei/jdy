@@ -328,13 +328,18 @@ public class JpaMetamodelReader
             return new JdyFloatType();
         } else if (aTypeClass.isAssignableFrom(BigDecimal.class))
         {
-            Column comlumn = wrapper.getAnntotationInfo(Column.class);
-            int scale = comlumn.scale();
-            int precision = comlumn.precision();
-            DecimalMin decMin = wrapper.getAnntotationInfo(DecimalMin.class);
-            DecimalMax decMax = wrapper.getAnntotationInfo(DecimalMax.class);
-            BigDecimal minValue = (decMin != null) ? new BigDecimal(decMin.value()) : CurrencyType.MIN_VALUE;
-            BigDecimal maxValue = (decMax != null) ? new BigDecimal(decMax.value()) : CurrencyType.MAX_VALUE;
+            final Column comlumn = wrapper.getAnntotationInfo(Column.class);
+
+            int scale = 0;
+            int precision = 0;
+            if(comlumn != null) {
+                scale = comlumn.scale();
+                precision = comlumn.precision();
+            }
+            final DecimalMin decMin = wrapper.getAnntotationInfo(DecimalMin.class);
+            final DecimalMax decMax = wrapper.getAnntotationInfo(DecimalMax.class);
+            final BigDecimal minValue = (decMin != null) ? new BigDecimal(decMin.value()) : CurrencyType.MIN_VALUE;
+            final BigDecimal maxValue = (decMax != null) ? new BigDecimal(decMax.value()) : CurrencyType.MAX_VALUE;
 
             return new JdyDecimalType(minValue, maxValue, scale);
         } else

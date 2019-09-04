@@ -19,6 +19,7 @@ package de.jdynameta.jdy.model.jpa;
 import de.jdynameta.base.metainfo.*;
 import de.jdynameta.base.metainfo.primitive.LongType;
 import de.jdynameta.base.metainfo.primitive.TextType;
+import de.jdynameta.base.metainfo.primitive.TimeStampType;
 import de.jdynameta.base.objectlist.ChangeableObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
@@ -27,8 +28,10 @@ import de.jdynameta.base.value.ValueObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -209,7 +212,7 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
             } else {
                 throw new JdyPersistentException("Setter not found for " + aInfo.getInternalName());
             }
-        } catch ( IllegalAccessException | InvocationTargetException excp)
+        } catch ( IllegalAccessException | InvocationTargetException | IllegalArgumentException excp)
         {
             throw new JdyPersistentException(excp);
         }
@@ -231,10 +234,29 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
                     : givenValue;
         } else if(aInfo.getType() instanceof LongType){
             return this.convertLongValue(aInfo, givenValue, setter);
+        } else if(aInfo.getType() instanceof TimeStampType){
+            return this.convertTimeStampTypeValue(aInfo, givenValue, setter);
         } else {
             return givenValue;
         }
 
+    }
+
+    private Object convertTimeStampTypeValue(PrimitiveAttributeInfo aInfo, Object value, Method setter) throws JdyPersistentException {
+
+        if (setter.getParameterTypes().length != 1) {
+            throw new JdyPersistentException("Wrong count of parameters in setter " + setter.getName());
+        }
+
+        if (!(value instanceof Date)) {
+            throw new JdyPersistentException("TimeStampType type is no Date value " + setter.getName());
+        }
+
+        if (setter.getParameterTypes()[0] == Timestamp.class) {
+            return new Timestamp(((Date)value).getTime());
+        } else {
+            return value;
+        }
     }
 
     private Object convertLongValue(PrimitiveAttributeInfo aInfo, Object value, Method setter) throws JdyPersistentException {
@@ -247,11 +269,12 @@ public class TypedReflectionValueObjectWrapper implements TypedValueObject
             throw new JdyPersistentException("Long type is no Number value " + setter.getName());
         }
 
-        if (setter.getParameterTypes()[0] == Long.class) {
+        Class<?> jpaType = setter.getParameterTypes()[0];
+        if (Long.class.isAssignableFrom(jpaType) || long.class.isAssignableFrom(jpaType)) {
             return ((Number) value).longValue();
-        } else if (setter.getParameterTypes()[0] == Integer.class) {
+        } else if (Integer.class.isAssignableFrom(jpaType) || int.class.isAssignableFrom(jpaType)) {
             return ((Number) value).intValue();
-        } else if (setter.getParameterTypes()[0] == Short.class) {
+        } else if (Short.class.isAssignableFrom(jpaType) || short.class.isAssignableFrom(jpaType)) {
             return ((Number) value).shortValue();
         } else {
             throw new JdyPersistentException("Type not supported " + setter.getName());

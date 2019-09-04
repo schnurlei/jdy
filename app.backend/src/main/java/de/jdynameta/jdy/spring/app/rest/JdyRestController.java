@@ -123,15 +123,20 @@ public class JdyRestController {
                 JsonFileReader jsonReader = new JsonFileReader();
                 ObjectList<ApplicationObj> objectList = jsonReader.readObjectList(reader,entityClassInfo);
                 JpaWriter writer = new JpaWriter();
-                writer.insertInDb(objectList.get(0), jpaEntityForName.get(), this.entityManager);
+                TypedValueObject insertedObject = writer.insertInDb(objectList.get(0), jpaEntityForName.get(), this.entityManager);
+                DefaultObjectList<TypedValueObject> singleElementList = new DefaultObjectList<>(insertedObject);
+                JsonFileWriter jsonFileWriter = new JsonFileWriter(new JsonFileWriter.WriteAllDependentStrategy(), true);
+                final StringWriter resultWriter = new StringWriter();
+                jsonFileWriter.writeObjectList(resultWriter,entityClassInfo,singleElementList, PersistentOperation.Operation.READ);
 
-            } catch (JdyPersistentException ex) {
+                return new ResponseEntity<String>(resultWriter.toString(), HttpStatus.OK);
+
+            } catch (JdyPersistentException | TransformerConfigurationException ex) {
                 throw new GeneralRestException(ex);
             }
 
-            return new ResponseEntity<String>("POST Response", HttpStatus.OK);
         } else {
-            return new ResponseEntity<String>("POST Response", HttpStatus.OK);
+            throw new GeneralRestException("Invalid entity type ");
         }
     }
 

@@ -1,48 +1,54 @@
 <template>
 
-    <v-data-table :headers="headers"  :items="items"   class="elevation-1">
-        <template v-slot:top>
-            <v-toolbar flat color="white">
-                <v-toolbar-title>{{typeName}}</v-toolbar-title>
-                <v-divider class="mx-2" inset vertical></v-divider>
-                <v-spacer></v-spacer>
-                <v-btn color="primary" dark class="mb-2" @click="editInDialog(null)">New Item</v-btn>
-                <v-dialog v-model="isEditDialogVisible" max-width="500px">
-                    <v-card>
-                        <v-card-title>
-                            <span class="headline">{{ formTitle }}</span>
-                        </v-card-title>
-                        <v-card-text>
-                            <jdy-panel :editedItem="editedItem" :classinfo="classinfo"></jdy-panel>
-                        </v-card-text>
+    <div>
+        <v-snackbar v-model="showMessage" color='error' :top='true' :multi-line=true :timeout='6000' >
+            {{ errorMessage }}
+            <v-btn dark text @click="showMessage = false">Close</v-btn>
+        </v-snackbar>
+        <v-data-table :headers="headers"  :items="items"   class="elevation-1">
+            <template v-slot:top>
+                <v-toolbar flat color="white">
+                    <v-toolbar-title>{{typeName}}</v-toolbar-title>
+                    <v-divider class="mx-2" inset vertical></v-divider>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" dark class="mb-2" @click="editInDialog(null)">New Item</v-btn>
+                    <v-dialog v-model="isEditDialogVisible" max-width="500px">
+                        <v-card>
+                            <v-card-title>
+                                <span class="headline">{{ formTitle }}</span>
+                            </v-card-title>
+                            <v-card-text>
+                                <jdy-panel :editedItem="editedItem" :classinfo="classinfo"></jdy-panel>
+                            </v-card-text>
 
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                            <v-btn color="blue darken-1" text @click="save">Save</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-            </v-toolbar>
-        </template>
-        <template v-slot:item.action="{ item }">
-            <v-icon small @click="editInDialog(item)">
-                mdi-pencil
-            </v-icon>
-            <v-icon small @click="deleteItem(item)">
-                mdi-delete
-            </v-icon>
-        </template>
-        <template v-slot:no-data>
-            No Data found
-        </template>
-        <template  v-for="attr in booleanAttrs" v-slot:[attr.item]="{ item }">
-            <v-checkbox v-model="item[attr.attr]" class="mx-2" disabled></v-checkbox>
-        </template>
-        <template  v-for="dateItem in dateAttrs" v-slot:[dateItem.item]="{ item }">
-            {{new Date(item[dateItem.attr]).toLocaleDateString()}}
-        </template>
-    </v-data-table>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
+                                <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                </v-toolbar>
+            </template>
+            <template v-slot:item.action="{ item }">
+                <v-icon small @click="editInDialog(item)">
+                    mdi-pencil
+                </v-icon>
+                <v-icon small @click="deleteItem(item)">
+                    mdi-delete
+                </v-icon>
+            </template>
+            <template v-slot:no-data>
+                No Data found
+            </template>
+            <template  v-for="attr in booleanAttrs" v-slot:[attr.item]="{ item }">
+                <v-checkbox v-model="item[attr.attr]" class="mx-2" disabled></v-checkbox>
+            </template>
+            <template  v-for="dateItem in dateAttrs" v-slot:[dateItem.item]="{ item }">
+                {{new Date(item[dateItem.attr]).toLocaleDateString()}}
+            </template>
+        </v-data-table>
+    </div>
 </template>
 
 <script  lang='ts'>
@@ -80,6 +86,8 @@ export default class JdyTable extends Vue {
     isEditDialogVisible = false;
     editedItem = {};
     writer = new JsonHttpObjectWriter("");
+    showMessage = false;
+    errorMessage = '';
 
         // a computed getter
     get headers () {
@@ -160,14 +168,20 @@ export default class JdyTable extends Vue {
                 , (result => {
                     Object.assign(listItem, result)
                 })
-                , (error => console.log(error)));
+                , (error => {
+                    this.errorMessage = error.message;
+                    this.showMessage = true;
+                }));
 
         } else {
             this.writer.insertObjectInDb(this.editedItem
                 , (result => {
                     this.items.push(result);
                 })
-                , (error => console.log(error)));
+                , (error =>  {
+                    this.errorMessage = error.message;
+                    this.showMessage = true;
+                }));
         }
         this.close();
     }

@@ -295,7 +295,7 @@ export class JsonHttpObjectWriter {
             });
     };
 
-    private createAjaxPostCall (aUrl, content) {
+    private createAjaxPostCall (aUrl, content): Promise<any>  {
 
         return fetch(aUrl, {
             method: 'POST',
@@ -307,8 +307,10 @@ export class JsonHttpObjectWriter {
             if (response.ok) {
                 return response.json();
             } else {
+                if (response.json) {
+                    return response.json().then(responseJson => {throw new Error('Error reading data from server: ' + responseJson.message)});
                 // @ts-ignore
-                if (response.error) {
+                } else if (response.error) {
                     // @ts-ignore
                     throw new Error('Error reading data from server: ' + response.error);
                 } else {
