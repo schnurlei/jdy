@@ -224,9 +224,8 @@ export function parameterGetVisitor (aAttrValue) {
     };
 };
 
-export function createParametersFor (aValueObj, aPrefix): { name: string; value: string }[] {
+export function createParametersFor (aValueObj, aPrefix, searchParams: URLSearchParams): void {
 
-    let nameValuePairs: { name: string; value: string }[] = [];
     let refObjParams;
     let curValue;
 
@@ -236,22 +235,19 @@ export function createParametersFor (aValueObj, aPrefix): { name: string; value:
             if (curAttrInfo.isPrimitive()) {
 
                 curValue = curAttrInfo.getType().handlePrimitiveKey(parameterGetVisitor(aValueObj.val(curAttrInfo)));
-                nameValuePairs.push({ name: aPrefix + curAttrInfo.getInternalName(), value: curValue });
+                searchParams.set(aPrefix + curAttrInfo.getInternalName(),  curValue );
             } else {
 
                 if (typeof aValueObj.val(curAttrInfo) === 'object') {
                     refObjParams = createParametersFor(aValueObj.val(curAttrInfo),
-                        aPrefix + curAttrInfo.getInternalName() + '.');
-                    nameValuePairs = nameValuePairs.concat(refObjParams);
+                        aPrefix + curAttrInfo.getInternalName() + '.', searchParams);
                 } else {
                     throw new JdyPersistentException('Wrong type for attr value (no object): ' + curAttrInfo.getInternalName());
                 }
             }
         }
     });
-
-    return nameValuePairs;
-};
+}
 
 export class JsonHttpObjectWriter {
 
@@ -267,9 +263,10 @@ export class JsonHttpObjectWriter {
     public deleteObjectInDb (aObjToDelete, successFunct, failFunc) {
 
         let uri = this.createUriForClassInfo(aObjToDelete.$typeInfo);
-        let params = createParametersFor(aObjToDelete, '');
+        const searchParams = new URLSearchParams();
+        createParametersFor(aObjToDelete, '', searchParams);
 
-        uri = uri + '?' + params;
+        uri = uri + '?' + searchParams.toString();
         this.createAjaxDeleteCall(uri)
             .then(response => {
                 successFunct();

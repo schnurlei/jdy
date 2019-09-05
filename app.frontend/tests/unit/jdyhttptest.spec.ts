@@ -30,7 +30,6 @@ test(' jdyhttp.createParametersFor', function () {
     let refClass = rep.addClassInfo('refClass', null);
     let value;
     let refValue;
-    let params;
 
     createdClass.addTextAttr('testTextAttr', 99).setIsKey(true);
     createdClass.addBooleanAttr('testBooleanAttr');
@@ -49,13 +48,11 @@ test(' jdyhttp.createParametersFor', function () {
 
     value.masterClassReference = refValue;
 
-    params = createParametersFor(value, createdClass);
-    expect(params.length).toBe(3); // '2 primitive attributes');
-    expect(params[0].name).toBe('testTextAttr'); // 'text attr name');
-    expect(params[0].value).toBe('Plant Family'); // 'text attr value');
-    expect(params[1].name).toBe('testLongAttr'); // 'long attr name');
-    expect(params[1].value).toBe('123456'); // 'long attr value');
-    expect(params[2].name).toBe('masterClassReference.refTextAttr'); // 'ref attr name');
-    expect(params[2].value).toBe('Ref text value'); // 'ref attr value');
+    const searchParams = new URLSearchParams();
+    createParametersFor(value, '', searchParams);
+    let paraString = searchParams.toString();
+    expect(searchParams.get('testTextAttr')).toBe('Plant Family'); // 'text attr value');
+    expect(searchParams.get('testLongAttr')).toBe('123456'); // 'long attr value');
+    expect(searchParams.get('masterClassReference.refTextAttr')).toBe('Ref text value'); // 'ref attr value');
 
 });
