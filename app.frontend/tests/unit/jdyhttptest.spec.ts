@@ -49,7 +49,7 @@ test(' jdyhttp.createParametersFor', function () {
 
     value.masterClassReference = refValue;
 
-    params = createParametersFor(value, createdClass, '');
+    params = createParametersFor(value, createdClass);
     expect(params.length).toBe(3); // '2 primitive attributes');
     expect(params[0].name).toBe('testTextAttr'); // 'text attr name');
     expect(params[0].value).toBe('Plant Family'); // 'text attr value');

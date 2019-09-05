@@ -1,12 +1,13 @@
 package de.jdynameta.jdy.spring.app.rest;
 
-import de.jdynameta.base.metainfo.ClassInfo;
-import de.jdynameta.base.metainfo.ClassRepository;
+import de.jdynameta.base.metainfo.*;
 import de.jdynameta.base.metainfo.filter.ClassInfoQuery;
+import de.jdynameta.base.metainfo.primitive.*;
 import de.jdynameta.base.objectlist.DefaultObjectList;
 import de.jdynameta.base.objectlist.ObjectList;
 import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.TypedValueObject;
+import de.jdynameta.base.value.ValueObject;
 import de.jdynameta.jdy.model.jpa.JpaFilterConverter;
 import de.jdynameta.jdy.model.jpa.JpaMetamodelReader;
 import de.jdynameta.jdy.model.jpa.JpaWriter;
@@ -21,6 +22,7 @@ import de.jdynameta.metamodel.filter.FilterCreator;
 import de.jdynameta.metamodel.filter.FilterRepository;
 import de.jdynameta.persistence.manager.PersistentOperation;
 import de.jdynameta.persistence.state.ApplicationObj;
+import de.jdynameta.persistence.state.ApplicationObjImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +34,16 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 import javax.xml.transform.TransformerConfigurationException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -140,6 +144,43 @@ public class JdyRestController {
         }
     }
 
+    @DeleteMapping(path = "jdy/data/{className}")
+    public @ResponseBody
+    @Transactional
+    ResponseEntity<String> deleteEntityInDb(final @PathVariable("className") String className
+            , @RequestParam Map<String, String> parameters) {
+
+        final ClassInfo entityClassInfo = this.getMetaInfoClassForClassName(className);
+        final Optional<EntityType<?>> jpaEntityForName = this.getJpaEntityTypeForClassName(className);
+
+        if( entityClassInfo != null && jpaEntityForName.isPresent() ) {
+
+            try {
+                JpaWriter writer = new JpaWriter();
+
+                final ApplicationObj objToDelete = convertParameters(parameters, entityClassInfo);
+                writer.deleleteInDb(objToDelete, jpaEntityForName.get(), this.entityManager);
+
+                return new ResponseEntity<String>("Ok", HttpStatus.NO_CONTENT);
+
+            } catch (JdyPersistentException  ex) {
+                throw new GeneralRestException(ex);
+            }
+
+        } else {
+            throw new GeneralRestException("Invalid entity type ");
+        }
+    }
+
+    private ApplicationObj convertParameters(Map<String, String> parameters, ClassInfo entityClassInfo) throws JdyPersistentException {
+
+        RequestParameterHandler handler = new RequestParameterHandler(parameters, entityClassInfo, null);
+        entityClassInfo.handleAttributes(handler, null);
+        return  handler.result;
+
+    }
+
+
     private Optional<EntityType<?>> getJpaEntityTypeForClassName(final String className) {
 
         return this.entityManager.getMetamodel().getEntities()
@@ -174,27 +215,27 @@ public class JdyRestController {
 
         final CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
         final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
-        Root<?> entityRoot = query.from(entityType.getJavaType());
+        query.from(entityType.getJavaType());
 
         return this.entityManager.createQuery(query).getResultList();
     }
 
-    private List<?> readObjectsFromDbForEntity(final EntityType<?> entityType, String filter) throws JdyPersistentException {
+    private List<?> readObjectsFromDbForEntity(final EntityType<?> entityType, final String filter) throws JdyPersistentException {
 
         final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
-        final Root<?> entityRoot = query.from(entityType.getJavaType());
+        query.from(entityType.getJavaType());
 
         JsonCompactFileReader reader = new JsonCompactFileReader(this.getMapping() , FilterRepository.getSingleton().getRepoName(), null );
         ObjectList<ApplicationObj> appQuery = reader.readObjectList(new StringReader(filter), FilterRepository.getSingleton().getInfoForType(FilterRepository.TypeName.AppQuery));
 
         final ClassRepository metaRepo = new JpaMetamodelReader().createMetaRepository(this.entityManager.getMetamodel(), "TestApp");
 
-        FilterCreator creator = new FilterCreator();
-        ClassInfoQuery newQuery = creator.createMetaFilter(appQuery.get(0), metaRepo);
+        final FilterCreator creator = new FilterCreator();
+        final ClassInfoQuery newQuery = creator.createMetaFilter(appQuery.get(0), metaRepo);
 
-        JpaFilterConverter filterConverter = new JpaFilterConverter(this.entityManager);
-        CriteriaQuery<Object> criteriaQuery = filterConverter.convert(newQuery);
+        final JpaFilterConverter filterConverter = new JpaFilterConverter(this.entityManager);
+        final CriteriaQuery<Object> criteriaQuery = filterConverter.convert(newQuery);
 
         return this.entityManager.createQuery(criteriaQuery).getResultList();
     }
@@ -215,4 +256,142 @@ public class JdyRestController {
         att2AbbrMap.put("textVal", "tv");
         return att2AbbrMap;
     }
+
+    public static class RequestParameterHandler implements AttributeHandler
+    {
+        private final Map<String, String> paraMap;
+        private final ApplicationObj result;
+        private final List<AttributeInfo> aspectPath;
+
+        public RequestParameterHandler(final Map<String, String> aRequestParaMap, final ClassInfo aConcreteClass, final List<AttributeInfo> anAspectPath)
+        {
+            super();
+            this.result = new ApplicationObjImpl(aConcreteClass, false);
+            this.paraMap = aRequestParaMap;
+            this.aspectPath = anAspectPath;
+        }
+
+        @Override
+        public void handleObjectReference(final ObjectReferenceAttributeInfo aInfo, final ValueObject objToHandle)
+                throws JdyPersistentException
+        {
+
+            if (aInfo.isKey())
+            {
+                final List<AttributeInfo> refAspectPath = new ArrayList<>();
+                if (this.aspectPath != null)
+                {
+                    refAspectPath.addAll(this.aspectPath);
+                }
+                refAspectPath.add(aInfo);
+                final RequestParameterHandler refHandler = new RequestParameterHandler(this.paraMap, aInfo.getReferencedClass(), refAspectPath);
+                aInfo.getReferencedClass().handleAttributes(refHandler, null);
+                this.result.setValue(aInfo, refHandler.result);
+            }
+        }
+
+        @Override
+        public void handlePrimitiveAttribute(final PrimitiveAttributeInfo aInfo, final Object objToHandle)
+                throws JdyPersistentException
+        {
+            final String parameterName = this.createParameterName(this.aspectPath, aInfo);
+            if (aInfo.isKey())
+            {
+                final String value = this.paraMap.get(parameterName);
+                if (value == null || value.trim().isEmpty())
+                {
+                    throw new JdyPersistentException("Missing value for type in attr value: " + aInfo.getInternalName());
+                } else
+                {
+                    this.result.setValue(aInfo, aInfo.getType().handlePrimitiveKey(new StringValueGetVisitor(value)));
+                }
+            }
+        }
+
+        private String createParameterName(final List<AttributeInfo> aAspectPath, final PrimitiveAttributeInfo aInfo)
+        {
+            final StringBuilder resultName = new StringBuilder();
+            if (this.aspectPath != null)
+            {
+                for (final AttributeInfo attributeInfo : aAspectPath)
+                {
+                    resultName.append(attributeInfo.getInternalName()).append('.');
+                }
+            }
+
+            resultName.append(aInfo.getInternalName());
+            return resultName.toString();
+        }
+    }
+
+    public static class StringValueGetVisitor implements PrimitiveTypeGetVisitor
+    {
+        private final String attrValue;
+
+        /**
+         *
+         */
+        public StringValueGetVisitor(final String anAttrValue)
+        {
+            super();
+            this.attrValue = anAttrValue;
+        }
+
+        @Override
+        public Boolean handleValue(final BooleanType aType) throws JdyPersistentException
+        {
+            return Boolean.valueOf(this.attrValue);
+        }
+
+        @Override
+        public BigDecimal handleValue(final CurrencyType aType)
+                throws JdyPersistentException
+        {
+            return new BigDecimal(this.attrValue);
+        }
+
+        @Override
+        public Date handleValue(final TimeStampType aType) throws JdyPersistentException
+        {
+            try {
+                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+                final ZonedDateTime zdt = ZonedDateTime.parse(this.attrValue, formatter.withZone(ZoneId.systemDefault()));
+                return Date.from(zdt.toInstant());
+            } catch (final DateTimeParseException ex) {
+                throw new JdyPersistentException(ex);
+            }
+        }
+
+        @Override
+        public Double handleValue(final FloatType aType) throws JdyPersistentException
+        {
+            return Double.valueOf(this.attrValue);
+        }
+
+        @Override
+        public Long handleValue(final LongType aType) throws JdyPersistentException
+        {
+            return Long.valueOf(this.attrValue);
+        }
+
+        @Override
+        public String handleValue(final TextType aType) throws JdyPersistentException
+        {
+            return this.attrValue;
+        }
+
+        @Override
+        public String handleValue(final VarCharType aType) throws JdyPersistentException
+        {
+            return this.attrValue;
+        }
+
+        @Override
+        public BlobByteArrayHolder handleValue(final BlobType aType) throws JdyPersistentException
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+
 }

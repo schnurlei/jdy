@@ -37,8 +37,12 @@ public class JpaWriter {
         } catch (RuntimeException | IllegalAccessException | InstantiationException ex) {
             throw new JdyPersistentException(ex);
         }
-
-
     }
 
+    public void deleleteInDb(final ApplicationObj objToDelete, EntityType<?> entityType, EntityManager entityManager) throws JdyPersistentException {
+
+        final Object jpaObjToDelete = null;
+
+        entityManager.remove(jpaObjToDelete);
+    }
 }
