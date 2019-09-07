@@ -87,7 +87,7 @@ public class JpaFilterConverter {
         @Override
         public Predicate visitReferenceEqualExpression(final ObjectReferenceEqualExpression aOpExpr) {
 
-            throw new UnsupportedOperationException("ObjectReferenceSubqueryExpression is not supported at the moment");
+            throw new UnsupportedOperationException("ObjectReferenceEqualExpression is not supported at the moment");
         }
 
         @Override
