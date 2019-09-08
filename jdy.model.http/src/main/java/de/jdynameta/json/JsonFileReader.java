@@ -297,6 +297,7 @@ public class JsonFileReader
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
                 ZonedDateTime zdt = ZonedDateTime.parse(attrValue.asText(), formatter.withZone(ZoneId.systemDefault()));
+                zdt = zdt.withNano(0);
                 return Date.from(zdt.toInstant());
             } catch (DateTimeParseException ex) {
                 throw new JdyPersistentException(ex);

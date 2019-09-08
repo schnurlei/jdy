@@ -40,12 +40,12 @@ public class JsonFileReaderTest
 		input.addValue("BooleanData", "true");
 		input.addString("ClobData", "Clob Data");
 		input.addValue("CurrencyData", "425.67");
-		input.addString("DateData", "2012-06-15T14:57:46Z");
+		input.addString("DateData", "2012-06-15T14:57:46.987Z");
 		input.addValue("FloatData", "12312.45");
 		input.addValue("LongData", "3234");
 		input.addString("TextData", "text data");
-		input.addString("TimestampData", "2012-06-15T14:57:46Z");
-		input.addString("TimeData", "2012-06-15T14:57:46Z");
+		input.addString("TimestampData", "2012-06-15T14:57:46.123Z");
+		input.addString("TimeData", "2012-06-15T14:57:46.456Z");
 		input.addLastString("VarCharData", "Var char data");
 		input.listEnd();
 	
