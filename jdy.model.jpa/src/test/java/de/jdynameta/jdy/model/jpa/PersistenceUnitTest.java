@@ -25,7 +25,6 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.sql.Connection;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -44,13 +43,10 @@ public class PersistenceUnitTest {
 
     @Autowired
     private TestEntityManager entityManager;
-    private Connection connection;
 
     public PersistenceUnitTest() {
     }
 
-
-    
     @Test
     public void testReadMetaData() {
         JpaMetamodelReader reader = new JpaMetamodelReader();
@@ -65,7 +61,7 @@ public class PersistenceUnitTest {
         assertThat("Min Value", longType(repo, "Teilnehmer", "plz").getMinValue(), equalTo((long)Integer.MIN_VALUE));
         assertThat("Date type", timestampType(repo, "Veranstaltung", "datum").isDatePartUsed(), equalTo(true));
         assertThat("OneToOne", refAttr(repo, "Teilnehmer", "veranstaltung").getReferencedClass().getInternalName(), equalTo("Veranstaltung"));
-    
+
         assertThat("ManyToOne", refAttr(repo, "Customer", "invoiceaddressAddressid").getReferencedClass().getInternalName(), equalTo("Address"));
 
         assertThat("OneToMany", assoc(repo, "Plant", "orderitemCollection").getDetailClass().getInternalName(), equalTo("Orderitem"));
@@ -80,11 +76,11 @@ public class PersistenceUnitTest {
         return (LongType) primAttr(repo, aClassName, anAttributeName).getType();
     }
 
-    
+
     private TextType stringType(ClassRepository repo, String aClassName, String anAttributeName) {
         return (TextType) primAttr(repo, aClassName, anAttributeName).getType();
     }
-    
+
     private PrimitiveAttributeInfo primAttr(ClassRepository repo, String aClassName, String anAttributeName) {
         return (PrimitiveAttributeInfo)attr(repo, aClassName, anAttributeName);
     }
@@ -97,15 +93,15 @@ public class PersistenceUnitTest {
         return repo.getClassForName(aClassName).getAssoc(anAssocName);
     }
 
-    
+
     private AttributeInfo attr(ClassRepository repo, String aClassName, String anAttributeName) {
         return repo.getClassForName(aClassName).getAttributeInfoForExternalName(anAttributeName);
     }
-    
-    
+
+
     @Test
     public void testMetaData() {
-        
+
         for(EmbeddableType<?> embd: entityManager.getEntityManager().getMetamodel().getEmbeddables()) {
             System.out.println(embd.getPersistenceType().name());
             System.out.println(embd.getPersistenceType().ordinal());
@@ -118,7 +114,7 @@ public class PersistenceUnitTest {
             System.out.println("Name: " + type.getName());
             System.out.println("Bindable Type: " + type.getBindableJavaType().getName());
             System.out.println("Super Type: " + ((type.getSupertype() != null) ? type.getSupertype().getJavaType() : ""));
-            
+
             for (Attribute<?, ?> attr: type.getAttributes()) {
 
                 System.out.println("Name: " + attr.getName());
@@ -132,7 +128,7 @@ public class PersistenceUnitTest {
                 }
                 System.out.println("PersistentAttributeType: " + attr.getPersistentAttributeType());
 
-                
+
             }
         }
 

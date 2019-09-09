@@ -1,7 +1,12 @@
 package de.jdynameta.jdy.model.jpa;
 
+import de.jdynameta.base.metainfo.AttributeInfo;
+import de.jdynameta.base.metainfo.ObjectReferenceAttributeInfo;
+import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
 import de.jdynameta.base.metainfo.filter.*;
+import de.jdynameta.base.metainfo.filter.defaultimpl.DefaultObjectReferenceEqualExpression;
 import de.jdynameta.base.value.JdyPersistentException;
+import de.jdynameta.base.value.ValueObject;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.*;
@@ -46,9 +51,9 @@ public class JpaFilterConverter {
     private static class JpaVisitor implements ExpressionVisitor<Predicate> {
 
         final CriteriaBuilder criteriaBuilder;
-        final Root<?> entityRoot;
+        final From<?,?> entityRoot;
 
-        public JpaVisitor(final CriteriaBuilder criteriaBuilder, final Root<?> entityRoot) {
+        public JpaVisitor(final CriteriaBuilder criteriaBuilder, final From<?,?> entityRoot) {
             this.criteriaBuilder = criteriaBuilder;
             this.entityRoot = entityRoot;
         }
@@ -78,7 +83,7 @@ public class JpaFilterConverter {
         }
 
         @Override
-        public Predicate visitOperatorExpression(final OperatorExpression aOpExpr) {
+        public Predicate visitOperatorExpression(final OperatorExpression aOpExpr) throws JdyPersistentException {
 
             final JpaOperatorVisitor visitor = new JpaOperatorVisitor(this.entityRoot, this.criteriaBuilder,aOpExpr);
             return aOpExpr.getOperator().visitOperatorHandler(visitor);
@@ -87,7 +92,24 @@ public class JpaFilterConverter {
         @Override
         public Predicate visitReferenceEqualExpression(final ObjectReferenceEqualExpression aOpExpr) {
 
-            throw new UnsupportedOperationException("ObjectReferenceSubqueryExpression is not supported at the moment");
+            final Join<Object, Object> joinRoot = this.entityRoot.join(aOpExpr.getAttributeInfo().getInternalName());
+            final Iterable<? extends AttributeInfo> attrIter = aOpExpr.getAttributeInfo().getReferencedClass().getAttributeInfoIterator();
+            final List<Predicate> joinPredicates = new ArrayList<>();
+            attrIter.forEach(joinAttr -> {
+                if(joinAttr.isKey()) {
+                    final Object compareValue = aOpExpr.getCompareValue().getValue(joinAttr);
+                    if(joinAttr instanceof PrimitiveAttributeInfo) {
+                        final String attrName = aOpExpr.getAttributeInfo().getInternalName();
+                        final Path<Object> attrPath = joinRoot.get(attrName);
+                        joinPredicates.add(this.criteriaBuilder.equal(attrPath, compareValue));
+                    } else if ( joinAttr instanceof ObjectReferenceAttributeInfo){
+                        final ObjectReferenceEqualExpression subJoin = new DefaultObjectReferenceEqualExpression((ObjectReferenceAttributeInfo)joinAttr, (ValueObject) compareValue);
+                        joinPredicates.add(new JpaVisitor(this.criteriaBuilder,joinRoot).visitReferenceEqualExpression(subJoin));
+                    }
+                }
+            });
+
+            return this.criteriaBuilder.and(joinPredicates.toArray(new Predicate[joinPredicates.size()]));
         }
 
         @Override
@@ -106,13 +128,16 @@ public class JpaFilterConverter {
 
     private static class JpaOperatorVisitor implements OperatorVisitor<Predicate>
     {
-        final Root<?> entityRoot;
+        final From<?,?> entityRoot;
         private final CriteriaBuilder criteriaBuilder;
         private final Comparable compareValue;
         private final Path<Comparable> attrPath;
 
-        private JpaOperatorVisitor(final Root<?> entityRoot, final CriteriaBuilder criteriaBuilder, final OperatorExpression aOpExpr) {
+        private JpaOperatorVisitor(final From<?,?> entityRoot, final CriteriaBuilder criteriaBuilder, final OperatorExpression aOpExpr) throws JdyPersistentException {
 
+            if (aOpExpr.getAttributeInfo() == null) {
+                throw new JdyPersistentException("Operator Attribute Info is null");
+            }
             this.entityRoot = entityRoot;
             this.criteriaBuilder = criteriaBuilder;
             final String attrName = aOpExpr.getAttributeInfo().getInternalName();
