@@ -23,7 +23,9 @@ import de.jdynameta.base.value.JdyPersistentException;
 import de.jdynameta.base.value.ValueObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Filter Expression which defines the Comparision from a Attribute with a Value
@@ -34,18 +36,28 @@ import java.util.Iterator;
 public class DefaultExpressionAnd implements AndExpression
 {
 
-    private final ArrayList<ObjectFilterExpression> expressionVect;
+    private final List<ObjectFilterExpression> expressionVect;
 
     /**
      * ValueExpression - Konstruktorkommentar.
      *
      * @param aExprVect
      */
-    public DefaultExpressionAnd(ArrayList<ObjectFilterExpression> aExprVect)
+    public DefaultExpressionAnd(List<ObjectFilterExpression> aExprVect)
     {
         super();
         assert (aExprVect.size() > 0);
         expressionVect = aExprVect;
+    }
+
+     /* ValueExpression - Konstruktorkommentar.
+     *
+     * @param aExprVect
+     */
+    public DefaultExpressionAnd(ObjectFilterExpression ... aExprVect)
+    {
+        super();
+        this.expressionVect = Arrays.asList(aExprVect);
     }
 
     @Override
@@ -75,33 +87,13 @@ public class DefaultExpressionAnd implements AndExpression
     /**
      * Convenience Method to create And Expression with 2 Subexpressions
      *
-     * @param expr1
-     * @param expr2
+     * @param expr
      * @return
      */
-    public static DefaultExpressionAnd createAndExpr(ObjectFilterExpression expr1, ObjectFilterExpression expr2)
+    public static DefaultExpressionAnd createAndExpr(ObjectFilterExpression ... expr)
     {
         ArrayList<ObjectFilterExpression> andExprColl = new ArrayList<>();
-        andExprColl.add(expr1);
-        andExprColl.add(expr2);
-        return new DefaultExpressionAnd(andExprColl);
-    }
-
-    /**
-     * Convenience Method to create And Expression with 3 Subexpressions
-     *
-     * @param expr1
-     * @param expr2
-     * @param expr3
-     * @return
-     */
-    public static DefaultExpressionAnd createAndExpr(ObjectFilterExpression expr1, ObjectFilterExpression expr2, ObjectFilterExpression expr3)
-    {
-        ArrayList<ObjectFilterExpression> andExprColl = new ArrayList<>();
-        andExprColl.add(expr1);
-        andExprColl.add(expr2);
-        andExprColl.add(expr3);
-        return new DefaultExpressionAnd(andExprColl);
+        return new DefaultExpressionAnd(expr);
     }
 
 }

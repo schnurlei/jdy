@@ -190,8 +190,12 @@ public class FilterCreator implements ExpressionVisitor<Object>
 
 		DefaultClassInfoQuery metaQuery = new DefaultClassInfoQuery(typeInfo);
 		TypedValueObject expression = (TypedValueObject) appQuery.getAttrValue(AppQueryName.expr);
-		metaQuery.setFilterExpression(createMetaExpr(expression, typeInfo));
+		if (expression != null) {
+			metaQuery.setFilterExpression(createMetaExpr(expression, typeInfo));
+		} else {
+			metaQuery.setFilterExpression(null);
 
+		}
 
 		return metaQuery;
 	}
