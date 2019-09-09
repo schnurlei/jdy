@@ -224,14 +224,14 @@ export function parameterGetVisitor (aAttrValue) {
     };
 };
 
-export function createParametersFor (aValueObj, aPrefix, searchParams: URLSearchParams): void {
+export function createParametersFor (aValueObj, aPrefix, searchParams: URLSearchParams, parentIsKey: boolean): void {
 
     let refObjParams;
     let curValue;
 
     aValueObj.$typeInfo.forEachAttr(curAttrInfo => {
 
-        if (curAttrInfo.isKey()) {
+        if (curAttrInfo.isKey() || parentIsKey) {
             if (curAttrInfo.isPrimitive()) {
 
                 curValue = curAttrInfo.getType().handlePrimitiveKey(parameterGetVisitor(aValueObj.val(curAttrInfo)));
@@ -240,7 +240,7 @@ export function createParametersFor (aValueObj, aPrefix, searchParams: URLSearch
 
                 if (typeof aValueObj.val(curAttrInfo) === 'object') {
                     refObjParams = createParametersFor(aValueObj.val(curAttrInfo),
-                        aPrefix + curAttrInfo.getInternalName() + '.', searchParams);
+                        aPrefix + curAttrInfo.getInternalName() + '.', searchParams, true);
                 } else {
                     throw new JdyPersistentException('Wrong type for attr value (no object): ' + curAttrInfo.getInternalName());
                 }
@@ -264,7 +264,7 @@ export class JsonHttpObjectWriter {
 
         let uri = this.createUriForClassInfo(aObjToDelete.$typeInfo);
         const searchParams = new URLSearchParams();
-        createParametersFor(aObjToDelete, '', searchParams);
+        createParametersFor(aObjToDelete, '', searchParams, false);
 
         uri = uri + '?' + searchParams.toString();
         this.createAjaxDeleteCall(uri)

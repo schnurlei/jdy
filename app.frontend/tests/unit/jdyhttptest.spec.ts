@@ -49,7 +49,7 @@ test(' jdyhttp.createParametersFor', function () {
     value.masterClassReference = refValue;
 
     const searchParams = new URLSearchParams();
-    createParametersFor(value, '', searchParams);
+    createParametersFor(value, '', searchParams, false);
     let paraString = searchParams.toString();
     expect(searchParams.get('testTextAttr')).toBe('Plant Family'); // 'text attr value');
     expect(searchParams.get('testLongAttr')).toBe('123456'); // 'long attr value');

@@ -266,6 +266,7 @@ public class JpaMetamodelReader
 
         JdyObjectReferenceModel  metaAttr = new JdyObjectReferenceModel(referenceType, curAttr.getName(), curAttr.getName(), isKey, isNotNull);
         metaAttr.setGenerated(isGenerated);
+        metaAttr.setDependent(true);
         return metaAttr;
     }
 

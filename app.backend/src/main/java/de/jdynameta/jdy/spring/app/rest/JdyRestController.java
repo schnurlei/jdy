@@ -174,7 +174,7 @@ public class JdyRestController {
 
     private ApplicationObj convertParameters(Map<String, String> parameters, ClassInfo entityClassInfo) throws JdyPersistentException {
 
-        RequestParameterHandler handler = new RequestParameterHandler(parameters, entityClassInfo, null);
+        RequestParameterHandler handler = new RequestParameterHandler(parameters, entityClassInfo, null, false);
         entityClassInfo.handleAttributes(handler, null);
         return  handler.result;
 
@@ -262,13 +262,16 @@ public class JdyRestController {
         private final Map<String, String> paraMap;
         private final ApplicationObj result;
         private final List<AttributeInfo> aspectPath;
+        private final boolean parentisKey;
 
-        public RequestParameterHandler(final Map<String, String> aRequestParaMap, final ClassInfo aConcreteClass, final List<AttributeInfo> anAspectPath)
+        public RequestParameterHandler(final Map<String, String> aRequestParaMap, final ClassInfo aConcreteClass, final List<AttributeInfo> anAspectPath
+                , final boolean parentisKey)
         {
             super();
             this.result = new ApplicationObjImpl(aConcreteClass, false);
             this.paraMap = aRequestParaMap;
             this.aspectPath = anAspectPath;
+            this.parentisKey = parentisKey;
         }
 
         @Override
@@ -276,7 +279,7 @@ public class JdyRestController {
                 throws JdyPersistentException
         {
 
-            if (aInfo.isKey())
+            if (aInfo.isKey() || parentisKey)
             {
                 final List<AttributeInfo> refAspectPath = new ArrayList<>();
                 if (this.aspectPath != null)
@@ -284,7 +287,7 @@ public class JdyRestController {
                     refAspectPath.addAll(this.aspectPath);
                 }
                 refAspectPath.add(aInfo);
-                final RequestParameterHandler refHandler = new RequestParameterHandler(this.paraMap, aInfo.getReferencedClass(), refAspectPath);
+                final RequestParameterHandler refHandler = new RequestParameterHandler(this.paraMap, aInfo.getReferencedClass(), refAspectPath, true);
                 aInfo.getReferencedClass().handleAttributes(refHandler, null);
                 this.result.setValue(aInfo, refHandler.result);
             }
@@ -295,7 +298,7 @@ public class JdyRestController {
                 throws JdyPersistentException
         {
             final String parameterName = this.createParameterName(this.aspectPath, aInfo);
-            if (aInfo.isKey())
+            if (aInfo.isKey() || parentisKey)
             {
                 final String value = this.paraMap.get(parameterName);
                 if (value == null || value.trim().isEmpty())

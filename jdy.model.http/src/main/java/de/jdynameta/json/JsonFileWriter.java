@@ -69,7 +69,7 @@ public class JsonFileWriter
 
 		ArrayNode jsonObjects = writeModelCollection( aObjectList, aPersistenceType);
 		try {
-			 JsonGenerator jsonGenerator = mapper.getJsonFactory().createJsonGenerator(out);
+			 JsonGenerator jsonGenerator = mapper.getFactory().createGenerator(out);
 			 jsonGenerator.useDefaultPrettyPrinter();
 
 			mapper.configure(SerializationFeature.FLUSH_AFTER_WRITE_VALUE, this.flush);
@@ -117,7 +117,7 @@ public class JsonFileWriter
 					if( refObj != null) {
 						boolean isProxy = asProxy || writeStrategy.isWriteAsProxy(objToWrite.getClassInfo(), (ObjectReferenceAttributeInfo) attrInfo,refObj);
 						ObjectNode refJsonNode = createClassInfoNode(refObj, aPersistenceType, isProxy);
-						jsonObject.put(attrInfo.getInternalName(), refJsonNode);
+						jsonObject.set(attrInfo.getInternalName(), refJsonNode);
 					} else {
 						jsonObject.putNull(attrInfo.getInternalName());
 					}
