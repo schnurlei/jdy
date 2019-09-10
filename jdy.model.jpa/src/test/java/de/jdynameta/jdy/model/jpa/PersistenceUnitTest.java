@@ -47,24 +47,28 @@ public class PersistenceUnitTest {
     public PersistenceUnitTest() {
     }
 
+
+    @Test
+    public void testEmbeddedId() {
+        JpaMetamodelReader reader = new JpaMetamodelReader();
+        ClassRepository repo = reader.createMetaRepository(entityManager.getEntityManager().getMetamodel(), "TestApp");
+
+
+    }
+
+
     @Test
     public void testReadMetaData() {
         JpaMetamodelReader reader = new JpaMetamodelReader();
         ClassRepository repo = reader.createMetaRepository(entityManager.getEntityManager().getMetamodel(), "TestApp");
 
-        assertThat("String length", stringType(repo, "Teilnehmer", "name").getLength(), equalTo(60L));
-        assertThat("Is Not Generated",primAttr(repo, "Teilnehmer", "name").isGenerated(), equalTo(false));
-        assertThat("Is No Key", primAttr(repo, "Teilnehmer", "name").isKey(), equalTo(false));
-        assertThat("Is Generated", primAttr(repo, "Teilnehmer", "id").isGenerated(), equalTo(true));
-        assertThat("Is Key", primAttr(repo, "Teilnehmer", "id").isKey(), equalTo(true));
-        assertThat("Dom Values", stringType(repo, "Teilnehmer", "landkreis").getDomainValues().size(), equalTo(9));
-        assertThat("Min Value", longType(repo, "Teilnehmer", "plz").getMinValue(), equalTo((long)Integer.MIN_VALUE));
-        assertThat("Date type", timestampType(repo, "Veranstaltung", "datum").isDatePartUsed(), equalTo(true));
-        assertThat("OneToOne", refAttr(repo, "Teilnehmer", "veranstaltung").getReferencedClass().getInternalName(), equalTo("Veranstaltung"));
+        ObjectReferenceAttributeInfo orderitemPK = refAttr(repo, "Orderitem", "orderitemPK");
 
-        assertThat("ManyToOne", refAttr(repo, "Customer", "invoiceaddressAddressid").getReferencedClass().getInternalName(), equalTo("Address"));
+        AttributeInfo ordernr = orderitemPK.getReferencedClass().getAttributeInfoForExternalName("itemnr");
+        AttributeInfo plantOrdernr = orderitemPK.getReferencedClass().getAttributeInfoForExternalName("plantorderOrdernr");
 
-        assertThat("OneToMany", assoc(repo, "Plant", "orderitemCollection").getDetailClass().getInternalName(), equalTo("Orderitem"));
+        assertThat("ordernr is key", ordernr.isKey(), equalTo(true));
+        assertThat("plantOrdernr is key", plantOrdernr.isKey(), equalTo(true));
 
     }
 

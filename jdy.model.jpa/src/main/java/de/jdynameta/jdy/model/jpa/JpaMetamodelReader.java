@@ -5,6 +5,7 @@
  */
 package de.jdynameta.jdy.model.jpa;
 
+import de.jdynameta.base.metainfo.AttributeInfo;
 import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ClassRepository;
 import de.jdynameta.base.metainfo.PrimitiveType;
@@ -12,10 +13,7 @@ import de.jdynameta.base.metainfo.impl.*;
 import de.jdynameta.base.metainfo.primitive.CurrencyType;
 import de.jdynameta.base.view.DbDomainValue;
 
-import javax.persistence.Column;
-import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 import javax.persistence.metamodel.*;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
@@ -73,6 +71,11 @@ public class JpaMetamodelReader
         for (EmbeddableType<?> curEntity : uniqueEmbeddableInfos)
         {
             buildAttrForEmbeddableMetaRepo(metaRepo, curEntity, false);
+        }
+
+        for (EntityType<?> curEntity : allEntityInfos)
+        {
+            fixEmbeddedIdAttrForMetaRepo(metaRepo, curEntity, false);
         }
 
         for (EntityType<?> curEntity : allEntityInfos)
@@ -147,6 +150,33 @@ public class JpaMetamodelReader
                     // s. buildAssocsForMetaRepo
                 }
 
+            }
+        }
+    }
+
+    /**
+     * marked Attributes of Object references with EmbeddedId Annotations as keys
+     * @param metaRepo
+     * @param anEntity
+     * @param embeddedId
+     */
+    private void fixEmbeddedIdAttrForMetaRepo(ClassRepository metaRepo, EntityType<?> anEntity,boolean embeddedId)
+    {
+        JdyClassInfoModel metaClass = (JdyClassInfoModel) metaRepo.getClassForName(anEntity.getName());
+        for (Attribute<?, ?> curAttr : anEntity.getAttributes())
+        {
+            if (!curAttr.isCollection() && curAttr.getPersistentAttributeType() == EMBEDDED) {
+
+                JpaFieldWrapper wrapper = new JpaFieldWrapper(curAttr);
+                EmbeddedId embeddedIdAnnotation = wrapper.getAnntotationInfo(EmbeddedId.class);
+                AttributeInfo metaAttr = metaClass.getAttributeInfoForExternalName(curAttr.getName());
+                if (metaAttr instanceof JdyObjectReferenceModel ) {
+                    // Set all Attributes of an emmbeddd Id also as keys
+                    if (embeddedIdAnnotation != null) {
+                        Iterable<? extends AttributeInfo> attrIter = ((JdyObjectReferenceModel)metaAttr).getReferencedClass().getAttributeInfoIterator();
+                        attrIter.forEach(attr->((JdyAbstractAttributeModel)attr).setIsKey(true));
+                    }
+                }
             }
         }
     }

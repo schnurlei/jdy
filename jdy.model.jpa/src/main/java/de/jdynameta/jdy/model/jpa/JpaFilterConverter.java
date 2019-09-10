@@ -1,6 +1,7 @@
 package de.jdynameta.jdy.model.jpa;
 
 import de.jdynameta.base.metainfo.AttributeInfo;
+import de.jdynameta.base.metainfo.ClassInfo;
 import de.jdynameta.base.metainfo.ObjectReferenceAttributeInfo;
 import de.jdynameta.base.metainfo.PrimitiveAttributeInfo;
 import de.jdynameta.base.metainfo.filter.*;
@@ -92,25 +93,33 @@ public class JpaFilterConverter {
         @Override
         public Predicate visitReferenceEqualExpression(final ObjectReferenceEqualExpression aOpExpr) {
 
-            final Join<Object, Object> joinRoot = this.entityRoot.join(aOpExpr.getAttributeInfo().getInternalName());
-            final Iterable<? extends AttributeInfo> attrIter = aOpExpr.getAttributeInfo().getReferencedClass().getAttributeInfoIterator();
+            final Path<Object> joinRoot = this.entityRoot.get(aOpExpr.getAttributeInfo().getInternalName());
             final List<Predicate> joinPredicates = new ArrayList<>();
+            handleReferenceEqualExpression(aOpExpr.getAttributeInfo().getReferencedClass(),  (ValueObject) aOpExpr.getCompareValue()
+                    ,joinRoot, joinPredicates);
+            return this.criteriaBuilder.and(joinPredicates.toArray(new Predicate[joinPredicates.size()]));
+        }
+
+        public void handleReferenceEqualExpression(final ClassInfo refClass, final ValueObject compareValueObj, Path<Object> joinRoot, final List<Predicate> joinPredicates) {
+
+            final Iterable<? extends AttributeInfo> attrIter = refClass.getAttributeInfoIterator();
             attrIter.forEach(joinAttr -> {
                 if(joinAttr.isKey()) {
-                    final Object compareValue = aOpExpr.getCompareValue().getValue(joinAttr);
+                    final Object compareValue = compareValueObj.getValue(joinAttr);
                     if(joinAttr instanceof PrimitiveAttributeInfo) {
-                        final String attrName = aOpExpr.getAttributeInfo().getInternalName();
+                        final String attrName = joinAttr.getInternalName();
                         final Path<Object> attrPath = joinRoot.get(attrName);
                         joinPredicates.add(this.criteriaBuilder.equal(attrPath, compareValue));
                     } else if ( joinAttr instanceof ObjectReferenceAttributeInfo){
+                        ObjectReferenceAttributeInfo joinRef = (ObjectReferenceAttributeInfo) joinAttr;
                         final ObjectReferenceEqualExpression subJoin = new DefaultObjectReferenceEqualExpression((ObjectReferenceAttributeInfo)joinAttr, (ValueObject) compareValue);
-                        joinPredicates.add(new JpaVisitor(this.criteriaBuilder,joinRoot).visitReferenceEqualExpression(subJoin));
+                        handleReferenceEqualExpression(joinRef.getReferencedClass(), (ValueObject)compareValueObj.getValue(joinRef), joinRoot.get(joinRef.getInternalName()), joinPredicates);
                     }
                 }
             });
-
-            return this.criteriaBuilder.and(joinPredicates.toArray(new Predicate[joinPredicates.size()]));
         }
+
+
 
         @Override
         public Predicate visitAssociationExpression(final AssociationExpression aOpExpr) {

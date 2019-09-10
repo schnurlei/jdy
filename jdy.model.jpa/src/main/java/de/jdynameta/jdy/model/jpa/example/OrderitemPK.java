@@ -4,10 +4,10 @@
  */
 package de.jdynameta.jdy.model.jpa.example;
 
-import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import java.io.Serializable;
 
 /**
  *
@@ -18,6 +18,7 @@ public class OrderitemPK implements Serializable {
 	@Basic(optional = false)
     @Column(name = "ITEMNR")
 	private int itemnr;
+
 	@Basic(optional = false)
     @Column(name = "PLANTORDER_ORDERNR")
 	private long plantorderOrdernr;
@@ -74,5 +75,5 @@ public class OrderitemPK implements Serializable {
 	public String toString() {
 		return "de.jdynameta.model.asm.jpa.OrderitemPK[ itemnr=" + itemnr + ", plantorderOrdernr=" + plantorderOrdernr + " ]";
 	}
-	
+
 }
