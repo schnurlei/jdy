@@ -11,7 +11,6 @@ import de.jdynameta.base.value.ValueObject;
 import de.jdynameta.persistence.state.ApplicationObj;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.metamodel.EntityType;
 import java.util.ArrayList;
@@ -71,21 +70,12 @@ public class JpaWriter {
             }
         }, objToDelete);
 
-/*
+
         final DefaultClassInfoQuery query = new DefaultClassInfoQuery(objToDelete.getClassInfo(), new DefaultExpressionAnd(idExprList));
         final CriteriaQuery<Object> criteriaQuery = new JpaFilterConverter(entityManager).convert( query);
-        final Object jpaObjToDelete = entityManager.createQuery(criteriaQuery).getResultList();
+        final Object jpaObjToDelete = entityManager.createQuery(criteriaQuery).getSingleResult();
         if (jpaObjToDelete != null) {
             entityManager.remove(jpaObjToDelete);
         }
-*/
-
-        final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        final CriteriaQuery<?> query = criteriaBuilder.createQuery(entityType.getJavaType());
-        query.from(entityType.getJavaType());
-
-        final Object jpaObjToDelete = entityManager.createQuery(query).getResultList();
-
-        System.out.println(jpaObjToDelete);
     }
 }

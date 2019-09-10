@@ -69,12 +69,14 @@ export default class App extends Vue {
             metaRepo => {
 
                 let repo: JdyRepository = metaRepo;
-                Object.values(repo.getClasses()).forEach( value =>{
-                    this.menuitems.push( {
-                        title: value.getInternalName(),
-                        icon: 'dashboard',
-                        href: '#/jdy/' + value.getInternalName()
-                    })
+                Object.values(repo.getClasses())
+                    .sort((a, b) => a.getInternalName().localeCompare(b.getInternalName()))
+                    .forEach( value =>{
+                        this.menuitems.push( {
+                            title: value.getInternalName(),
+                            icon: 'dashboard',
+                            href: '#/jdy/' + value.getInternalName()
+                        })
                 });
             },
             error => { this.about = error; return null; });

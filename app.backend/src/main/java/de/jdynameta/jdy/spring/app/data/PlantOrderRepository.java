@@ -15,10 +15,10 @@ public interface PlantOrderRepository extends CrudRepository<Plantorder, Integer
     public static Plantorder createPlantorder(final PlantOrderRepository repo, PlantOrderItemRepository itemrRepo, Plant... plants) {
 
         Plantorder newPlantorder = new Plantorder();
-        UUID uuid = UUID.randomUUID();
 
         newPlantorder.setOrderdate(new Date());
-        newPlantorder.setOrdernr(uuid.getLeastSignificantBits());
+
+        newPlantorder.setOrdernr(System.currentTimeMillis());
         newPlantorder.setOrderitemColl(new ArrayList<>());
 
         List<Orderitem> items = Arrays.stream(plants)
